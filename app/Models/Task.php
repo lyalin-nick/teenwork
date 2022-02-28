@@ -46,27 +46,6 @@ class Task extends Model
         'safe_deal', 'hot_work', 'account_verified'
     ];
 
-    public static function getStatusLabels(): array
-    {
-        $labels = [
-            self::STATUS_WAIT => "Waiting for response",
-            self::STATUS_PROGRESS => "In progress",
-            self::STATUS_FAIL => "Fail",
-            self::STATUS_EXPIRE => "Expire",
-            self::STATUS_COMPLETE => "Completed"
-        ];
-
-        return $labels;
-    }
-
-
-    public function getStatusLabel(): string
-    {
-        $labels = self::getStatusLabels();
-
-        return isset($labels[$this->status]) ? $labels[$this->status] : 'undefined';
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -82,7 +61,7 @@ class Task extends Model
         return date('H:i A', strtotime($value));
     }
 
-    public function getFullInfo()
+    public function getFullInfo(): array
     {
         $task = [
             'id' => $this->id,
@@ -113,29 +92,15 @@ class Task extends Model
     public function getUserInfo(): array
     {
         $user = $this->user;
-        $portfolio = $user->portfolio;
+        $profile = $user->profile;
         $info = [
             'id' => $user->id,
-            'name' => $portfolio->first_name . ' ' . $portfolio->last_name,
-            'photo' => $portfolio->getPhotoLink(),
-            'rating' => $portfolio->rating,
+            'name' => $profile->first_name . ' ' . $profile->last_name,
+            'photo' => $profile->getPhotoLink(),
+            'rating' => $profile->rating,
         ];
 
         return $info;
-    }
-
-    public function getAllImages(): array
-    {
-        $images = $this->images;
-
-        $task_images = [];
-
-        if ($images) {
-            foreach ($images as $image)
-                $task_images[] = $image->getLink();
-        }
-
-        return $task_images;
     }
 
     public function getAllLanguages(): string
@@ -164,6 +129,40 @@ class Task extends Model
         }
 
         return implode(', ', $task_addresses);
+    }
+
+    public function getAllImages(): array
+    {
+        $images = $this->images;
+
+        $task_images = [];
+
+        if ($images) {
+            foreach ($images as $image)
+                $task_images[] = $image->getLink();
+        }
+
+        return $task_images;
+    }
+
+    public function getStatusLabel(): string
+    {
+        $labels = self::getStatusLabels();
+
+        return isset($labels[$this->status]) ? $labels[$this->status] : 'undefined';
+    }
+
+    public static function getStatusLabels(): array
+    {
+        $labels = [
+            self::STATUS_WAIT => "Waiting for response",
+            self::STATUS_PROGRESS => "In progress",
+            self::STATUS_FAIL => "Fail",
+            self::STATUS_EXPIRE => "Expire",
+            self::STATUS_COMPLETE => "Completed"
+        ];
+
+        return $labels;
     }
 
     public function setStartTimeAttribute($value)
@@ -195,14 +194,14 @@ class Task extends Model
         }
     }
 
-    public function addresses()
-    {
-        return $this->hasMany(TaskAddress::class);
-    }
-
     public function languages()
     {
         return $this->belongsToMany(Language::class);
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(TaskAddress::class);
     }
 
     public function images()

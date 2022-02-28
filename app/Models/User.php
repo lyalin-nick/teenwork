@@ -220,20 +220,20 @@ class User extends Authenticatable
         return !empty($this->name) && !empty($this->last_name) && $this->isPhoneVerified();
     }
 
-    public function checkEmptyRole($role): void
-    {
-        if ($this->role === null) {
-            $this->role = $role;
-            $this->save();
-        }
-    }
-
     /**
      * @return bool
      */
     public function isPhoneVerified(): bool
     {
         return $this->phone_verified;
+    }
+
+    public function checkEmptyRole($role): void
+    {
+        if ($this->role === null) {
+            $this->role = $role;
+            $this->save();
+        }
     }
 
     /**

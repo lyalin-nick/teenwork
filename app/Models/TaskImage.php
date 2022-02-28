@@ -17,20 +17,19 @@ class TaskImage extends Model
         'name', 'task_id', 'name', 'alt', 'path', 'pos', 'ext'
     ];
 
-    public function getFullPath()
-    {
-        return $this->path . $this->name . '.' . $this->ext;
-    }
-
     public function getNewFullPath($new_path)
     {
         return $this->path . $new_path . $this->name . '.' . $this->ext;
     }
 
-
     public function getLink()
     {//'/storage/'
         return asset($this->getFullPath());
+    }
+
+    public function getFullPath()
+    {
+        return $this->path . $this->name . '.' . $this->ext;
     }
 
     public function profile()

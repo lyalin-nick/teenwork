@@ -144,7 +144,7 @@ class Profile extends Model
         if ($img_path) {
             $path_info = pathinfo(asset('/storage/' . $img_path));
             $this->update([
-                'photo_path' => 'public' . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR,
+                'photo_path' => 'storage' . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR,
                 'photo_name' => $path_info['filename'],
                 'photo_ext' => $path_info['extension'],
             ]);

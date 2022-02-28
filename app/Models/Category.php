@@ -6,11 +6,11 @@ use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property integer $id
+ * @property integer $category_id
  * @property string $name
  * @property string $slug
  * @property int $flag
@@ -129,7 +129,7 @@ class Category extends Model
     {
         $name = $this->name;
         if ($this->parent) {
-            $name = $this->parent->name . $name;
+            $name = $this->parent->name . ', ' . $name;
         }
 
         return $name;
@@ -143,20 +143,14 @@ class Category extends Model
         return $this->hasMany(Task::class);
     }
 
-    /**
-     * @return HasMany
-     */
-    public function children(): HasMany
+    public function children()
     {
         return $this->hasMany(Category::class);
     }
 
-    /**
-     * @return BelongsTo
-     */
-    public function parent(): BelongsTo
+    public function parent()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     public function profiles()
