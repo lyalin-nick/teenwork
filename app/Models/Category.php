@@ -1,0 +1,175 @@
+<?php
+
+namespace App\Models;
+
+use Cviebrock\EloquentSluggable\Sluggable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/**
+ * @property integer $id
+ * @property string $name
+ * @property string $slug
+ * @property int $flag
+ * @property mixed children
+ * @property mixed parent
+ *
+ * @mixin Builder
+ */
+class Category extends Model
+{
+    use HasFactory, Sluggable;
+
+    const
+        FLAG_OFFLINE = 1,
+        FLAG_ONLINE = 2,
+        FLAG_OFFLINE_ONLINE = 3;
+
+    protected $fillable = ['name', 'category_id', 'flag'];
+
+
+    /**
+     * Получение всего дерева категорий
+     *
+     * @return array
+     */
+    public static function getAllCategoriesAsArray(): array
+    {
+        $categories = [];
+        $models = self::where('category_id', 0)
+            ->with(['children'])
+            ->get();
+
+        foreach ($models as $model) {
+            $category = [
+                'id' => $model->id,
+                'name' => $model->name
+            ];
+            $subcategories = [];
+            foreach ($model->children as $child) {
+                $subcategories[] = [
+                    'id' => $child->id,
+                    'name' => $child->name
+                ];
+            }
+            $category['categories'] = $subcategories;
+            $categories[] = $category;
+        }
+
+        return $categories;
+    }
+
+    /**
+     * Получение категорий сгруппированных по флагу Online/Offline
+     *
+     * @return array
+     */
+    public static function getAllCategoriesAsArrayByFlag($flag): array
+    {
+        $categories = [];
+        $flag_constants = self::getFlagsConstants($flag);
+        $models = self::where('category_id', 0)
+            ->with(['children' => function ($query) use ($flag_constants) {
+                $query->whereIn('flag', $flag_constants);
+            }])
+            ->whereHas('children', function (Builder $query) use ($flag_constants) {
+                $query->whereIn('flag', $flag_constants);
+            })
+            ->get();
+
+        foreach ($models as $model) {
+            $category = [
+                'id' => $model->id,
+                'name' => $model->name
+            ];
+            $subcategories = [];
+            foreach ($model->children as $child) {
+                $subcategories[] = [
+                    'id' => $child->id,
+                    'name' => $child->name
+                ];
+            }
+            $category['categories'] = $subcategories;
+            $categories[] = $category;
+        }
+
+        return $categories;
+    }
+
+    protected static function getFlagsConstants($flag)
+    {
+        $flags = [
+            'online' => [self::FLAG_ONLINE, self::FLAG_OFFLINE_ONLINE],
+            'offline' => [self::FLAG_OFFLINE, self::FLAG_OFFLINE_ONLINE]
+        ];
+
+        return $flags[$flag];
+    }
+
+    public function getFlagLabel(): string
+    {
+        $flags = self::getFlags();
+        return $flags[$this->flag];
+    }
+
+    public static function getFlags(): array
+    {
+        $flags = [
+            self::FLAG_OFFLINE => 'Offline',
+            self::FLAG_ONLINE => 'Online',
+            self::FLAG_OFFLINE_ONLINE => 'Offline and Online',
+        ];
+        return $flags;
+    }
+
+    public function getFullPathName(): string
+    {
+        $name = $this->name;
+        if ($this->parent) {
+            $name = $this->parent->name . $name;
+        }
+
+        return $name;
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function profiles()
+    {
+        return $this->belongsToMany(Profile::class);
+    }
+
+    public function sluggable(): array
+    {
+        return [
+            'slug' => [
+                'source' => 'name'
+            ]
+        ];
+    }
+}

@@ -29,5 +29,13 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    'facebook' => [
+        'client_id' => env('FB_CLIENT_ID', '448227490186094'),
+        'client_secret' => env('FB_CLIENT_SECRET', 'a64385dcba398953ab565afbe550b516'),
+        'redirect' => env('FB_REDIRECT_URI', 'http://teenwork.demo/api/auth/facebook/callback'),
+    ],
+    'nexmo' => [
+        'sms_from' => '79512992213',
+    ],
 
 ];

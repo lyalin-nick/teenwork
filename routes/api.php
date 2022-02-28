@@ -1,5 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Auth\LogoutController;
+use App\Http\Controllers\Api\Auth\VerifyCodeController;
+use App\Http\Controllers\Api\Dictionary\CategoryController;
+use App\Http\Controllers\Api\Dictionary\LanguageController;
+use App\Http\Controllers\Api\Employer\Task\TaskController;
+use App\Http\Controllers\Api\Helper\GoogleMapController;
+use App\Http\Controllers\Api\Profile\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +22,57 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('/send/email', [VerifyCodeController::class, 'sendEmail']);
+Route::post('/send/sms', [VerifyCodeController::class, 'sendSms']);
+
+Route::prefix('/dictionary')->group(function () {
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/categories/{flag}', [CategoryController::class, 'grouped'])->where('flag', '(online|offline)');
+    Route::get('/languages', [LanguageController::class, 'index']);
+});
+
+Route::prefix('/helper')->group(function () {
+    Route::get('/autocomplete', [GoogleMapController::class, 'autocomplete']);
+});
+//Route::post('/task/create', [TaskController::class, 'create']);
+
+Route::prefix('/auth')->group(function () {
+
+
+    Route::post('/email', [AuthController::class, 'authByEmail']);
+    Route::post('/phone', [AuthController::class, 'authByPhone']);
+
+    Route::get('/{provider}', [AuthController::class, 'getNetworkRedirect']);
+    Route::get('/{provider}/callback', [AuthController::class, 'authByNetwork']);
+
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::prefix('/employer')->group(function () {
+
+        Route::prefix('/task')->group(function () {
+            Route::post('/store', [TaskController::class, 'store'])->middleware('employer');
+            Route::post('/upload-images', [TaskController::class, 'images']);
+        });
+    });
+
+    Route::prefix('/profile')->group(function () {
+        Route::put('/set-base-info', [ProfileController::class, 'setBaseInfo']);
+        Route::put('/set-about', [ProfileController::class, 'setAbout']);
+        Route::put('/set-address', [ProfileController::class, 'setAddress']);
+        Route::put('/set-categories', [ProfileController::class, 'setCategories'])->middleware('performer');
+        Route::post('/upload-image', [ProfileController::class, 'uploadImage']);
+
+        Route::prefix('/role')->group(function () {
+            Route::put('/employer', [ProfileController::class, 'setRoleEmployer'])->middleware('performer');
+            Route::put('/performer', [ProfileController::class, 'setRolePerformer'])->middleware('employer');
+        });
+    });
+
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    Route::post('/logout', [LogoutController::class, 'logout']);
+
 });
