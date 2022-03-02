@@ -19,8 +19,8 @@ class TaskController extends BaseController
             'description' => 'required|string',
             'result' => 'required|string',
             'images' => 'array|max:10',
-            'images.*' => 'integer',
-            "addresses" => 'required|array',
+            'images.*' => 'string',
+            "addresses" => 'array',
             'addresses.*' => 'array',
             "dates" => 'required|array',
             "dates.*" => "string",
@@ -49,11 +49,24 @@ class TaskController extends BaseController
                 $task->save();
                 $user->checkEmptyRole(User::ROLE_EMPLOYER);
             }
-            if ($request->addresses) $task->createTaskAddresses($request->addresses);
-            $task->linkToLanguages($request->get('languages'));
-            if ($request->images) $task->updateTaskImages($request->images);
 
-            return $this->sendResponse(['task' => $task->id], 'Task create');
+            $task->linkToLanguages($request->get('languages'));
+
+            if ($request->addresses) {
+                $result = $task->createTaskAddresses($request->addresses);
+
+                if (!$result)
+                    return $this->sendError('Addresses create error!', 500);
+            }
+
+            if ($request->images) {
+                $result = TaskImage::createModels($request->images, $task->id);
+
+                if (!$result)
+                    return $this->sendError('Images upload error!', 500);
+            }
+
+            return $this->sendResponse(['task' => $task->getFullInfo()], 'Task create');
         }
 
         return $this->sendError('Task doesnt created');

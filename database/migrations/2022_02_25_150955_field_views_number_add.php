@@ -14,7 +14,7 @@ class FieldViewsNumberAdd extends Migration
     public function up()
     {
         Schema::table('tasks', function (Blueprint $table) {
-            $table->bigInteger('views_number')->default(0);
+            $table->integer('views_number')->default(0);
         });
     }
 

@@ -144,4 +144,31 @@ class ProfileController extends BaseController
             return $this->sendResponse([], 'Role change success');
         }
     }
+
+    public function setPushNotification(Request $request)
+    {
+        $user = $request->user();
+        $user->push_notification = !$user->push_notification;
+        if ($user->save()) {
+            return $this->sendResponse([], 'Setting change success');
+        }
+    }
+
+    public function setEmailNotification(Request $request)
+    {
+        $user = $request->user();
+        $user->email_notification = !$user->email_notification;
+        if ($user->save()) {
+            return $this->sendResponse([], 'Setting change success');
+        }
+    }
+
+    public function setInvisible(Request $request)
+    {
+        $user = $request->user();
+        $user->invisible = !$user->invisible;
+        if ($user->save()) {
+            return $this->sendResponse([], 'Setting change success');
+        }
+    }
 }

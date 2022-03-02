@@ -15,10 +15,10 @@ class CreateTaskImagesTable extends Migration
     {
         Schema::create('task_images', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('task_id', false, true)->nullable();
-            $table->string('name');
-            $table->string('ext');
-            $table->string('path');
+            $table->bigInteger('task_id', false, true);
+            $table->string('name')->nullable();
+            $table->string('ext')->nullable();
+            $table->string('path')->nullable();
             $table->string('alt')->nullable();
             $table->tinyInteger('pos', false, true)->nullable();
             $table->timestamps();

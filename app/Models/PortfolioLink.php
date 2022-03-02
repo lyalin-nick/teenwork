@@ -15,6 +15,6 @@ class PortfolioLink extends Model
 
     public function profile()
     {
-        $this->belongsTo(Profile::class, 'id', 'profile_id');
+        $this->belongsTo(Profile::class, 'profile_id');
     }
 }

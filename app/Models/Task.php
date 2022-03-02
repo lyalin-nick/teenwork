@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property integer $category_id
@@ -43,7 +42,8 @@ class Task extends Model
         'description', 'result',
         'start_time', 'amount_of_workers',
         'minimum_age', 'price', 'payment_type',
-        'safe_deal', 'hot_work', 'account_verified'
+        'safe_deal', 'hot_work', 'account_verified',
+        'status', 'views_number'
     ];
 
     public function user()
@@ -61,6 +61,11 @@ class Task extends Model
         return date('H:i A', strtotime($value));
     }
 
+    public function getViewsNumberAttribute($value)
+    {
+        return intval($value);
+    }
+
     public function getFullInfo(): array
     {
         $task = [
@@ -72,7 +77,7 @@ class Task extends Model
             'result' => $this->result,
             'languages' => $this->getAllLanguages(),
             'addresses' => $this->getAllAddresses(),
-            'photos' => $this->getAllImages(),
+            'images' => $this->getAllImages(),
             'start_time' => $this->start_time,
             'amount_of_workers' => $this->amount_of_workers,
             'minimum_age' => $this->minimum_age,
@@ -139,7 +144,7 @@ class Task extends Model
 
         if ($images) {
             foreach ($images as $image)
-                $task_images[] = $image->getLink();
+                $task_images[] = $image->getImageLink();
         }
 
         return $task_images;
@@ -170,14 +175,17 @@ class Task extends Model
         $this->attributes['start_time'] = date('H:i:s', strtotime($value));
     }
 
-    public function createTaskAddresses($addresses)
+    public function createTaskAddresses($addresses): bool
     {
         if ($addresses) {
+            $addresses_models = [];
             foreach ($addresses as $address) {
                 $address['task_id'] = $this->id;
-                $adds = TaskAddress::create($address);
+                $addresses_models[] = TaskAddress::create($address);
             }
         }
+
+        return count($addresses) === count($addresses_models);
     }
 
     public function linkToLanguages($languages)
@@ -209,21 +217,4 @@ class Task extends Model
         return $this->hasMany(TaskImage::class);
     }
 
-    public function updateTaskImages($images)
-    {
-        if ($images) {
-            foreach ($images as $pos => $image_id) {
-                $image = TaskImage::find($image_id);
-                if ($image) {
-                    $image->task_id = $this->id;
-                    $image->pos = $pos;
-                    $is_moved = Storage::move($image->getFullPath(), $image->getNewFullPath($this->id . '/'));
-                    if ($is_moved) {
-                        $image->path .= $this->id . '/';
-                        $image->save();
-                    }
-                }
-            }
-        }
-    }
 }

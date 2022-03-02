@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Dictionary\CategoryController;
 use App\Http\Controllers\Api\Dictionary\LanguageController;
 use App\Http\Controllers\Api\Employer\Task\TaskController;
 use App\Http\Controllers\Api\Helper\GoogleMapController;
+use App\Http\Controllers\Api\Profile\PortfolioController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -58,11 +59,34 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('/profile')->group(function () {
-        Route::put('/set-base-info', [ProfileController::class, 'setBaseInfo']);
-        Route::put('/set-about', [ProfileController::class, 'setAbout']);
-        Route::put('/set-address', [ProfileController::class, 'setAddress']);
-        Route::put('/set-categories', [ProfileController::class, 'setCategories'])->middleware('performer');
-        Route::post('/upload-image', [ProfileController::class, 'uploadImage']);
+
+        Route::put('/base-info', [ProfileController::class, 'setBaseInfo']);
+        Route::put('/about', [ProfileController::class, 'setAbout']);
+        Route::put('/address', [ProfileController::class, 'setAddress']);
+        Route::put('/categories', [ProfileController::class, 'setCategories'])->middleware('performer');
+        Route::post('/image', [ProfileController::class, 'uploadImage']);
+
+        Route::prefix('/portfolio')->group(function () {
+
+            Route::get('/', [PortfolioController::class, 'index']);
+
+            Route::prefix('/image')->group(function () {
+                Route::post('/upload', [PortfolioController::class, 'uploadImage']);
+                Route::delete('/{id}', [PortfolioController::class, 'deleteImage']);
+            });
+
+            Route::prefix('/link')->group(function () {
+                Route::post('/store', [PortfolioController::class, 'storeLink']);
+                Route::delete('/{id}', [PortfolioController::class, 'deleteLink']);
+            });
+        });
+
+        Route::prefix('/setting')->group(function () {
+            Route::put('/push-notification', [ProfileController::class, 'setPushNotification']);
+            Route::put('/email-notification', [ProfileController::class, 'setEmailNotification']);
+            Route::put('/invisible', [ProfileController::class, 'setInvisible']);
+        });
+
 
         Route::prefix('/role')->group(function () {
             Route::put('/employer', [ProfileController::class, 'setRoleEmployer'])->middleware('performer');
