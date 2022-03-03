@@ -15,26 +15,40 @@ class TaskImage extends Model
     use HasFactory;
     use ImageTrait;
 
+    protected $configImages = [
+        '_mini' => [
+            'width' => 128,
+            'height' => 128
+        ]
+    ];
+
     protected $fillable = [
         'name', 'task_id', 'name', 'alt', 'path', 'pos', 'ext'
     ];
 
-    public static function createModels(array $images, $task_id)
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
+    ];
+
+    public static function createModels(array $images, $task_id): bool
     {
+
         if ($images) {
             $models = [];
             foreach ($images as $image) {
-                $model = self::create([
+                $model = new TaskImage([
                     'task_id' => $task_id
                 ]);
-                $models[] = $model;
 
-                if ($model)
-                    $model->uploadImageFromBase64($image, $task_id);
+                if ($model->save() && $model->uploadImageFromBase64($image, $task_id)) {
+                    $models[] = $model;
+                }
             }
+            return count($images) === count($models);
         }
 
-        return count($images) === count($models);
+        return false;
     }
 
     public function getNewFullPath($new_path)

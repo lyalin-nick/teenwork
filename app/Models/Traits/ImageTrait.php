@@ -2,9 +2,11 @@
 
 namespace App\Models\Traits;
 
+use App\Models\ImageFilters\MiniatureFilter;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
 
 trait ImageTrait
 {
@@ -20,7 +22,7 @@ trait ImageTrait
         $ext = 'jpg'; //TODO: подумать как выудить расширение картинки
 
         try {
-            if (is_file($img_path . $this->id . '.' . $ext)) {
+            if (is_file(Storage::disk('public')->path($img_path . $this->id . '.' . $ext))) {
                 Storage::delete($img_path . $this->id . '.' . $ext);
             }
             $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, $image);
@@ -35,9 +37,34 @@ trait ImageTrait
             $this->name = $this->id;
             $this->ext = $ext;
 
-            return $this->save();
+            return $this->createMiniature($this->path, $this->name, $this->ext) && $this->save();
         }
         return false;
+    }
+
+    public function createMiniature($path, $name, $ext): bool
+    {
+        $image_path = $path . $name . '.' . $ext;
+
+        try {
+
+            foreach ($this->configImages as $suffix => $config) {
+                $img = Image::make(Storage::disk('public')->path($image_path));
+
+                if (is_file(Storage::disk('public')->path($path . $this->id . $suffix . '.' . $ext))) {
+                    Storage::delete($path . $this->id . '.' . $ext);
+                }
+
+                $img->filter(new MiniatureFilter($config['width'], $config['height']));
+
+                $img->save(Storage::disk('public')->path($path . $name . $suffix . '.' . $ext));
+            }
+
+            return true;
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            return false;
+        }
     }
 
 

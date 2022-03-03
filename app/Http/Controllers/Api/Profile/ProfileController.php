@@ -106,7 +106,7 @@ class ProfileController extends BaseController
     public function uploadImage(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,png,jpg|max:2024',
+            'image' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -120,7 +120,7 @@ class ProfileController extends BaseController
             $profile = Profile::createProfile(['user_id' => $request->user()->id]);
         }
 
-        if ($profile->uploadImage($request->image)) {
+        if ($profile->uploadImageFromBase64($request->image)) {
             return $this->sendResponse([], 'Image upload successful');
         }
 
