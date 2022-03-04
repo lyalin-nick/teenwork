@@ -31,13 +31,7 @@ class BaseController extends Controller
     }
 
 
-    /**
-     * @param $images
-     * @param $class_name
-     * @param $parent_model
-     * @param null $foreign_field
-     * @return \Illuminate\Http\JsonResponse
-     */
+    /*
     public function uploadImages($images, $class_name, $parent_model = null, $foreign_field = null): \Illuminate\Http\JsonResponse
     {
         try {
@@ -54,7 +48,7 @@ class BaseController extends Controller
                         $image_data = [
                             'name' => $path_info['filename'],
                             'ext' => $path_info['extension'],
-                            'path' => 'public' . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR
+                            'path' => 'storage' . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR
                         ];
                         if ($parent_model) {
                             $foreign_field = $foreign_field ?: strtolower(class_basename(get_class($parent_model))) . '_id';
@@ -73,4 +67,5 @@ class BaseController extends Controller
             return $this->sendError($e->getMessage());
         }
     }
+    */
 }

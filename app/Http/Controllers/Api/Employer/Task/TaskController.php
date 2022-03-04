@@ -40,34 +40,48 @@ class TaskController extends BaseController
             return $this->sendError('Validation Error.', $validator->errors());
         }
 
-        $task = Task::create($request->all());
+        $dates = $request->dates;
 
-        if ($task) {
-            $user = $request->user();
-            if ($user) {
-                $task->user_id = $request->user()->id;
-                $task->save();
-                $user->checkEmptyRole(User::ROLE_EMPLOYER);
+        $response_task = null;
+        foreach ($dates as $date) {
+
+            $task_attributes = $request->only('category_id', 'name', 'description', 'result', 'start_time', 'amount_of_workers',
+                'minimum_age', 'price', 'payment_type', 'safe_deal', 'hot_work', 'account_verified');
+
+            $task_attributes['start_date'] = $date;
+
+            $task = Task::create($task_attributes);
+
+            if ($task) {
+
+                $user = $request->user();
+                if ($user) {
+                    $task->user_id = $request->user()->id;
+                    $task->save();
+                    $user->checkEmptyRole(User::ROLE_EMPLOYER);
+                }
+
+                $task->linkToLanguages($request->get('languages'));
+
+                if ($request->addresses) {
+                    $result = $task->createTaskAddresses($request->addresses);
+
+                    if (!$result)
+                        return $this->sendError('Addresses create error!', 500);
+                }
+
+                if ($request->images) {
+                    $result = TaskImage::createModels($request->images, $task->id);
+
+                    if (!$result)
+                        return $this->sendError('Images upload error!', 500);
+                }
+
+                $response_task = (!$response_task || ($response_task && strtotime($response_task->start_date) > strtotime($task->start_date))) ? $task : $response_task;
             }
-
-            $task->linkToLanguages($request->get('languages'));
-
-            if ($request->addresses) {
-                $result = $task->createTaskAddresses($request->addresses);
-
-                if (!$result)
-                    return $this->sendError('Addresses create error!', 500);
-            }
-
-            if ($request->images) {
-                $result = TaskImage::createModels($request->images, $task->id);
-
-                if (!$result)
-                    return $this->sendError('Images upload error!', 500);
-            }
-
-            return $this->sendResponse(['task' => $task->getFullInfo()], 'Task create');
         }
+        if ($response_task)
+            return $this->sendResponse(['task' => $response_task->getFullInfo()], 'Task create');
 
         return $this->sendError('Task doesnt created');
 

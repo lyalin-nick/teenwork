@@ -20,6 +20,7 @@ class CreateTasksTable extends Migration
             $table->string('name', 255);
             $table->text('description');
             $table->text('result');
+            $table->date('start_date');
             $table->time('start_time')->default('00:00:00');
             $table->smallInteger('amount_of_workers', false, true)->default(0);
             $table->smallInteger('minimum_age', false, true)->default(0);

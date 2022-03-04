@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $name
  * @property string $description
  * @property string $result
+ * @property string $start_date
  * @property string $start_time
  * @property integer $amount_of_workers
  * @property integer $minimum_age
@@ -40,7 +41,7 @@ class Task extends Model
     protected $fillable = [
         'category_id', 'name',
         'description', 'result',
-        'start_time', 'amount_of_workers',
+        'start_date', 'start_time', 'amount_of_workers',
         'minimum_age', 'price', 'payment_type',
         'safe_deal', 'hot_work', 'account_verified',
         'status', 'views_number'
@@ -54,6 +55,11 @@ class Task extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function setStartDateAttribute($value)
+    {
+        $this->attributes['start_date'] = date('Y-m-d', strtotime($value));
     }
 
     public function getStartTimeAttribute($value)
@@ -78,6 +84,7 @@ class Task extends Model
             'languages' => $this->getAllLanguages(),
             'addresses' => $this->getAllAddresses(),
             'images' => $this->getAllImages(),
+            'start_date' => $this->start_date,
             'start_time' => $this->start_time,
             'amount_of_workers' => $this->amount_of_workers,
             'minimum_age' => $this->minimum_age,
