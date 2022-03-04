@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends BaseController
 {
+    public function index(Request $request)
+    {
+        $user = $request->user();
+
+        return $user->getFullData();
+    }
+
     public function setBaseInfo(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -34,7 +41,7 @@ class ProfileController extends BaseController
         $profile->update($request->only('first_name', 'last_name', 'date_of_birth', 'about'));
         $profile->linkToLanguages($request->get('languages'));
 
-        return $this->sendResponse([], 'Profile update');
+        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
     }
 
     public function setAbout(Request $request)
@@ -54,7 +61,7 @@ class ProfileController extends BaseController
         }
         $profile->update($request->only('about'));
 
-        return $this->sendResponse([], 'Profile update');
+        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
     }
 
     public function setCategories(Request $request)
@@ -73,11 +80,11 @@ class ProfileController extends BaseController
         if (!$profile) {
             $profile = Profile::createProfile(['user_id' => $request->user()->id]);
         }
-        if (!$profile->refreshCategories($request->categories)){
+        if (!$profile->refreshCategories($request->categories)) {
             $this->sendError([], 'Error updating');
         }
 
-        return $this->sendResponse([], 'Profile update');
+        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
     }
 
     public function setAddress(Request $request)
@@ -100,7 +107,7 @@ class ProfileController extends BaseController
         }
         $profile->update($request->only('address', 'place_id', 'latitude', 'longitude'));
 
-        return $this->sendResponse([], 'Profile update');
+        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
     }
 
     public function uploadImage(Request $request)
@@ -121,19 +128,47 @@ class ProfileController extends BaseController
         }
 
         if ($profile->uploadImageFromBase64($request->image)) {
-            return $this->sendResponse([], 'Image upload successful');
+            return $this->sendResponse(['user' => $user->getFullData()], 'Image upload successful');
         }
 
-        return $this->sendError([], 'Error uploading image');
+        return $this->sendError('Error uploading image');
     }
+
+
+    public function uploadVideo(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'video' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        $user = $request->user();
+        $profile = $user->profile;
+
+        if (!$profile) {
+            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
+        }
+
+        if ($profile->uploadProfileVideo($request->video)) {
+            return $this->sendResponse(['video' => $profile->getProfileVideoLink()], 'Video upload successful');
+        }
+
+        return $this->sendError('Error uploading image');
+    }
+
 
     public function setRoleEmployer(Request $request)
     {
         $user = $request->user();
         $user->role = User::ROLE_EMPLOYER;
         if ($user->save()) {
-            return $this->sendResponse([], 'Role change success');
+            return $this->sendResponse(['role' => User::ROLE_EMPLOYER], 'Role change success');
         }
+
+        return $this->sendError('Error! Role don`t change!');
     }
 
     public function setRolePerformer(Request $request)
@@ -141,8 +176,10 @@ class ProfileController extends BaseController
         $user = $request->user();
         $user->role = User::ROLE_PERFORMER;
         if ($user->save()) {
-            return $this->sendResponse([], 'Role change success');
+            return $this->sendResponse(['role' => User::ROLE_PERFORMER], 'Role change success');
         }
+
+        return $this->sendError('Error! Role don`t change!');
     }
 
     public function setPushNotification(Request $request)
@@ -150,8 +187,10 @@ class ProfileController extends BaseController
         $user = $request->user();
         $user->push_notification = !$user->push_notification;
         if ($user->save()) {
-            return $this->sendResponse([], 'Setting change success');
+            return $this->sendResponse(['user' => $user->getFullData()], 'Setting change success');
         }
+
+        return $this->sendError('Error! Setting don`t update!');
     }
 
     public function setEmailNotification(Request $request)
@@ -159,8 +198,9 @@ class ProfileController extends BaseController
         $user = $request->user();
         $user->email_notification = !$user->email_notification;
         if ($user->save()) {
-            return $this->sendResponse([], 'Setting change success');
+            return $this->sendResponse(['user' => $user->getFullData()], 'Setting change success');
         }
+        return $this->sendError('Error! Setting don`t update!');
     }
 
     public function setInvisible(Request $request)
@@ -168,7 +208,8 @@ class ProfileController extends BaseController
         $user = $request->user();
         $user->invisible = !$user->invisible;
         if ($user->save()) {
-            return $this->sendResponse([], 'Setting change success');
+            return $this->sendResponse(['user' => $user->getFullData()], 'Setting change success');
         }
+        return $this->sendError('Error! Setting don`t update!');
     }
 }

@@ -60,11 +60,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('/profile')->group(function () {
 
+        Route::get('/', [ProfileController::class, 'index']);
         Route::put('/base-info', [ProfileController::class, 'setBaseInfo']);
         Route::put('/about', [ProfileController::class, 'setAbout']);
         Route::put('/address', [ProfileController::class, 'setAddress']);
         Route::put('/categories', [ProfileController::class, 'setCategories'])->middleware('performer');
         Route::post('/image', [ProfileController::class, 'uploadImage']);
+        Route::post('/video', [ProfileController::class, 'uploadVideo']);
 
         Route::prefix('/portfolio')->group(function () {
 

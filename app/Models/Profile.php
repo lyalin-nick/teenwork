@@ -53,7 +53,7 @@ class Profile extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function linkToLanguages($languages)
@@ -75,10 +75,44 @@ class Profile extends Model
         return $this->belongsToMany(Language::class);
     }
 
+    public function getLanguagesIds()
+    {
+        return $this->languages()->pluck('id');
+    }
+
+    public function profileVideo()
+    {
+        return $this->hasOne(ProfileVideo::class);
+    }
+
+    /**
+     * Получить ссылку на видео
+     *
+     * @return string|null
+     */
+    public function getProfileVideoLink()
+    {
+        if ($this->profileVideo) {
+            return $this->profileVideo->getLink();
+        }
+        return null;
+    }
+
     public function getPhotoLink()
     {
-        if ($this->photo_path) {
-            return asset($this->photo_path . $this->photo_name . '.' . $this->photo_ext);
+        if ($this->photo_path && $this->photo_name && $this->photo_ext) {
+            if (!is_file(Storage::disk('public')->path($this->photo_path . $this->photo_name . '.' . $this->photo_ext))) {
+                $this->createMiniature($this->photo_path, $this->photo_name, $this->photo_ext);
+            }
+            return Storage::disk('public')->url($this->photo_path . $this->photo_name . '.' . $this->photo_ext);
+        }
+        return "";
+    }
+
+    public function getPhotoPreviewLink()
+    {
+        if ($this->photo_path && $this->photo_name && $this->photo_ext) {
+            return Storage::disk('public')->url($this->photo_path . $this->photo_name . '_mini.' . $this->photo_ext);
         }
         return "";
     }
@@ -124,6 +158,11 @@ class Profile extends Model
     public function categories()
     {
         return $this->belongsToMany(Category::class);
+    }
+
+    public function getCategoriesIds()
+    {
+        return $this->categories()->pluck('id');
     }
 
     public function recountRating(): void
@@ -197,5 +236,15 @@ class Profile extends Model
             return $this->createMiniature($img_path, $this->id, $ext) && $this->save();
         }
         return false;
+    }
+
+    public function uploadProfileVideo($video_base64)
+    {
+        $profile_video = $this->profileVideo;
+        if (!$profile_video) {
+            $profile_video = ProfileVideo::create(['profile_id' => $this->id]);
+        }
+
+        return $profile_video->uploadVideo($video_base64);
     }
 }
