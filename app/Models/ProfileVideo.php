@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -58,7 +59,7 @@ class ProfileVideo extends Model
                 Storage::delete($img_path . $this->id . '.' . $ext);
             }
             $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, $image);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error($e->getMessage());
             $created = false;
         }

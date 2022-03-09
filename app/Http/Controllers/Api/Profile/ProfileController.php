@@ -14,7 +14,7 @@ class ProfileController extends BaseController
     {
         $user = $request->user();
 
-        return $user->getFullData();
+        return $this->sendResponse($user->getFullData(), 'Success');
     }
 
     public function setBaseInfo(Request $request)
@@ -60,52 +60,6 @@ class ProfileController extends BaseController
             $profile = Profile::createProfile(['user_id' => $request->user()->id]);
         }
         $profile->update($request->only('about'));
-
-        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
-    }
-
-    public function setCategories(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'categories' => 'required|array',
-            'categories.*' => 'integer',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
-        $profile = $user->profile;
-        if (!$profile) {
-            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
-        }
-        if (!$profile->refreshCategories($request->categories)) {
-            $this->sendError([], 'Error updating');
-        }
-
-        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
-    }
-
-    public function setAddress(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'address' => 'required|string',
-            'place_id' => 'string',
-            'latitude' => 'string',
-            'longitude' => 'string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
-        $profile = $user->profile;
-        if (!$profile) {
-            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
-        }
-        $profile->update($request->only('address', 'place_id', 'latitude', 'longitude'));
 
         return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
     }
@@ -157,29 +111,6 @@ class ProfileController extends BaseController
         }
 
         return $this->sendError('Error uploading image');
-    }
-
-
-    public function setRoleEmployer(Request $request)
-    {
-        $user = $request->user();
-        $user->role = User::ROLE_EMPLOYER;
-        if ($user->save()) {
-            return $this->sendResponse(['role' => User::ROLE_EMPLOYER], 'Role change success');
-        }
-
-        return $this->sendError('Error! Role don`t change!');
-    }
-
-    public function setRolePerformer(Request $request)
-    {
-        $user = $request->user();
-        $user->role = User::ROLE_PERFORMER;
-        if ($user->save()) {
-            return $this->sendResponse(['role' => User::ROLE_PERFORMER], 'Role change success');
-        }
-
-        return $this->sendError('Error! Role don`t change!');
     }
 
     public function setPushNotification(Request $request)

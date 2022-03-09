@@ -7,7 +7,10 @@ use App\Http\Controllers\Api\Dictionary\CategoryController;
 use App\Http\Controllers\Api\Dictionary\LanguageController;
 use App\Http\Controllers\Api\Employer\Task\TaskController;
 use App\Http\Controllers\Api\Helper\GoogleMapController;
-use App\Http\Controllers\Api\Profile\PortfolioController;
+use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
+use App\Http\Controllers\Api\Performer\Profile\PortfolioPhotoController;
+use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
+use App\Http\Controllers\Api\Employer\Profile\ProfileController as EmployerProfileController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -29,7 +32,7 @@ Route::post('/send/sms', [VerifyCodeController::class, 'sendSms']);
 Route::prefix('/dictionary')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{flag}', [CategoryController::class, 'grouped'])->where('flag', '(online|offline)');
-    Route::get('/languages', [LanguageController::class, 'index']);
+    Route::get('/languages', [LanguageController::class, ' ']);
 });
 
 Route::prefix('/helper')->group(function () {
@@ -38,7 +41,6 @@ Route::prefix('/helper')->group(function () {
 //Route::post('/task/create', [TaskController::class, 'create']);
 
 Route::prefix('/auth')->group(function () {
-
 
     Route::post('/email', [AuthController::class, 'authByEmail']);
     Route::post('/phone', [AuthController::class, 'authByPhone']);
@@ -63,23 +65,26 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [ProfileController::class, 'index']);
         Route::put('/base-info', [ProfileController::class, 'setBaseInfo']);
         Route::put('/about', [ProfileController::class, 'setAbout']);
-        Route::put('/address', [ProfileController::class, 'setAddress']);
-        Route::put('/categories', [ProfileController::class, 'setCategories'])->middleware('performer');
+
+        Route::put('/address', [PerformerProfileController::class, 'setAddress'])->middleware('performer');
+        Route::put('/categories', [PerformerProfileController::class, 'setCategories'])->middleware('performer');
+
         Route::post('/image', [ProfileController::class, 'uploadImage']);
         Route::post('/video', [ProfileController::class, 'uploadVideo']);
 
         Route::prefix('/portfolio')->group(function () {
 
-            Route::get('/', [PortfolioController::class, 'index']);
+            Route::get('/', [PerformerProfileController::class, 'portfolio']);
 
-            Route::prefix('/image')->group(function () {
-                Route::post('/upload', [PortfolioController::class, 'uploadImage']);
-                Route::delete('/{id}', [PortfolioController::class, 'deleteImage']);
+            Route::prefix('/images')->group(function () {
+                Route::post('/', [PortfolioPhotoController::class, 'store']);
+                Route::delete('/{id}', [PortfolioPhotoController::class, 'delete']);
             });
 
             Route::prefix('/link')->group(function () {
-                Route::post('/store', [PortfolioController::class, 'storeLink']);
-                Route::delete('/{id}', [PortfolioController::class, 'deleteLink']);
+                Route::post('/', [PortfolioLinkController::class, 'store']);
+                Route::put('/{id}', [PortfolioLinkController::class, 'edit']);
+                Route::delete('/{id}', [PortfolioLinkController::class, 'delete']);
             });
         });
 
@@ -91,8 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         Route::prefix('/role')->group(function () {
-            Route::put('/employer', [ProfileController::class, 'setRoleEmployer'])->middleware('performer');
-            Route::put('/performer', [ProfileController::class, 'setRolePerformer'])->middleware('employer');
+            Route::put('/employer', [PerformerProfileController::class, 'setRoleEmployer'])->middleware('performer');
+            Route::put('/performer', [EmployerProfileController::class, 'setRolePerformer'])->middleware('employer');
         });
     });
 

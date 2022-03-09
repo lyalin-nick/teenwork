@@ -3,6 +3,7 @@
 namespace App\Models\ImageFilters;
 
 use Intervention\Image\Filters\FilterInterface;
+use Intervention\Image\Image;
 
 class MiniatureFilter implements FilterInterface
 {
@@ -31,7 +32,7 @@ class MiniatureFilter implements FilterInterface
      * @param Intervention\Image\Image $img
      * @return Intervention\Image\Image
      */
-    public function applyFilter(\Intervention\Image\Image $img)
+    public function applyFilter(Image $img)
     {
         $width = $img->width();
         $height = $img->height();

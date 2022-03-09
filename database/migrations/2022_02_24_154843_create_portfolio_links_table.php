@@ -16,7 +16,7 @@ class CreatePortfolioLinksTable extends Migration
         Schema::create('portfolio_links', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('profile_id', false, true);
-            $table->text('path');
+            $table->text('link');
             $table->timestamps();
         });
     }

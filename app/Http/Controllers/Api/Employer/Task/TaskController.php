@@ -6,12 +6,13 @@ use App\Http\Controllers\Api\BaseController;
 use App\Models\Task;
 use App\Models\TaskImage;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class TaskController extends BaseController
 {
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|integer',

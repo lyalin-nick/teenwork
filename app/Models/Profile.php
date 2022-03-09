@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\ImageTrait;
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -101,10 +102,8 @@ class Profile extends Model
     public function getPhotoLink()
     {
         if ($this->photo_path && $this->photo_name && $this->photo_ext) {
-            if (!is_file(Storage::disk('public')->path($this->photo_path . $this->photo_name . '.' . $this->photo_ext))) {
-                $this->createMiniature($this->photo_path, $this->photo_name, $this->photo_ext);
-            }
-            return Storage::disk('public')->url($this->photo_path . $this->photo_name . '.' . $this->photo_ext);
+            if (is_file(Storage::disk('public')->path($this->photo_path . $this->photo_name . '.' . $this->photo_ext)))
+                return Storage::disk('public')->url($this->photo_path . $this->photo_name . '.' . $this->photo_ext);
         }
         return "";
     }
@@ -117,12 +116,42 @@ class Profile extends Model
         return "";
     }
 
-    public function profilePhotos()
+    public function getPortfolio(): array
+    {
+        return [
+            'photos' => $this->getPortfolioPhotosAsArray(),
+            'links' => $this->getPortfolioLinksAsArray()
+        ];
+    }
+
+    public function portfolioPhotos()
     {
         return $this->hasMany(PortfolioPhoto::class);
     }
 
-    public function profileLinks()
+    public function getPortfolioPhotosAsArray()
+    {
+        $photos = [];
+        $models = $this->portfolioPhotos;
+
+        if ($models)
+            foreach ($models as $model) {
+                $photos[] = [
+                    'id' => $model->id,
+                    'photo' => $model->getPhotoLink(),
+                    'photo_preview' => $model->getPhotoPreviewLink()
+                ];
+            }
+
+        return $photos;
+    }
+
+    public function getPortfolioLinksAsArray()
+    {
+        return $this->portfolioLinks()->select('id', 'link')->get();
+    }
+
+    public function portfolioLinks()
     {
         return $this->hasMany(PortfolioLink::class);
     }
@@ -138,10 +167,10 @@ class Profile extends Model
         $this->save();
     }
 
-//    public function setDateOfBirthAttribute($value)
-//    {
-//        $this->attributes['start_time'] = date('H:i:s', strtotime($value));
-//    }
+    public function setDateOfBirthAttribute($value)
+    {
+        $this->attributes['date_of_birth'] = date('Y-m-d', strtotime($value));
+    }
 
     public function refreshCategories($categories): bool
     {
@@ -189,6 +218,7 @@ class Profile extends Model
         $this->save();
     }
 
+    /*
     public function uploadImage($image): bool
     {
         $path = 'uploads/' . strtolower(class_basename(self::class)) . '/' . $this->id;
@@ -206,6 +236,7 @@ class Profile extends Model
             return false;
         }
     }
+    */
 
     public function uploadImageFromBase64($image_base64, $parent_id = null)
     {
@@ -222,7 +253,7 @@ class Profile extends Model
                 Storage::delete($img_path . $this->id . '.' . $ext);
             }
             $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, $image);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error($e->getMessage());
             $created = false;
         }

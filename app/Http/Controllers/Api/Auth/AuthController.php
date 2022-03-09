@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Models\Network;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -109,7 +110,7 @@ class AuthController extends BaseController
 
             return $this->sendResponse(['token' => $token->plainTextToken], 'Success auth');
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->sendError($e->getMessage(), 403);
         }
     }

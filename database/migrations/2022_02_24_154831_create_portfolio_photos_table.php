@@ -16,10 +16,10 @@ class CreatePortfolioPhotosTable extends Migration
         Schema::create('portfolio_photos', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('profile_id', false, true);
-            $table->string('path');
-            $table->string('name');
-            $table->string('ext');
-            $table->text('description');
+            $table->string('path')->nullable();
+            $table->string('name')->nullable();
+            $table->string('ext')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
