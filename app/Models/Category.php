@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property integer $category_id
  * @property string $name
  * @property string $slug
+ * @property string $icon_name
  * @property int $flag
  * @property mixed children
  * @property mixed parent
@@ -28,7 +29,7 @@ class Category extends Model
         FLAG_ONLINE = 2,
         FLAG_OFFLINE_ONLINE = 3;
 
-    protected $fillable = ['name', 'category_id', 'flag'];
+    protected $fillable = ['name', 'category_id', 'icon_name', 'flag'];
 
 
     /**
@@ -46,7 +47,8 @@ class Category extends Model
         foreach ($models as $model) {
             $category = [
                 'id' => $model->id,
-                'name' => $model->name
+                'name' => $model->name,
+                'icon_name' => $model->icon_name
             ];
             $subcategories = [];
             foreach ($model->children as $child) {
@@ -83,7 +85,8 @@ class Category extends Model
         foreach ($models as $model) {
             $category = [
                 'id' => $model->id,
-                'name' => $model->name
+                'name' => $model->name,
+                'icon_name' => $model->icon_name
             ];
             $subcategories = [];
             foreach ($model->children as $child) {

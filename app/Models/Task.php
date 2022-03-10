@@ -84,6 +84,7 @@ class Task extends Model
             'languages' => $this->getAllLanguages(),
             'addresses' => $this->getAllAddresses(),
             'images' => $this->getAllImages(),
+            'video' => $this->getVideoLink(),
             'start_date' => $this->start_date,
             'start_time' => $this->start_time,
             'amount_of_workers' => $this->amount_of_workers,
@@ -222,6 +223,16 @@ class Task extends Model
     public function images()
     {
         return $this->hasMany(TaskImage::class);
+    }
+
+    public function video()
+    {
+        return $this->hasOne(TaskVideo::class);
+    }
+
+    public function getVideoLink()
+    {
+        return ($this->video) ? $this->video->getLink() : null;
     }
 
 }

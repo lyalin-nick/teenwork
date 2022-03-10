@@ -56,8 +56,8 @@ class TaskImage extends Model
         return $this->path . $new_path . $this->name . '.' . $this->ext;
     }
 
-    public function profile()
+    public function task()
     {
-        $this->belongsTo(Task::class, 'id', 'task_id');
+        $this->belongsTo(Task::class, 'task_id');
     }
 }

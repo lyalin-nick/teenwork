@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Employer\Task;
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Task;
 use App\Models\TaskImage;
+use App\Models\TaskVideo;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,14 @@ use Illuminate\Support\Facades\Validator;
 
 class TaskController extends BaseController
 {
+
+    /**
+     * @OA\Post (
+     *     @OA\RequestBody (
+     *     @OA\JsonContent()
+     * )
+     * )
+     */
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -21,6 +30,7 @@ class TaskController extends BaseController
             'result' => 'required|string',
             'images' => 'array|max:10',
             'images.*' => 'string',
+            'video' => 'string',
             "addresses" => 'array',
             'addresses.*' => 'array',
             "dates" => 'required|array',
@@ -76,6 +86,13 @@ class TaskController extends BaseController
 
                     if (!$result)
                         return $this->sendError('Images upload error!', 500);
+                }
+
+                if ($request->video) {
+                    $result = TaskVideo::createModel($request->video, $task->id);
+
+                    if (!$result)
+                        return $this->sendError('Video upload error!', 500);
                 }
 
                 $response_task = (!$response_task || ($response_task && strtotime($response_task->start_date) > strtotime($task->start_date))) ? $task : $response_task;
