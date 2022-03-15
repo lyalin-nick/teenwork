@@ -66,13 +66,13 @@ class GoogleMap
     {
         $clinet = new Client();
 
-        $link = "https://maps.googleapis.com/maps/api/geocode/json? ={$latitude},{$longitude}&key=" . self::GOOGLE_API_KEY;
+        $link = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$latitude},{$longitude}&key=" . self::GOOGLE_API_KEY;
 
         $response = $clinet->request('GET', $link);
 
         $data = $response->getBody();
         $data = json_decode($data);
-        dd($data);
-        return !empty($data->results) ? $data->results[0]['placeId'] : null;
+        
+        return !empty($data->results) ? $data->results[0]->place_id : null;
     }
 }

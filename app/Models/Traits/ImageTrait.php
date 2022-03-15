@@ -22,8 +22,9 @@ trait ImageTrait
         $ext = $image_uri_info['extension'];
 
         try {
-            if (is_file(Storage::disk('public')->path($img_path . $this->id . '.' . $ext))) {
-                Storage::delete($img_path . $this->id . '.' . $ext);
+            if ($this->hasImage()) {
+                $this->deleteImage();
+                $this->deleteResizedImages();
             }
             $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, file_get_contents($image_uri));
         } catch (Exception $e) {
@@ -37,23 +38,18 @@ trait ImageTrait
             $this->name = $this->id;
             $this->ext = $ext;
 
-            return $this->createMiniature($this->path, $this->name, $this->ext) && $this->save();
+            return $this->createMiniature($img_path, $this->id, $ext) && $this->save();
         }
         return false;
     }
 
     public function createMiniature($path, $name, $ext): bool
     {
-        $image_path = $path . $name . '.' . $ext;
-
         try {
+            $image_path = $path . $name . '.' . $ext;
 
             foreach ($this->configImages as $suffix => $config) {
                 $img = Image::make(Storage::disk('public')->path($image_path));
-
-                if (is_file(Storage::disk('public')->path($path . $this->id . $suffix . '.' . $ext))) {
-                    Storage::delete($path . $this->id . '.' . $ext);
-                }
 
                 $img->filter(new MiniatureFilter($config['width'], $config['height']));
 
@@ -68,49 +64,36 @@ trait ImageTrait
     }
 
 
-    public function getImageLink()
+    public function getImageLink(): string
     {
         return asset(Storage::url($this->getFullPath()));
     }
 
-    public function getFullPath()
+    public function getFullPath($suffix = ''): string
     {
-        return $this->path . $this->name . '.' . $this->ext;
+        return $this->path . $this->name . "{$suffix}." . $this->ext;
     }
 
-    /////// NOT USED
-    /*
-
-    public function uploadImageFromBase64($image_base64, $parent_id = null)
+    public function hasImage(): bool
     {
-        $image = base64_decode($image_base64);
+        $profile_photo_path = $this->getFullPath();
 
-        $img_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
-        if ($parent_id)
-            $img_path .= $parent_id . DIRECTORY_SEPARATOR;
+        return !empty($profile_photo_path) && is_file(Storage::disk('public')->path($profile_photo_path));
+    }
 
-        $ext = 'jpg'; //TODO: подумать как выудить расширение картинки
+    public function deleteImage(): bool
+    {
+        return Storage::delete(Storage::disk('public')->path($this->getFullPath()));
+    }
 
-        try {
-            if (is_file(Storage::disk('public')->path($img_path . $this->id . '.' . $ext))) {
-                Storage::delete($img_path . $this->id . '.' . $ext);
+    public function deleteResizedImages(): void
+    {
+        if ($this->configImages) {
+            foreach ($this->configImages as $suffix => $params) {
+                $full_path = Storage::disk('public')->path($this->getFullPath($suffix));
+                if (is_file($full_path))
+                    Storage::delete($full_path);
             }
-            $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, $image);
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            $created = false;
         }
-
-        if ($created) {
-
-            $this->path = $img_path;
-            $this->name = $this->id;
-            $this->ext = $ext;
-
-            return $this->createMiniature($this->path, $this->name, $this->ext) && $this->save();
-        }
-        return false;
     }
-
-     */
 }

@@ -61,9 +61,9 @@ class GoogleMapController extends BaseController
 
         $autocomplete_results = GoogleMap::getPlaceId($request->latitude, $request->longitude);
 
-        if (empty($autocomplete_results))
+        if ($autocomplete_results === null)
             return $this->sendError('Results not found');
 
-        return $this->sendResponse($autocomplete_results, 'Results');
+        return $this->sendResponse(['place_id' => $autocomplete_results], 'Results');
     }
 }
