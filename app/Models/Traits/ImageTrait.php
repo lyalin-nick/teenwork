@@ -83,16 +83,16 @@ trait ImageTrait
 
     public function deleteImage(): bool
     {
-        return Storage::delete(Storage::disk('public')->path($this->getFullPath()));
+        return Storage::disk('public')->delete($this->getFullPath());
     }
 
     public function deleteResizedImages(): void
     {
         if ($this->configImages) {
             foreach ($this->configImages as $suffix => $params) {
-                $full_path = Storage::disk('public')->path($this->getFullPath($suffix));
-                if (is_file($full_path))
-                    Storage::delete($full_path);
+                $full_path = $this->getFullPath($suffix);
+                if (is_file(Storage::disk('public')->path($full_path)))
+                    Storage::disk('public')->delete($full_path);
             }
         }
     }

@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use Exception;
+use App\Models\Traits\VideoTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property integer $profile_id
@@ -16,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class ProfileVideo extends Model
 {
-    use HasFactory;
+    use HasFactory, VideoTrait;
 
     protected $fillable = [
         'profile_id', 'path', 'name', 'ext'
@@ -27,53 +25,13 @@ class ProfileVideo extends Model
         return $this->belongsTo(Profile::class, 'profile_id');
     }
 
-    public function getPath()
-    {
-        if ($this->path && $this->name && $this->ext) {
-            $full_path = Storage::disk('public')->path($this->path . $this->name . '.' . $this->ext);
-            return is_file($full_path) ? $full_path : null;
-        }
-        return null;
-    }
-
     public function getLink()
     {
-        if ($this->getPath()) {
-            return Storage::disk('public')->url($this->path . $this->name . '.' . $this->ext);
-        }
-        return null;
+        return $this->getVideoLink();
     }
 
-    public function uploadVideo($video_base64): bool
+    public function uploadVideo($video_uri): bool
     {
-
-        $image = base64_decode($video_base64);
-
-        $img_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
-        if ($this->profile_id)
-            $img_path .= $this->profile_id . DIRECTORY_SEPARATOR;
-
-        $ext = 'mp4'; //TODO: подумать как выудить расширение картинки
-
-        try {
-            if (is_file(Storage::disk('public')->path($img_path . $this->id . '.' . $ext))) {
-                Storage::delete($img_path . $this->id . '.' . $ext);
-            }
-            $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, $image);
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            $created = false;
-        }
-
-        if ($created) {
-
-            $this->path = $img_path;
-            $this->name = $this->id;
-            $this->ext = $ext;
-
-            return $this->save();
-        }
-
-        return false;
+        return $this->uploadVideoFromUri($video_uri, $this->profile_id);
     }
 }

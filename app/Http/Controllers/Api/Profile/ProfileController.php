@@ -110,7 +110,7 @@ class ProfileController extends BaseController
             return $this->sendResponse(['video' => $profile->getProfileVideoLink()], 'Video upload successful');
         }
 
-        return $this->sendError('Error uploading image');
+        return $this->sendError('Error uploading video');
     }
 
     public function setPushNotification(Request $request)

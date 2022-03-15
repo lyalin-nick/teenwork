@@ -227,59 +227,6 @@ class Profile extends Model
         $this->save();
     }
 
-    /*
-    public function uploadImage($image): bool
-    {
-        $path = 'uploads/' . strtolower(class_basename(self::class)) . '/' . $this->id;
-
-        $img_path = $image->store($path, 'public');
-        if ($img_path) {
-            $path_info = pathinfo(asset('/storage/' . $img_path));
-            $this->update([
-                'photo_path' => 'storage' . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR,
-                'photo_name' => $path_info['filename'],
-                'photo_ext' => $path_info['extension'],
-            ]);
-            return true;
-        } else {
-            return false;
-        }
-    }
-    */
-
-    /*
-    public function uploadImageFromBase64($image_base64, $parent_id = null)
-    {
-        $image = base64_decode($image_base64);
-
-        $img_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
-        if ($parent_id)
-            $img_path .= $parent_id . DIRECTORY_SEPARATOR;
-
-        $ext = 'jpg'; //TODO: подумать как выудить расширение картинки
-
-        try {
-            if (is_file($img_path . $this->id . '.' . $ext)) {
-                Storage::delete($img_path . $this->id . '.' . $ext);
-            }
-            $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, $image);
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            $created = false;
-        }
-
-        if ($created) {
-
-            $this->photo_path = $img_path;
-            $this->photo_name = $this->id;
-            $this->photo_ext = $ext;
-
-            return $this->createMiniature($img_path, $this->id, $ext) && $this->save();
-        }
-        return false;
-    }
-    */
-
     public function uploadImageFromUri($image_uri, $parent_id = null)
     {
         $image_uri_info = pathinfo($image_uri);
@@ -311,14 +258,14 @@ class Profile extends Model
         return false;
     }
 
-    public function uploadProfileVideo($video_base64)
+    public function uploadProfileVideo($video_uri)
     {
         $profile_video = $this->profileVideo;
         if (!$profile_video) {
             $profile_video = ProfileVideo::create(['profile_id' => $this->id]);
         }
 
-        return $profile_video->uploadVideo($video_base64);
+        return $profile_video->uploadVideo($video_uri);
     }
 
     public function hasImage(): bool
