@@ -55,21 +55,21 @@ class TaskVideo extends Model
         return null;
     }
 
-    public function uploadVideo($video_base64): bool
+    public function uploadVideo($video_uri): bool
     {
-        $video_file = base64_decode($video_base64);
+        $video_uri_info = pathinfo($video_uri);
 
-        $video_file_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
+        $video_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
         if ($this->task_id)
-            $video_file_path .= $this->task_id . DIRECTORY_SEPARATOR;
+            $video_path .= $this->task_id . DIRECTORY_SEPARATOR;
 
-        $ext = 'mp4'; //TODO: подумать как выудить расширение картинки
+        $ext = $video_uri_info['extension'];
 
         try {
-            if (is_file(Storage::disk('public')->path($video_file_path . $this->id . '.' . $ext))) {
-                Storage::delete($video_file_path . $this->id . '.' . $ext);
+            if (is_file(Storage::disk('public')->path($video_path . $this->id . '.' . $ext))) {
+                Storage::delete($video_path . $this->id . '.' . $ext);
             }
-            $created = Storage::disk('public')->put($video_file_path . $this->id . '.' . $ext, $video_file);
+            $created = Storage::disk('public')->put($video_path . $this->id . '.' . $ext, $video_path);
         } catch (Exception $e) {
             Log::error($e->getMessage());
             $created = false;
@@ -77,7 +77,7 @@ class TaskVideo extends Model
 
         if ($created) {
 
-            $this->path = $video_file_path;
+            $this->path = $video_path;
             $this->name = $this->id;
             $this->ext = $ext;
 

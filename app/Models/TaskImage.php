@@ -41,7 +41,7 @@ class TaskImage extends Model
                     'task_id' => $task_id
                 ]);
 
-                if ($model->save() && $model->uploadImageFromBase64($image, $task_id)) {
+                if ($model->save() && $model->uploadImageFromUri($image, $task_id)) {
                     $models[] = $model;
                 }
             }

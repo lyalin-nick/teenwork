@@ -27,6 +27,13 @@ class GoogleMap
         return $autocomplete;
     }
 
+    /**
+     * Not used
+     *
+     * @param $place_id
+     * @return array|null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
     public static function getCoordinates($place_id)
     {
         $clinet = new Client();
@@ -38,6 +45,34 @@ class GoogleMap
         $data = $response->getBody();
         $data = json_decode($data);
 
-        return ['latitude' => $data['result']['geometry']['lat'], 'longitude' => $data['result']['geometry']['lng']];
+        if (!empty($data->result))
+            return [
+                'latitude' => $data->result->geometry->location->lat,
+                'longitude' => $data->result->geometry->location->lng
+            ];
+
+        return null;
+    }
+
+    /**
+     * Получить placeId места из ГуглКарт
+     *
+     * @param $latitude
+     * @param $longitude
+     * @return mixed|null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public static function getPlaceId($latitude, $longitude)
+    {
+        $clinet = new Client();
+
+        $link = "https://maps.googleapis.com/maps/api/geocode/json? ={$latitude},{$longitude}&key=" . self::GOOGLE_API_KEY;
+
+        $response = $clinet->request('GET', $link);
+
+        $data = $response->getBody();
+        $data = json_decode($data);
+        dd($data);
+        return !empty($data->results) ? $data->results[0]['placeId'] : null;
     }
 }

@@ -81,7 +81,7 @@ class ProfileController extends BaseController
             $profile = Profile::createProfile(['user_id' => $request->user()->id]);
         }
 
-        if ($profile->uploadImageFromBase64($request->image)) {
+        if ($profile->uploadImageFromUri($request->image)) {
             return $this->sendResponse(['user' => $user->getFullData()], 'Image upload successful');
         }
 

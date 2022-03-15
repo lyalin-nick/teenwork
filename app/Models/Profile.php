@@ -172,6 +172,15 @@ class Profile extends Model
         $this->attributes['date_of_birth'] = date('Y-m-d', strtotime($value));
     }
 
+//    public function setPlaceIdAttribute($value)
+//    {
+//        if (empty($value)) {
+//            $address = $this->attributes['address'];
+//            $this->attributes['place_id'] = GoogleMap::getPlaceId($address);
+//        }
+//        $this->attributes['place_id'] = $value;
+//    }
+
     public function refreshCategories($categories): bool
     {
         if ($categories) {
@@ -238,6 +247,7 @@ class Profile extends Model
     }
     */
 
+    /*
     public function uploadImageFromBase64($image_base64, $parent_id = null)
     {
         $image = base64_decode($image_base64);
@@ -268,6 +278,38 @@ class Profile extends Model
         }
         return false;
     }
+    */
+
+    public function uploadImageFromUri($image_uri, $parent_id = null)
+    {
+        $image_uri_info = pathinfo($image_uri);
+
+        $img_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
+        if ($parent_id)
+            $img_path .= $parent_id . DIRECTORY_SEPARATOR;
+
+        $ext = $image_uri_info['extension'];
+
+        try {
+            if ($this->hasImage()) {
+                $this->deleteImage();
+            }
+            $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, file_get_contents($image_uri));
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            $created = false;
+        }
+
+        if ($created) {
+
+            $this->photo_path = $img_path;
+            $this->photo_name = $this->id;
+            $this->photo_ext = $ext;
+
+            return $this->createMiniature($img_path, $this->id, $ext) && $this->save();
+        }
+        return false;
+    }
 
     public function uploadProfileVideo($video_base64)
     {
@@ -277,5 +319,27 @@ class Profile extends Model
         }
 
         return $profile_video->uploadVideo($video_base64);
+    }
+
+    public function hasImage(): bool
+    {
+        $profile_photo_path = $this->getFullPath();
+
+        return !empty($profile_photo_path) && is_file(Storage::disk('public')->path($profile_photo_path));
+    }
+
+    public function getImageLink(): string
+    {
+        return asset(Storage::url($this->getFullPath()));
+    }
+
+    public function getFullPath(): string
+    {
+        return $this->photo_path . $this->photo_name . '.' . $this->photo_ext;
+    }
+
+    public function deleteImage(): bool
+    {
+        return Storage::delete(Storage::disk('public')->path($this->getFullPath()));
     }
 }

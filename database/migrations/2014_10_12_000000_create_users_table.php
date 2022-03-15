@@ -31,6 +31,9 @@ class CreateUsersTable extends Migration
             //$table->boolean('phone_auth')->default(false);
             $table->string('password')->nullable();
             $table->rememberToken();
+            $table->boolean('push_notification')->default(false);
+            $table->boolean('email_notification')->default(false);
+            $table->boolean('invisible')->default(false);
             $table->timestamps();
         });
     }

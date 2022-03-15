@@ -5,12 +5,12 @@ use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\VerifyCodeController;
 use App\Http\Controllers\Api\Dictionary\CategoryController;
 use App\Http\Controllers\Api\Dictionary\LanguageController;
+use App\Http\Controllers\Api\Employer\Profile\ProfileController as EmployerProfileController;
 use App\Http\Controllers\Api\Employer\Task\TaskController;
 use App\Http\Controllers\Api\Helper\GoogleMapController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioPhotoController;
 use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
-use App\Http\Controllers\Api\Employer\Profile\ProfileController as EmployerProfileController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,13 +32,14 @@ Route::post('/send/sms', [VerifyCodeController::class, 'sendSms']);
 Route::prefix('/dictionary')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{flag}', [CategoryController::class, 'grouped'])->where('flag', '(online|offline)');
-    Route::get('/languages', [LanguageController::class, ' ']);
+    Route::get('/languages', [LanguageController::class, 'index']);
 });
 
 Route::prefix('/helper')->group(function () {
     Route::get('/autocomplete', [GoogleMapController::class, 'autocomplete']);
+    Route::get('/coords', [GoogleMapController::class, 'c']);
+    Route::get('/place-id', [GoogleMapController::class, 'placeId']);
 });
-//Route::post('/task/create', [TaskController::class, 'create']);
 
 Route::prefix('/auth')->group(function () {
 
