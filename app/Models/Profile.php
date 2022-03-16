@@ -3,10 +3,8 @@
 namespace App\Models;
 
 use App\Models\Traits\ImageTrait;
-use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -124,11 +122,6 @@ class Profile extends Model
         ];
     }
 
-    public function portfolioPhotos()
-    {
-        return $this->hasMany(PortfolioPhoto::class);
-    }
-
     public function getPortfolioPhotosAsArray()
     {
         $photos = [];
@@ -154,6 +147,11 @@ class Profile extends Model
     public function portfolioLinks()
     {
         return $this->hasMany(PortfolioLink::class);
+    }
+
+    public function portfolioPhotos()
+    {
+        return $this->hasMany(PortfolioPhoto::class);
     }
 
     public function getDateOfBirthAttribute($value)
@@ -227,45 +225,35 @@ class Profile extends Model
         $this->save();
     }
 
-    public function uploadImageFromUri($image_uri, $parent_id = null)
+    public function uploadProfileImage($image): bool
     {
-        $image_uri_info = pathinfo($image_uri);
+        $img_path = $this->createPath();
 
-        $img_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
-        if ($parent_id)
-            $img_path .= $parent_id . DIRECTORY_SEPARATOR;
-
-        $ext = $image_uri_info['extension'];
-
-        try {
-            if ($this->hasImage()) {
-                $this->deleteImage();
-            }
-            $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, file_get_contents($image_uri));
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            $created = false;
-        }
+        $created = $this->createImage($image, $img_path);
 
         if ($created) {
 
-            $this->photo_path = $img_path;
-            $this->photo_name = $this->id;
-            $this->photo_ext = $ext;
+            $path_info = pathinfo(Storage::disk('public')->path($created));
 
-            return $this->createMiniature($img_path, $this->id, $ext) && $this->save();
+            $this->photo_path = $img_path;
+            $this->photo_name = $path_info['filename'];
+            $this->photo_ext = $path_info['extension'];
+
+            return $this->save() && $this->createMiniature($this->photo_path, $this->photo_name, $this->photo_ext);
         }
+
         return false;
     }
 
-    public function uploadProfileVideo($video_uri)
+
+    public function uploadProfileVideo($video)
     {
         $profile_video = $this->profileVideo;
         if (!$profile_video) {
             $profile_video = ProfileVideo::create(['profile_id' => $this->id]);
         }
 
-        return $profile_video->uploadVideo($video_uri);
+        return $profile_video->upload($video);
     }
 
     public function hasImage(): bool
@@ -275,14 +263,14 @@ class Profile extends Model
         return !empty($profile_photo_path) && is_file(Storage::disk('public')->path($profile_photo_path));
     }
 
-    public function getImageLink(): string
-    {
-        return asset(Storage::url($this->getFullPath()));
-    }
-
     public function getFullPath(): string
     {
         return $this->photo_path . $this->photo_name . '.' . $this->photo_ext;
+    }
+
+    public function getImageLink(): string
+    {
+        return asset(Storage::url($this->getFullPath()));
     }
 
     public function deleteImage(): bool

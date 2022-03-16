@@ -21,7 +21,7 @@ class PortfolioPhotoController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'images' => 'required|array',
-            'images.*' => 'string',
+            'images.*' => 'image|mimes:jpeg,png,jpg',
         ]);
 
         if ($validator->fails()) {

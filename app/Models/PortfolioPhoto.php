@@ -42,7 +42,7 @@ class PortfolioPhoto extends Model
                     'profile_id' => $profile_id
                 ]);
 
-                if ($model->save() && $model->uploadImageFromUri($image, $profile_id)) {
+                if ($model->save() && $model->uploadImage($image, $profile_id)) {
                     $models[] = $model;
                 }
             }

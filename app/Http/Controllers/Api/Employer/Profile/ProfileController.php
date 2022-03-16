@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Employer\Profile;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProfileController extends BaseController
@@ -12,7 +13,7 @@ class ProfileController extends BaseController
      * Установка роли "Исполнитель" доступно только для заказчика
      *
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function setRolePerformer(Request $request)
     {

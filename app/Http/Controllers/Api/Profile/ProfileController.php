@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Profile;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -67,7 +66,7 @@ class ProfileController extends BaseController
     public function uploadImage(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'image' => 'required|string',
+            'image' => 'required|image|mimes:jpeg,png,jpg',
         ]);
 
         if ($validator->fails()) {
@@ -81,7 +80,7 @@ class ProfileController extends BaseController
             $profile = Profile::createProfile(['user_id' => $request->user()->id]);
         }
 
-        if ($profile->uploadImageFromUri($request->image)) {
+        if ($profile->uploadProfileImage($request->image)) {
             return $this->sendResponse(['user' => $user->getFullData()], 'Image upload successful');
         }
 
@@ -92,7 +91,7 @@ class ProfileController extends BaseController
     public function uploadVideo(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'video' => 'required|string',
+            'video' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
         ]);
 
         if ($validator->fails()) {
@@ -107,7 +106,7 @@ class ProfileController extends BaseController
         }
 
         if ($profile->uploadProfileVideo($request->video)) {
-            return $this->sendResponse(['video' => $profile->getProfileVideoLink()], 'Video upload successful');
+            return $this->sendResponse(['user' => $user->getFullData()], 'Video upload successful');
         }
 
         return $this->sendError('Error uploading video');

@@ -95,7 +95,7 @@ class Task extends Model
             'hot_work' => $this->hot_work,
             'account_verified' => $this->account_verified,
             'status' => $this->getStatusLabel(),
-            'created_at' => $this->created_at,
+            'created_at' => date('Y-m-d H:i:s', strtotime($this->created_at)),
             'views_number' => $this->views_number,
         ];
 
@@ -156,6 +156,11 @@ class Task extends Model
         }
 
         return $task_images;
+    }
+
+    public function getVideoLink()
+    {
+        return ($this->video) ? $this->video->getLink() : null;
     }
 
     public function getStatusLabel(): string
@@ -228,11 +233,6 @@ class Task extends Model
     public function video()
     {
         return $this->hasOne(TaskVideo::class);
-    }
-
-    public function getVideoLink()
-    {
-        return ($this->video) ? $this->video->getLink() : null;
     }
 
 }

@@ -30,8 +30,8 @@ class ProfileVideo extends Model
         return $this->getVideoLink();
     }
 
-    public function uploadVideo($video_uri): bool
+    public function upload($video): bool
     {
-        return $this->uploadVideoFromUri($video_uri, $this->profile_id);
+        return $this->uploadVideo($video, $this->profile_id);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models\Helpers;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
 class GoogleMap
 {
@@ -32,7 +33,7 @@ class GoogleMap
      *
      * @param $place_id
      * @return array|null
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     public static function getCoordinates($place_id)
     {
@@ -60,7 +61,7 @@ class GoogleMap
      * @param $latitude
      * @param $longitude
      * @return mixed|null
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     public static function getPlaceId($latitude, $longitude)
     {
@@ -72,7 +73,7 @@ class GoogleMap
 
         $data = $response->getBody();
         $data = json_decode($data);
-        
+
         return !empty($data->results) ? $data->results[0]->place_id : null;
     }
 }

@@ -4,6 +4,56 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 
+/**
+ * @OA\Info(
+ *      version="1.0.0",
+ *      title="L5 OpenApi",
+ *      description="L5 Swagger OpenApi description",
+ *      @OA\Contact(
+ *          email="lyalin.nick@yandex.ru"
+ *      )
+ * )
+ * @OA\Tag (
+ *     name="Auth",
+ *     description="Методы для авторизации"
+ * )
+ * @OA\Tag (
+ *     name="Employer-Task",
+ *     description="Методы для управления задачами для роли заказчик"
+ * )
+ * @OA\Tag (
+ *     name="Employer-Profile",
+ *     description="Методы для управления профилем для роли заказчик"
+ * )
+ * @OA\Tag (
+ *     name="Performer-Profile",
+ *     description="Методы для управления профилем для роли исполнитель"
+ * )
+ * @OA\Tag (
+ *     name="Profile",
+ *     description="Общие методы для управления профилем"
+ * )
+ * @OA\Tag (
+ *     name="Portfolio",
+ *     description="Методы для управления портфолио"
+ * )
+ * @OA\Tag (
+ *     name="Dictionary",
+ *     description="Словарь"
+ * )
+ * @OA\Tag (
+ *     name="Helpers",
+ *     description="Хелперы"
+ * )
+ * @OA\Server (
+ *     url="http://teenwork/api/",
+ *     description="Локальный серв"
+ * )
+ * @OA\Server (
+ *     url="http://teenwork.demo.onlinebees.ru/api/",
+ *     description="Рабочий серв"
+ * )
+ */
 class BaseController extends Controller
 {
     public function sendResponse($result, $message, $code = 200)
@@ -13,7 +63,6 @@ class BaseController extends Controller
             'data' => $result,
             'message' => $message
         ];
-
         return response()->json($response, $code);
     }
 
