@@ -6,6 +6,7 @@ use App\Models\Traits\VideoTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property integer $task_id
@@ -26,16 +27,18 @@ class TaskVideo extends Model
     /**
      * Создание модели видео
      *
-     * @param $video_base64 string Видео в формате base64
+     * @param $video_path string Путь до видео
      * @param $task_id integer Идентификатор задачи
      * @return bool
      */
-    public static function createModel($video_base64, $task_id)
+    public static function createModel($video_path, $task_id)
     {
-        $video = self::create(['task_id' => $task_id]);
+        if (Storage::disk('public')->exists($video_path)) {
+            $video = self::create(['task_id' => $task_id]);
 
-        if ($video) {
-            return $video->uploadVideo($video_base64);
+            if ($video) {
+                return $video->moveVideo($video_path, $task_id);
+            }
         }
         return false;
     }

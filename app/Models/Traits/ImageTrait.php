@@ -11,6 +11,42 @@ use Intervention\Image\Facades\Image;
 trait ImageTrait
 {
 
+    public function existsImage($path)
+    {
+        return Storage::disk('public')->exists($path);
+    }
+
+    public function moveImage($path, $parent_id)
+    {
+        $image_uri_info = pathinfo(Storage::disk('public')->path($path));
+        $ext = $image_uri_info['extension'];
+
+        $img_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
+        if ($parent_id)
+            $img_path .= $parent_id . DIRECTORY_SEPARATOR;
+
+        try {
+            if ($this->hasImage()) {
+                $this->deleteImage();
+                $this->deleteResizedImages();
+            }
+            $created = Storage::disk('public')->move($path, $img_path . $this->id . '.' . $ext);
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            $created = false;
+        }
+
+        if ($created) {
+
+            $this->path = $img_path;
+            $this->name = $this->id;
+            $this->ext = $ext;
+
+            return $this->save() && $this->createMiniature($img_path, $this->id, $ext);
+        }
+        return false;
+    }
+
     public function uploadImageFromUri($image_uri, $parent_id = null)
     {
         $image_uri_info = pathinfo($image_uri);
@@ -26,6 +62,7 @@ trait ImageTrait
                 $this->deleteImage();
                 $this->deleteResizedImages();
             }
+
             $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, file_get_contents($image_uri));
         } catch (Exception $e) {
             Log::error($e->getMessage());

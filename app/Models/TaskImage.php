@@ -6,14 +6,14 @@ use App\Models\Traits\ImageTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @mixin Builder
  */
 class TaskImage extends Model
 {
-    use HasFactory;
-    use ImageTrait;
+    use HasFactory, ImageTrait;
 
     protected $configImages = [
         '_mini' => [
@@ -36,13 +36,15 @@ class TaskImage extends Model
 
         if ($images) {
             $models = [];
-            foreach ($images as $image) {
-                $model = new TaskImage([
-                    'task_id' => $task_id
-                ]);
+            foreach ($images as $image_path) {
+                if (Storage::disk('public')->exists($image_path)) {
+                    $model = new TaskImage([
+                        'task_id' => $task_id
+                    ]);
 
-                if ($model->save() && $model->uploadImageFromUri($image, $task_id)) {
-                    $models[] = $model;
+                    if ($model->save() && $model->moveImage($image_path, $task_id)) {
+                        $models[] = $model;
+                    }
                 }
             }
             return count($images) === count($models);
@@ -51,13 +53,16 @@ class TaskImage extends Model
         return false;
     }
 
+    /*
     public function getNewFullPath($new_path)
     {
         return $this->path . $new_path . $this->name . '.' . $this->ext;
     }
+    */
 
     public function task()
     {
         $this->belongsTo(Task::class, 'task_id');
     }
+
 }

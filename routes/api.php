@@ -57,7 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('/task')->group(function () {
             Route::post('/store', [TaskController::class, 'store'])->middleware('employer');
-            Route::post('/upload-images', [TaskController::class, 'images']);
+            Route::post('/upload-images', [TaskController::class, 'uploadImages']);
+            Route::post('/upload-video', [TaskController::class, 'uploadVideo']);
         });
     });
 

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api\Employer\Task;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Models\Helpers\UploadingHelper;
 use App\Models\Task;
 use App\Models\TaskImage;
 use App\Models\TaskVideo;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 
 class TaskController extends BaseController
@@ -48,7 +50,7 @@ class TaskController extends BaseController
         ]);
 
         if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
+            return $this->sendError('Validation Error.', $validator->errors(), Response::HTTP_BAD_REQUEST);
         }
 
         $dates = $request->dates;
@@ -78,21 +80,21 @@ class TaskController extends BaseController
                     $result = $task->createTaskAddresses($request->addresses);
 
                     if (!$result)
-                        return $this->sendError('Addresses create error!', 500);
+                        return $this->sendError('Addresses create error!', [], 512);
                 }
 
                 if ($request->images) {
                     $result = TaskImage::createModels($request->images, $task->id);
 
                     if (!$result)
-                        return $this->sendError('Images upload error!', 500);
+                        return $this->sendError('Images upload error!', [], 513);
                 }
 
                 if ($request->video) {
                     $result = TaskVideo::createModel($request->video, $task->id);
 
                     if (!$result)
-                        return $this->sendError('Video upload error!', 500);
+                        return $this->sendError('Video upload error!', [], 514);
                 }
 
                 $response_task = (!$response_task || ($response_task && strtotime($response_task->start_date) > strtotime($task->start_date))) ? $task : $response_task;
@@ -101,22 +103,40 @@ class TaskController extends BaseController
         if ($response_task)
             return $this->sendResponse(['task' => $response_task->getFullInfo()], 'Task create');
 
-        return $this->sendError('Task doesnt created');
+        return $this->sendError('Task doesnt created', [], 500);
 
     }
 
 
-    public function images(Request $request)
+    public function uploadImages(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'images' => 'required|array|max:10',
-            'images.*' => 'image|mimes:jpeg,png,jpg|max:2024',
+            'images.*' => 'image|mimes:jpeg,png,jpg',
         ]);
 
         if ($validator->fails()) {
             return $this->sendError('Validation Error.', $validator->errors());
         }
 
-        return $this->uploadImages($request->images, TaskImage::class);
+        $paths = UploadingHelper::uploadFiles($request->images);
+
+        return $this->sendResponse($paths, 'Uploading success');
+    }
+
+
+    public function uploadVideo(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'video' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        $paths = UploadingHelper::uploadFile($request->video);
+
+        return $this->sendResponse($paths, 'Uploading success');
     }
 }
