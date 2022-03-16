@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class TaskController extends BaseController
@@ -100,9 +101,15 @@ class TaskController extends BaseController
                 $response_task = (!$response_task || ($response_task && strtotime($response_task->start_date) > strtotime($task->start_date))) ? $task : $response_task;
             }
         }
-        if ($response_task)
-            return $this->sendResponse(['task' => $response_task->getFullInfo()], 'Task create');
+        if ($response_task) {
+            if ($request->images)
+                Storage::disk('public')->delete($request->images);
+            if ($request->video) {
+                Storage::disk('public')->delete($request->video);
+            }
 
+            return $this->sendResponse(['task' => $response_task->getFullInfo()], 'Task create');
+        }
         return $this->sendError('Task doesnt created', [], 500);
 
     }
@@ -139,4 +146,5 @@ class TaskController extends BaseController
 
         return $this->sendResponse($paths, 'Uploading success');
     }
+
 }

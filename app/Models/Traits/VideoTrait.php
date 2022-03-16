@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 trait VideoTrait
 {
 
-    public function moveVideo($path, $parent_id)
+    public function copyVideo($path, $parent_id)
     {
         $video_uri_info = pathinfo(Storage::disk('public')->path($path));
         $ext = $video_uri_info['extension'];
@@ -22,7 +22,7 @@ trait VideoTrait
             if ($this->hasVideo()) {
                 $this->deleteVideo();
             }
-            $created = Storage::disk('public')->move($path, $video_path . $this->id . '.' . $ext);
+            $created = Storage::disk('public')->copy($path, $video_path . $this->id . '.' . $ext);
         } catch (Exception $e) {
             Log::error($e->getMessage(), $e->getTrace());
             $created = false;

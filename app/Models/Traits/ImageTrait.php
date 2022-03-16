@@ -16,7 +16,7 @@ trait ImageTrait
         return Storage::disk('public')->exists($path);
     }
 
-    public function moveImage($path, $parent_id)
+    public function copyImage($path, $parent_id)
     {
         $image_uri_info = pathinfo(Storage::disk('public')->path($path));
         $ext = $image_uri_info['extension'];
@@ -30,14 +30,13 @@ trait ImageTrait
                 $this->deleteImage();
                 $this->deleteResizedImages();
             }
-            $created = Storage::disk('public')->move($path, $img_path . $this->id . '.' . $ext);
+            $created = Storage::disk('public')->copy($path, $img_path . $this->id . '.' . $ext);
         } catch (Exception $e) {
             Log::error($e->getMessage());
             $created = false;
         }
 
         if ($created) {
-
             $this->path = $img_path;
             $this->name = $this->id;
             $this->ext = $ext;

@@ -42,7 +42,7 @@ class TaskImage extends Model
                         'task_id' => $task_id
                     ]);
 
-                    if ($model->save() && $model->moveImage($image_path, $task_id)) {
+                    if ($model->save() && $model->copyImage($image_path, $task_id)) {
                         $models[] = $model;
                     }
                 }

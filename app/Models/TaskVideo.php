@@ -37,7 +37,7 @@ class TaskVideo extends Model
             $video = self::create(['task_id' => $task_id]);
 
             if ($video) {
-                return $video->moveVideo($video_path, $task_id);
+                return $video->copyVideo($video_path, $task_id);
             }
         }
         return false;
