@@ -8,9 +8,10 @@ use App\Http\Controllers\Api\Dictionary\LanguageController;
 use App\Http\Controllers\Api\Employer\Profile\ProfileController as EmployerProfileController;
 use App\Http\Controllers\Api\Employer\Task\TaskController;
 use App\Http\Controllers\Api\Helper\GoogleMapController;
+use App\Http\Controllers\Api\Performer\Profile\PortfolioImageController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
-use App\Http\Controllers\Api\Performer\Profile\PortfolioPhotoController;
 use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
+use App\Http\Controllers\Api\Profile\ConfirmPhoneController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -62,6 +63,16 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
+    Route::prefix('/performer')->group(function () {
+
+        Route::prefix('/profile')->group(function () {
+            Route::post('/update', [PerformerProfileController::class, 'update']);
+            Route::post('/upload-image', [PerformerProfileController::class, 'uploadImage']);
+            Route::post('/upload-video', [PerformerProfileController::class, 'uploadVideo']);
+            Route::post('/portfolio/images', [PerformerProfileController::class, 'uploadImages']);
+        });
+    });
+
     Route::prefix('/profile')->group(function () {
 
         Route::get('/', [ProfileController::class, 'index']);
@@ -79,8 +90,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/', [PerformerProfileController::class, 'portfolio']);
 
             Route::prefix('/images')->group(function () {
-                Route::post('/', [PortfolioPhotoController::class, 'store']);
-                Route::delete('/{id}', [PortfolioPhotoController::class, 'delete']);
+                Route::post('/', [PortfolioImageController::class, 'store']);
+                Route::delete('/{id}', [PortfolioImageController::class, 'delete']);
             });
 
             Route::prefix('/link')->group(function () {
@@ -96,10 +107,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/invisible', [ProfileController::class, 'setInvisible']);
         });
 
-
         Route::prefix('/role')->group(function () {
             Route::put('/employer', [PerformerProfileController::class, 'setRoleEmployer'])->middleware('performer');
             Route::put('/performer', [EmployerProfileController::class, 'setRolePerformer'])->middleware('employer');
+        });
+
+        Route::prefix('/confirm-phone')->group(function () {
+            Route::put('/send', [ConfirmPhoneController::class, 'send']);
+            Route::put('/confirm', [ConfirmPhoneController::class, 'confirm']);
         });
     });
 

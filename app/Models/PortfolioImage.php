@@ -6,7 +6,6 @@ use App\Models\Traits\ImageTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -18,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * @mixin Builder
  */
-class PortfolioPhoto extends Model
+class PortfolioImage extends Model
 {
     use HasFactory, ImageTrait;
 
@@ -41,9 +40,14 @@ class PortfolioPhoto extends Model
                 $model = new self([
                     'profile_id' => $profile_id
                 ]);
-
-                if ($model->save() && $model->uploadImage($image, $profile_id)) {
-                    $models[] = $model;
+                if (is_string($image)) {
+                    if ($model->save() && $model->copyImage($image, $profile_id)) {
+                        $models[] = $model;
+                    }
+                } else {
+                    if ($model->save() && $model->uploadImage($image, $profile_id)) {
+                        $models[] = $model;
+                    }
                 }
             }
             return count($images) === count($models);
@@ -57,25 +61,13 @@ class PortfolioPhoto extends Model
         $this->belongsTo(Profile::class, 'profile_id');
     }
 
-    public function getPhotoPreviewLink(): string
+    public function getLink(): string
     {
-        if ($this->path && $this->name && $this->ext) {
-            if (is_file(Storage::disk('public')->path($this->path . $this->name . '.' . $this->ext)) && !is_file(Storage::disk('public')->path($this->path . $this->name . '_mini.' . $this->ext)))
-                $this->createMiniature($this->path, $this->name, $this->ext);
-
-            if (is_file(Storage::disk('public')->path($this->path . $this->name . '_mini.' . $this->ext)))
-                return Storage::disk('public')->url($this->path . $this->name . '_mini.' . $this->ext);
-        }
-        return "";
+        return $this->getImageLink();
     }
 
-    public function getPhotoLink(): string
+    public function getPreviewLink(): string
     {
-        if ($this->path && $this->name && $this->ext) {
-            if (is_file(Storage::disk('public')->path($this->path . $this->name . '.' . $this->ext)))
-                return Storage::disk('public')->url($this->path . $this->name . '.' . $this->ext);
-        }
-        return "";
+        return $this->getImageLink('_mini');
     }
-
 }

@@ -137,7 +137,12 @@ trait ImageTrait
         }
     }
 
-    public function uploadImageFromUri($image_uri, $parent_id = null)
+    public function getImageLink($suffix = null): string
+    {
+        return asset(Storage::url($this->getFullPath($suffix)));
+    }
+
+    /*public function uploadImageFromUri($image_uri, $parent_id = null)
     {
         $image_uri_info = pathinfo($image_uri);
 
@@ -168,10 +173,5 @@ trait ImageTrait
             return $this->createMiniature($img_path, $this->id, $ext) && $this->save();
         }
         return false;
-    }
-
-    public function getImageLink(): string
-    {
-        return asset(Storage::url($this->getFullPath()));
-    }
+    }*/
 }

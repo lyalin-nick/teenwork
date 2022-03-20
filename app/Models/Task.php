@@ -32,7 +32,8 @@ class Task extends Model
 {
     use HasFactory;
 
-    const STATUS_WAIT = 1,
+    const
+        STATUS_WAIT = 1,
         STATUS_PROGRESS = 2,
         STATUS_FAIL = 3,
         STATUS_EXPIRE = 4,
@@ -57,21 +58,43 @@ class Task extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function setStartDateAttribute($value)
+    /**
+     * Мутатор на поле start_date
+     *
+     * @param $value
+     */
+    public function setStartDateAttribute($value): void
     {
         $this->attributes['start_date'] = date('Y-m-d', strtotime($value));
     }
 
-    public function getStartTimeAttribute($value)
+    /**
+     * Аксессор поля start_date
+     *
+     * @param $value
+     * @return string
+     */
+    public function getStartTimeAttribute($value): string
     {
         return date('H:i A', strtotime($value));
     }
 
-    public function getViewsNumberAttribute($value)
+    /**
+     * Аксессор поля views_number
+     *
+     * @param $value
+     * @return int
+     */
+    public function getViewsNumberAttribute($value): int
     {
         return intval($value);
     }
 
+    /**
+     * Получение полной информации о задаче
+     *
+     * @return array
+     */
     public function getFullInfo(): array
     {
         $task = [
@@ -102,6 +125,11 @@ class Task extends Model
         return $task;
     }
 
+    /**
+     * Получение краткой информации о пользователе создавший задачу
+     *
+     * @return array
+     */
     public function getUserInfo(): array
     {
         $user = $this->user;
@@ -109,7 +137,7 @@ class Task extends Model
         $info = [
             'id' => $user->id,
             'name' => $profile->first_name . ' ' . $profile->last_name,
-            'photo' => $profile->getPhotoLink(),
+            'photo' => $profile->getProfileImageLink(),
             'rating' => $profile->rating,
         ];
 

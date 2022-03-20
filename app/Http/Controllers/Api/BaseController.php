@@ -7,10 +7,10 @@ use App\Http\Controllers\Controller;
 /**
  * @OA\Info(
  *      version="1.0.0",
- *      title="L5 OpenApi",
- *      description="L5 Swagger OpenApi description",
+ *      title="TeenWork",
+ *      description="API для мобильного приложения TeenWork",
  *      @OA\Contact(
- *          email="lyalin.nick@yandex.ru"
+ *          url="https://t.me/nikitalyalin"
  *      )
  * )
  * @OA\Tag (
@@ -53,6 +53,12 @@ use App\Http\Controllers\Controller;
  *     url="http://teenwork.demo.onlinebees.ru/api/",
  *     description="Рабочий серв"
  * )
+ * @OA\SecurityScheme (
+ *     securityScheme="Bearer",
+ *     type="apiKey",
+ *     name="Authorization",
+ *     in="header"
+ *)
  */
 class BaseController extends Controller
 {

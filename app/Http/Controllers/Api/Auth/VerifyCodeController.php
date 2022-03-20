@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Api\BaseController;
 use App\Models\User;
 use Exception;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -13,11 +12,27 @@ class VerifyCodeController extends BaseController
 {
 
     /**
-     * Отправка письма с кодом подтверждения для авторизации
-     *
-     * @param Request $request
-     * @return JsonResponse
-     * @throws Exception
+     * @OA\Post (
+     *     path="/send/email",
+     *     operationId="sendEmail",
+     *     tags={"Auth"},
+     *     @OA\RequestBody (
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/SendEmailRequest"),
+     *     ),
+     *     @OA\Response(
+     *         response="200",
+     *         description="Success email sending",
+     *     ),
+     *     @OA\Response(
+     *         response="404",
+     *         description="Validation Error.",
+     *     ),
+     *     @OA\Response(
+     *         response="501",
+     *         description="Stupid coder.",
+     *     ),
+     * )
      */
     public function sendEmail(Request $request)
     {
@@ -40,24 +55,40 @@ class VerifyCodeController extends BaseController
         try {
             $user->setEmailVerificationData($new_pass);
         } catch (Exception $e) {
-            return $this->sendError('Failed to update user. ' . $e->getMessage() . '. ' . $e->getLine());
+            return $this->sendError('Failed to update user. ' . $e->getMessage() . '. ' . $e->getLine(), [], 501);
         }
 
 //        try {
 //            $user->notify(new EmailCode($new_pass));
 //        } catch (\Exception $e) {
-//            return $this->sendError('Failed to send message. ' . $e->getMessage() . '. ' . $e->getLine());
+//            return $this->sendError('Failed to send message. ' . $e->getMessage() . '. ' . $e->getLine(), [], 501);
 //        }
 
         return $this->sendResponse(['expires_in' => User::SECONDS_TO_EXPIRE], 'Code send successfully.');
     }
 
     /**
-     * Отправка SMS-сообщения с кодом для авторизации
-     *
-     * @param Request $request
-     * @return JsonResponse
-     * @throws Exception
+     * @OA\Post (
+     *     path="/send/sms",
+     *     operationId="sendSms",
+     *     tags={"Auth"},
+     *     @OA\RequestBody (
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/SendSmsRequest"),
+     *     ),
+     *     @OA\Response(
+     *         response="200",
+     *         description="Success sms sendig",
+     *     ),
+     *     @OA\Response(
+     *         response="404",
+     *         description="Validation Error.",
+     *     ),
+     *     @OA\Response(
+     *         response="501",
+     *         description="Stupid coder.",
+     *     ),
+     * )
      */
     public function sendSms(Request $request)
     {

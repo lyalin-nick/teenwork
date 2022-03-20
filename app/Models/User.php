@@ -251,6 +251,11 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class, 'user_id', 'id');
     }
 
+    public function updatePhone($phone): bool
+    {
+        return $this->update(['phone' => $phone]);
+    }
+
     public function getFullData(): array
     {
         $profile = $this->profile;
@@ -264,8 +269,8 @@ class User extends Authenticatable
             'date_of_birth' => $profile->date_of_birth,
             'about' => $profile->about,
             'status' => $profile->status,
-            'photo_preview' => $profile->getPhotoPreviewLink(),
-            'photo' => $profile->getPhotoLink(),
+            'photo_preview' => $profile->getProfilePreviewImageLink(),
+            'photo' => $profile->getProfileImageLink(),
             'video' => $profile->getProfileVideoLink(),
             'address' => $profile->address,
             'address_id' => $profile->place_id,

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 
 class UploadingHelper
 {
-    public static function uploadFiles($files)
+    public static function uploadFiles($files): array
     {
         $paths = [];
         foreach ($files as $file) {
@@ -17,7 +17,7 @@ class UploadingHelper
         return $paths;
     }
 
-    public static function uploadFile($file)
+    public static function uploadFile($file): string
     {
         $path = Storage::disk('public')->putFile('tmp', $file);
 

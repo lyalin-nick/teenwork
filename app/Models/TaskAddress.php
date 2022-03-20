@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property integer $id
+ * @property integer $task_id
  * @property string $address
- * @property string $latitude
- * @property string $longitude
+ * @property string $place_id
  *
  * @mixin Builder
  */
@@ -18,10 +18,10 @@ class TaskAddress extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['task_id', 'address', 'place_id', 'latitude', 'longitude'];
+    protected $fillable = ['task_id', 'address', 'place_id'];
 
     public function task()
     {
-        return $this->belongsTo(Task::class, 'id', 'task_id');
+        return $this->belongsTo(Task::class, 'task_id');
     }
 }

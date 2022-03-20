@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api\Performer\Profile;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Models\PortfolioPhoto;
+use App\Models\PortfolioImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class PortfolioPhotoController extends BaseController
+class PortfolioImageController extends BaseController
 {
     /**
      * Загрузка и создание новых фото
@@ -31,7 +31,7 @@ class PortfolioPhotoController extends BaseController
         $user = $request->user();
         $profile = $user->profile;
 
-        $result = PortfolioPhoto::createModels($request->images, $profile->id);
+        $result = PortfolioImage::createModels($request->images, $profile->id);
 
         if (!$result) {
             Log::error("Portfolio photo error");
@@ -54,7 +54,7 @@ class PortfolioPhotoController extends BaseController
         $user = $request->user();
         $profile = $user->profile;
 
-        $photo = $profile->portfolioPhotos()->where('id', $id)->first();
+        $photo = $profile->portfolioImages()->where('id', $id)->first();
 
         if ($photo) {
             if ($photo->delete()) {

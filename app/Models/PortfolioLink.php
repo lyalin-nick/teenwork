@@ -24,4 +24,15 @@ class PortfolioLink extends Model
     {
         $this->belongsTo(Profile::class, 'profile_id');
     }
+
+    public static function createModels($links, $profile_id)
+    {
+        $models = [];
+
+        foreach ($links as $link) {
+            $models[] = self::create(['profile_id' => $profile_id, 'link' => $link]);
+        }
+
+        return count($links) === count($models);
+    }
 }

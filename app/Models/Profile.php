@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Models\Traits\ImageTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property integer $user_id
@@ -13,11 +13,8 @@ use Illuminate\Support\Facades\Storage;
  * @property string $last_name
  * @property string $date_of_birth
  * @property string $about
- * @property string $photo_path
- * @property string $photo_name
- * @property string $photo_ext
  * @property string $address
- * @property string $latitude
+ * @property string $place_id
  * @property string $longitude
  * @property integer $number_performer_tasks
  * @property integer $number_customer_tasks
@@ -26,11 +23,19 @@ use Illuminate\Support\Facades\Storage;
  * @property boolean $push_notification
  * @property boolean $email_notification
  * @property boolean $invisible
+ *
+ * @property User $user
+ * @property Language[] $languages
+ * @property ProfileImage $profileImage
+ * @property ProfileVideo $profileVideo
+ * @property PortfolioImage[] $portfolioImages
+ * @property PortfolioLink[] $portfolioLinks
+ *
+ * @mixin Builder
  */
 class Profile extends Model
 {
-    use HasFactory;
-    use ImageTrait;
+    use HasFactory, ImageTrait;
 
     protected $configImages = [
         '_mini' => [
@@ -41,8 +46,7 @@ class Profile extends Model
 
     protected $fillable = [
         'user_id', 'first_name', 'last_name', 'date_of_birth', 'about',
-        'photo_path', 'photo_name', 'photo_ext',
-        'address', 'place_id', 'latitude', 'longitude'
+        'address', 'place_id'
     ];
 
     public static function createProfile($data)
@@ -76,7 +80,12 @@ class Profile extends Model
 
     public function getLanguagesIds()
     {
-        return $this->languages()->pluck('id');
+        return $this->languages()->pluck('language_id');
+    }
+
+    public function profileImage()
+    {
+        return $this->hasOne(ProfileImage::class);
     }
 
     public function profileVideo()
@@ -87,29 +96,28 @@ class Profile extends Model
     /**
      * Получить ссылку на видео
      *
-     * @return string|null
+     * @return string
      */
-    public function getProfileVideoLink()
+    public function getProfileVideoLink(): string
     {
         if ($this->profileVideo) {
             return $this->profileVideo->getLink();
         }
-        return null;
+        return '';
     }
 
-    public function getPhotoLink()
+    public function getProfileImageLink(): string
     {
-        if ($this->photo_path && $this->photo_name && $this->photo_ext) {
-            if (is_file(Storage::disk('public')->path($this->photo_path . $this->photo_name . '.' . $this->photo_ext)))
-                return Storage::disk('public')->url($this->photo_path . $this->photo_name . '.' . $this->photo_ext);
+        if ($this->profileImage) {
+            return $this->profileImage->getLink();
         }
         return "";
     }
 
-    public function getPhotoPreviewLink()
+    public function getProfilePreviewImageLink(): string
     {
-        if ($this->photo_path && $this->photo_name && $this->photo_ext) {
-            return Storage::disk('public')->url($this->photo_path . $this->photo_name . '_mini.' . $this->photo_ext);
+        if ($this->profileImage) {
+            return $this->profileImage->getPreviewLink();
         }
         return "";
     }
@@ -117,31 +125,31 @@ class Profile extends Model
     public function getPortfolio(): array
     {
         return [
-            'photos' => $this->getPortfolioPhotosAsArray(),
+            'images' => $this->getPortfolioImagesAsArray(),
             'links' => $this->getPortfolioLinksAsArray()
         ];
     }
 
-    public function getPortfolioPhotosAsArray()
+    public function getPortfolioImagesAsArray(): array
     {
-        $photos = [];
-        $models = $this->portfolioPhotos;
+        $images = [];
+        $models = $this->portfolioImages;
 
         if ($models)
             foreach ($models as $model) {
-                $photos[] = [
+                $images[] = [
                     'id' => $model->id,
-                    'photo' => $model->getPhotoLink(),
-                    'photo_preview' => $model->getPhotoPreviewLink()
+                    'image' => $model->getLink(),
+                    'image_preview' => $model->getPreviewLink()
                 ];
             }
 
-        return $photos;
+        return $images;
     }
 
     public function getPortfolioLinksAsArray()
     {
-        return $this->portfolioLinks()->select('id', 'link')->get();
+        return $this->portfolioLinks()->get(['id', 'link'])->toArray();
     }
 
     public function portfolioLinks()
@@ -149,12 +157,12 @@ class Profile extends Model
         return $this->hasMany(PortfolioLink::class);
     }
 
-    public function portfolioPhotos()
+    public function portfolioImages()
     {
-        return $this->hasMany(PortfolioPhoto::class);
+        return $this->hasMany(PortfolioImage::class);
     }
 
-    public function getDateOfBirthAttribute($value)
+    public function getDateOfBirthAttribute($value): string
     {
         return date('Y-m-d', strtotime($value));
     }
@@ -170,16 +178,7 @@ class Profile extends Model
         $this->attributes['date_of_birth'] = date('Y-m-d', strtotime($value));
     }
 
-//    public function setPlaceIdAttribute($value)
-//    {
-//        if (empty($value)) {
-//            $address = $this->attributes['address'];
-//            $this->attributes['place_id'] = GoogleMap::getPlaceId($address);
-//        }
-//        $this->attributes['place_id'] = $value;
-//    }
-
-    public function refreshCategories($categories): bool
+    public function updateCategories($categories): bool
     {
         if ($categories) {
             $this->categories()->detach();
@@ -225,56 +224,32 @@ class Profile extends Model
         $this->save();
     }
 
-    public function uploadProfileImage($image): bool
+    /**
+     * @param $image object|string
+     * @return bool
+     */
+    public function uploadProfileImage($image)
     {
-        $img_path = $this->createPath();
-
-        $created = $this->createImage($image, $img_path);
-
-        if ($created) {
-
-            $path_info = pathinfo(Storage::disk('public')->path($created));
-
-            $this->photo_path = $img_path;
-            $this->photo_name = $path_info['filename'];
-            $this->photo_ext = $path_info['extension'];
-
-            return $this->save() && $this->createMiniature($this->photo_path, $this->photo_name, $this->photo_ext);
+        $profile_image = $this->profileImage;
+        if (!$profile_image) {
+            $profile_image = ProfileImage::create(['profile_id' => $this->id]);
         }
 
-        return false;
+        return is_string($image) ? $profile_image->copyImage($image, $this->id) : $profile_image->uploadImage($image, $this->id);
     }
 
-
-    public function uploadProfileVideo($video)
+    /**
+     * @param $video object|string
+     * @return bool
+     */
+    public function uploadProfileVideo($video): bool
     {
         $profile_video = $this->profileVideo;
         if (!$profile_video) {
             $profile_video = ProfileVideo::create(['profile_id' => $this->id]);
         }
 
-        return $profile_video->upload($video);
+        return is_string($video) ? $profile_video->copyVideo($video, $this->id) : $profile_video->uploadVideo($video, $this->id);
     }
 
-    public function hasImage(): bool
-    {
-        $profile_photo_path = $this->getFullPath();
-
-        return !empty($profile_photo_path) && is_file(Storage::disk('public')->path($profile_photo_path));
-    }
-
-    public function getFullPath(): string
-    {
-        return $this->photo_path . $this->photo_name . '.' . $this->photo_ext;
-    }
-
-    public function getImageLink(): string
-    {
-        return asset(Storage::url($this->getFullPath()));
-    }
-
-    public function deleteImage(): bool
-    {
-        return Storage::delete(Storage::disk('public')->path($this->getFullPath()));
-    }
 }

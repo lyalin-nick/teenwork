@@ -14,7 +14,33 @@ use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends BaseController
 {
-
+    /**
+     * @OA\Post (
+     *     path="/auth/email",
+     *     operationId="authByEmail",
+     *     tags={"Auth"},
+     *     @OA\RequestBody (
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/AuthEmailRequest"),
+     *     ),
+     *     @OA\Response(
+     *         response="200",
+     *         description="Success auth",
+     *     ),
+     *     @OA\Response(
+     *         response="404",
+     *         description="User with this email not found.",
+     *     ),
+     *     @OA\Response(
+     *         response="405",
+     *         description="Incorrect code.",
+     *     ),
+     *     @OA\Response(
+     *         response="406",
+     *         description="The verify code has expired.",
+     *     ),
+     * )
+     */
     public function authByEmail(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -30,11 +56,11 @@ class AuthController extends BaseController
         $user = User::findByEmail($request->email);
 
         if (!$user) {
-            return $this->sendError('User Error.', ['email' => 'User with this email not found.']);
+            return $this->sendError('Auth error! User with this email not found.', ['email' => 'User with this email not found.']);
         } elseif (!Hash::check($request->code, $user->verify_token)) {
-            return $this->sendError('User Error.', ['code' => 'Incorrect code.']);
+            return $this->sendError('Auth Error! Incorrect code.', ['code' => 'Incorrect code.'], 405);
         } elseif (strtotime($user->verify_token_expire) < strtotime(Carbon::now())) {
-            return $this->sendError('User Error.', ['code' => 'The verify code has expired.']);
+            return $this->sendError('Auth Error! The verify code has expired.', ['code' => 'The verify code has expired.'], 406);
         }
 
         $user->verify();
@@ -43,6 +69,33 @@ class AuthController extends BaseController
         return $this->sendResponse(['token' => $token->plainTextToken], 'Success auth');
     }
 
+    /**
+     * @OA\Post (
+     *     path="/auth/phone",
+     *     operationId="authByPhone",
+     *     tags={"Auth"},
+     *     @OA\RequestBody (
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/AuthPhoneRequest"),
+     *     ),
+     *     @OA\Response(
+     *         response="200",
+     *         description="Success auth",
+     *     ),
+     *     @OA\Response(
+     *         response="404",
+     *         description="User with this email not found.",
+     *     ),
+     *     @OA\Response(
+     *         response="405",
+     *         description="Incorrect code.",
+     *     ),
+     *     @OA\Response(
+     *         response="406",
+     *         description="The verify code has expired.",
+     *     ),
+     * )
+     */
     public function authByPhone(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -60,9 +113,9 @@ class AuthController extends BaseController
         if (!$user) {
             return $this->sendError('User Error.', ['phone' => 'User with this phone not found.']);
         } elseif (!Hash::check($request->code, $user->phone_verify_token)) {
-            return $this->sendError('User Error.', ['code' => 'Incorrect code.']);
+            return $this->sendError('User Error.', ['code' => 'Incorrect code.'], 405);
         } elseif (strtotime($user->phone_verify_token_expire) < strtotime(Carbon::now())) {
-            return $this->sendError('User Error.', ['code' => 'The verify code has expired.']);
+            return $this->sendError('User Error.', ['code' => 'The verify code has expired.'], 406);
         }
         $user->verifyPhone();
         $token = $user->createToken($request->device_name);

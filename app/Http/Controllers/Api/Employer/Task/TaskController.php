@@ -17,13 +17,6 @@ use Illuminate\Support\Facades\Validator;
 class TaskController extends BaseController
 {
 
-    /**
-     * @OA\Post (
-     *     @OA\RequestBody (
-     *     @OA\JsonContent()
-     * )
-     * )
-     */
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

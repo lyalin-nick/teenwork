@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTaskAddressesTable extends Migration
+class CreateProfileImagesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,12 @@ class CreateTaskAddressesTable extends Migration
      */
     public function up()
     {
-        Schema::create('task_addresses', function (Blueprint $table) {
+        Schema::create('profile_images', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('task_id', false, true);
-            $table->string('address');
-            $table->text('place_id')->nullable();
+            $table->bigInteger('profile_id', false, true);
+            $table->string('path')->nullable();
+            $table->string('name')->nullable();
+            $table->string('ext')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +30,6 @@ class CreateTaskAddressesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('task_addresses');
+        Schema::dropIfExists('profile_images');
     }
 }
