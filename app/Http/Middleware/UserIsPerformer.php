@@ -19,7 +19,7 @@ class UserIsPerformer
         if ($request->user() && !$request->user()->isPerformer()) {
             $response = [
                 'success' => false,
-                'message' => 'Action not available.'
+                'message' => 'Action not available for this role. You role - ' . $request->user()->role
             ];
 
             return response()->json($response, 403);

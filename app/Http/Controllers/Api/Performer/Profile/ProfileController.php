@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Performer\Profile;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Helpers\UploadingHelper;
-use App\Models\PortfolioLink;
 use App\Models\PortfolioImage;
+use App\Models\PortfolioLink;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -40,6 +40,7 @@ class ProfileController extends BaseController
         }
 
         $user = $request->user();
+        $user->checkEmptyRole(User::ROLE_PERFORMER);
         $profile = $user->profile;
         if (!$profile) {
             $profile = Profile::createProfile(['user_id' => $request->user()->id]);

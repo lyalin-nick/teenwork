@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\UserHasPhone;
 use App\Http\Middleware\UserIsEmployer;
 use App\Http\Middleware\UserIsPerformer;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -24,7 +25,8 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         UserIsPerformer::class,
-        UserIsEmployer::class
+        UserIsEmployer::class,
+        UserHasPhone::class
     ];
 
     /**
@@ -69,6 +71,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'performer' => UserIsPerformer::class,
-        'employer' => UserIsEmployer::class
+        'employer' => UserIsEmployer::class,
+        'user.phone' => UserHasPhone::class
     ];
 }

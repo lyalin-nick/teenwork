@@ -5,21 +5,21 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 
-class UserIsEmployer
+class UserHasPhone
 {
     /**
      * Handle an incoming request.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
      * @return \Illuminate\Http\JsonResponse
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && !$request->user()->isEmployer()) {
+        if ($request->user() && !$request->user()->hasPhone()) {
             $response = [
                 'success' => false,
-                'message' => 'Action not available for this role. You role - ' . $request->user()->role
+                'message' => 'Action not available. You have phone number already.'
             ];
 
             return response()->json($response, 403);

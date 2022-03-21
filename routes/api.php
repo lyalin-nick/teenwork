@@ -31,15 +31,19 @@ Route::post('/send/email', [VerifyCodeController::class, 'sendEmail']);
 Route::post('/send/sms', [VerifyCodeController::class, 'sendSms']);
 
 Route::prefix('/dictionary')->group(function () {
+
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{flag}', [CategoryController::class, 'grouped'])->where('flag', '(online|offline)');
     Route::get('/languages', [LanguageController::class, 'index']);
+
 });
 
 Route::prefix('/helper')->group(function () {
+
     Route::get('/autocomplete', [GoogleMapController::class, 'autocomplete']);
     Route::get('/coords', [GoogleMapController::class, 'c']);
     Route::get('/place-id', [GoogleMapController::class, 'placeId']);
+
 });
 
 Route::prefix('/auth')->group(function () {
@@ -61,9 +65,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/upload-images', [TaskController::class, 'uploadImages']);
             Route::post('/upload-video', [TaskController::class, 'uploadVideo']);
         });
+
     });
 
-    Route::prefix('/performer')->group(function () {
+    Route::prefix('/performer')->middleware('performer')->group(function () {
 
         Route::prefix('/profile')->group(function () {
             Route::post('/update', [PerformerProfileController::class, 'update']);
@@ -71,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/upload-video', [PerformerProfileController::class, 'uploadVideo']);
             Route::post('/portfolio/images', [PerformerProfileController::class, 'uploadImages']);
         });
+
     });
 
     Route::prefix('/profile')->group(function () {
@@ -85,7 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/image', [ProfileController::class, 'uploadImage']);
         Route::post('/video', [ProfileController::class, 'uploadVideo']);
 
-        Route::prefix('/portfolio')->group(function () {
+        Route::prefix('/portfolio')->middleware('performer')->group(function () {
 
             Route::get('/', [PerformerProfileController::class, 'portfolio']);
 
@@ -99,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::put('/{id}', [PortfolioLinkController::class, 'edit']);
                 Route::delete('/{id}', [PortfolioLinkController::class, 'delete']);
             });
+
         });
 
         Route::prefix('/setting')->group(function () {
@@ -112,10 +119,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/performer', [EmployerProfileController::class, 'setRolePerformer'])->middleware('employer');
         });
 
-        Route::prefix('/confirm-phone')->group(function () {
+        Route::prefix('/confirm-phone')->middleware('user.phone')->group(function () {
             Route::put('/send', [ConfirmPhoneController::class, 'send']);
             Route::put('/confirm', [ConfirmPhoneController::class, 'confirm']);
         });
+
     });
 
     Route::get('/user', function (Request $request) {

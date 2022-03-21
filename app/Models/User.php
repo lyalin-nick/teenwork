@@ -225,7 +225,15 @@ class User extends Authenticatable
      */
     public function isPhoneVerified(): bool
     {
-        return $this->phone_verified;
+        return !empty($this->phone_verified_at);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPhone(): bool
+    {
+        return !empty($this->phone) && $this->isPhoneVerified();
     }
 
     public function checkEmptyRole($role): void
@@ -256,6 +264,11 @@ class User extends Authenticatable
         return $this->update(['phone' => $phone]);
     }
 
+    /**
+     * Получить данные о пользователе
+     *
+     * @return array
+     */
     public function getFullData(): array
     {
         $profile = $this->profile;
