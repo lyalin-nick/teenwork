@@ -29,8 +29,8 @@ class ProfileController extends BaseController
             'categories.*' => 'integer',
             'image' => 'string',
             'video' => 'string',
-            'portfolio_photos' => 'array',
-            'portfolio_photos.*' => 'string',
+            'portfolio_images' => 'array',
+            'portfolio_images.*' => 'array',
             'portfolio_links' => 'array',
             'portfolio_links.*' => 'string|max:255'
         ]);
@@ -65,8 +65,9 @@ class ProfileController extends BaseController
                 $profile->uploadProfileVideo($request->image);
             }
 
-            if ($request->portfolio_photos) {
-                $result = PortfolioImage::createModels($request->portfolio_photos, $profile->id);
+            if ($request->portfolio_images) {
+
+                $result = PortfolioImage::createModels($request->portfolio_images, $profile->id);
 
                 if (!$result)
                     return $this->sendError('Photos upload error!', [], 511);

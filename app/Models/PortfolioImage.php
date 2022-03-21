@@ -36,16 +36,18 @@ class PortfolioImage extends Model
     {
         if ($images) {
             $models = [];
-            foreach ($images as $image) {
-                $model = new self([
-                    'profile_id' => $profile_id
+            foreach ($images as $image_arr) {
+                $model = self::create([
+                    'profile_id' => $profile_id,
+                    'description' => $image_arr['description']
                 ]);
-                if (is_string($image)) {
-                    if ($model->save() && $model->copyImage($image, $profile_id)) {
+
+                if (is_string($image_arr['image'])) {
+                    if ($model->save() && $model->copyImage($image_arr['image'], $profile_id)) {
                         $models[] = $model;
                     }
                 } else {
-                    if ($model->save() && $model->uploadImage($image, $profile_id)) {
+                    if ($model->save() && $model->uploadImage($image_arr['image'], $profile_id)) {
                         $models[] = $model;
                     }
                 }
@@ -54,6 +56,17 @@ class PortfolioImage extends Model
         }
 
         return false;
+    }
+
+    public static function createModel($image, $profile_id, $description): bool
+    {
+        $model = self::create([
+            'profile_id' => $profile_id,
+            'description' => $description
+        ]);
+
+        return is_string($image) ? $model->save() && $model->copyImage($image, $profile_id) : $model->save() && $model->uploadImage($image, $profile_id);
+
     }
 
     public function profile()

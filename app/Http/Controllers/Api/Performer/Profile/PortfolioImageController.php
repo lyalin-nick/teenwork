@@ -20,8 +20,8 @@ class PortfolioImageController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'images' => 'required|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg',
+            'image' => 'required|image|mimes:jpeg,png,jpg',
+            'description' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -31,7 +31,7 @@ class PortfolioImageController extends BaseController
         $user = $request->user();
         $profile = $user->profile;
 
-        $result = PortfolioImage::createModels($request->images, $profile->id);
+        $result = PortfolioImage::createModel($request->image, $profile->id, $request->description);
 
         if (!$result) {
             Log::error("Portfolio photo error");

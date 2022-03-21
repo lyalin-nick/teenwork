@@ -95,7 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('/', [PerformerProfileController::class, 'portfolio']);
 
-            Route::prefix('/images')->group(function () {
+            Route::prefix('/image')->group(function () {
                 Route::post('/', [PortfolioImageController::class, 'store']);
                 Route::delete('/{id}', [PortfolioImageController::class, 'delete']);
             });
