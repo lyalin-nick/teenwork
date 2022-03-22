@@ -15,8 +15,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $slug
  * @property string $icon_name
  * @property int $flag
- * @property mixed children
- * @property mixed parent
+ *
+ * @property Task[] $tasks
+ * @property Category $parent
+ * @property Category[] $children
+ * @property Profile[] $profiles
  *
  * @mixin Builder
  */
@@ -102,6 +105,12 @@ class Category extends Model
         return $categories;
     }
 
+    /**
+     * Получить массив ID флагов
+     *
+     * @param $flag
+     * @return int[]
+     */
     protected static function getFlagsConstants($flag)
     {
         $flags = [
@@ -112,12 +121,39 @@ class Category extends Model
         return $flags[$flag];
     }
 
+    protected static function booted()
+    {
+        static::deleted(function (self $category) {
+            $category->profiles()->detach();//убираем прилинкованные категории к профилю
+
+            if ($category->children)
+                foreach ($category->children as $child)
+                    $child->delete();
+
+        });
+    }
+
+    public function profiles()
+    {
+        return $this->belongsToMany(Profile::class);
+    }
+
+    /**
+     * Получить название флага
+     *
+     * @return string
+     */
     public function getFlagLabel(): string
     {
         $flags = self::getFlags();
         return $flags[$this->flag];
     }
 
+    /**
+     * Получение флагов категорий
+     *
+     * @return string[]
+     */
     public static function getFlags(): array
     {
         $flags = [
@@ -128,6 +164,11 @@ class Category extends Model
         return $flags;
     }
 
+    /**
+     * Получение пути одной категории (Категория, Подкатегория)
+     *
+     * @return string
+     */
     public function getFullPathName(): string
     {
         $name = $this->name;
@@ -154,11 +195,6 @@ class Category extends Model
     public function parent()
     {
         return $this->belongsTo(Category::class, 'category_id');
-    }
-
-    public function profiles()
-    {
-        return $this->belongsToMany(Profile::class);
     }
 
     public function sluggable(): array

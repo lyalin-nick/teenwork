@@ -6,6 +6,7 @@ use App\Models\Traits\ImageTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 
 /**
  * @property integer $user_id
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $place_id
  * @property string $longitude
  * @property integer $number_performer_tasks
- * @property integer $number_customer_tasks
+ * @property integer $number_employer_tasks
  * @property float $rating
  * @property integer $number_review
  * @property boolean $push_notification
@@ -49,9 +50,36 @@ class Profile extends Model
         'address', 'place_id'
     ];
 
+    /**
+     * Создание модели портфолио пользователя
+     * @param $data
+     * @return Profile|Model
+     */
     public static function createProfile($data)
     {
         return self::create($data);
+    }
+
+    protected static function booted()
+    {
+        static::deleted(function (self $profile) {
+            $profile->categories()->detach(); //удалим прилинкованные категории
+
+            if ($profile->profileVideo)
+                $profile->profileVideo->delete();//удалим прикрепленное видео
+
+            if ($profile->profileImage)
+                $profile->profileImage->delete();//удалим прикрепленное фото
+
+            if ($profile->portfolioImages)//удалим прикрепленные фото
+                foreach ($profile->portfolioImages as $image_model)
+                    $image_model->delete();
+
+            if ($profile->portfolioLinks)//удалим прикрепленные фото
+                foreach ($profile->portfolioLinks as $link_model)
+                    $link_model->delete();
+
+        });
     }
 
     public function user()
@@ -59,6 +87,10 @@ class Profile extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * Прилинковка выбранных языков к профилю
+     * @param $languages
+     */
     public function linkToLanguages($languages)
     {
         $language_models = Language::where('id', Language::ENGLISH_LANGUAGE)->get();
@@ -78,9 +110,14 @@ class Profile extends Model
         return $this->belongsToMany(Language::class);
     }
 
-    public function getLanguagesIds()
+    /**
+     * Получение массива IDшников предпочитаемых языков
+     * @return array
+     */
+    public function getLanguagesIds(): array
     {
-        return $this->languages()->pluck('language_id');
+        $languages = $this->languages;
+        return ($languages) ? Arr::pluck($languages, 'id') : [];
     }
 
     public function profileImage()
@@ -106,6 +143,10 @@ class Profile extends Model
         return '';
     }
 
+    /**
+     * Получить ссылку на фото профиля
+     * @return string
+     */
     public function getProfileImageLink(): string
     {
         if ($this->profileImage) {
@@ -114,6 +155,10 @@ class Profile extends Model
         return "";
     }
 
+    /**
+     * Получить ссылку на превью фото профиля
+     * @return string
+     */
     public function getProfilePreviewImageLink(): string
     {
         if ($this->profileImage) {
@@ -122,6 +167,10 @@ class Profile extends Model
         return "";
     }
 
+    /**
+     * Получение данных портфолио
+     * @return array
+     */
     public function getPortfolio(): array
     {
         return [
@@ -130,6 +179,10 @@ class Profile extends Model
         ];
     }
 
+    /**
+     * Получение массива данных о фото в портфолио
+     * @return array
+     */
     public function getPortfolioImagesAsArray(): array
     {
         $images = [];
@@ -147,6 +200,10 @@ class Profile extends Model
         return $images;
     }
 
+    /**
+     * Получение данных о ссылках в портфолио
+     * @return array
+     */
     public function getPortfolioLinksAsArray()
     {
         return $this->portfolioLinks()->get(['id', 'link'])->toArray();
@@ -162,22 +219,43 @@ class Profile extends Model
         return $this->hasMany(PortfolioImage::class);
     }
 
+    /**
+     * Аксессор на получение даты рождения
+     * @param $value
+     * @return string
+     */
     public function getDateOfBirthAttribute($value): string
     {
         return date('Y-m-d', strtotime($value));
     }
 
-    public function setLocation($address, $latitude, $longitude): void
+    /**
+     * Обновление адреса профиля
+     * @param $address
+     * @param $place_id
+     * @return bool
+     */
+    public function setLocation($address, $place_id): bool
     {
         $this->address = $address;
-        $this->save();
+        $this->place_id = $place_id;
+        return $this->save();
     }
 
+    /**
+     * Мутатор на поле даты рождения
+     * @param $value
+     */
     public function setDateOfBirthAttribute($value)
     {
         $this->attributes['date_of_birth'] = date('Y-m-d', strtotime($value));
     }
 
+    /**
+     * Прилинковка предпочитаемых категорий профиля
+     * @param $categories
+     * @return bool
+     */
     public function updateCategories($categories): bool
     {
         if ($categories) {
@@ -195,29 +273,46 @@ class Profile extends Model
         return $this->belongsToMany(Category::class);
     }
 
+    /**
+     * Получение ID предпочитаемых категорий профиля
+     * @return array
+     */
     public function getCategoriesIds()
     {
-        return $this->categories()->pluck('id');
+        $categories = $this->categories;
+        return ($categories) ? Arr::pull($categories, 'id') : [];
     }
 
+    /**
+     * Пересчет рейтинга профиля
+     */
     public function recountRating(): void
     {
         $this->rating = 5.0;
         $this->save();
     }
 
+    /**
+     * Добавить количество выполненных задач
+     */
     public function addNumberPerformerTask(): void
     {
         $this->number_performer_tasks += 1;
         $this->save();
     }
 
-    public function addNumberCustomerTask(): void
+    /**
+     * Добавить количество созданных задач
+     */
+    public function addNumberEmployerTask(): void
     {
-        $this->number_customer_tasks += 1;
+        $this->number_employer_tasks += 1;
         $this->save();
     }
 
+    /**
+     * Добавить количество отзывов
+     */
     public function addNumberReview(): void
     {
         $this->number_review += 1;
@@ -225,6 +320,7 @@ class Profile extends Model
     }
 
     /**
+     * Загрузка фото профиля
      * @param $image object|string
      * @return bool
      */
@@ -239,6 +335,7 @@ class Profile extends Model
     }
 
     /**
+     * Загрузка видео профиля
      * @param $video object|string
      * @return bool
      */
@@ -251,5 +348,4 @@ class Profile extends Model
 
         return is_string($video) ? $profile_video->copyVideo($video, $this->id) : $profile_video->uploadVideo($video, $this->id);
     }
-
 }

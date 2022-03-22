@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $address
  * @property string $place_id
  *
+ * @property Task $task
+ *
  * @mixin Builder
  */
 class TaskAddress extends Model

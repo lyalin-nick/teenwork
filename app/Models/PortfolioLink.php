@@ -10,6 +10,8 @@ use Illuminate\Database\Query\Builder;
  * @property integer $profile_id
  * @property string $link
  *
+ * @property Profile $profile
+ *
  * @mixin Builder
  */
 class PortfolioLink extends Model
@@ -20,11 +22,12 @@ class PortfolioLink extends Model
         'profile_id', 'link'
     ];
 
-    public function profile()
-    {
-        $this->belongsTo(Profile::class, 'profile_id');
-    }
-
+    /**
+     * Создание моделей ссылок портфолио
+     * @param $links
+     * @param $profile_id
+     * @return bool
+     */
     public static function createModels($links, $profile_id)
     {
         $models = [];
@@ -34,5 +37,10 @@ class PortfolioLink extends Model
         }
 
         return count($links) === count($models);
+    }
+
+    public function profile()
+    {
+        $this->belongsTo(Profile::class, 'profile_id');
     }
 }

@@ -9,13 +9,19 @@ class GoogleMap
 {
     const GOOGLE_API_KEY = "AIzaSyCBtiB9qc9100FDxgoeeq2F6kpBea2HOuQ";
 
-    public static function getAutocomplete($input)
+    /**
+     * Получение мест для автокомплита выбора адреса
+     * @param $input
+     * @return array
+     * @throws GuzzleException
+     */
+    public static function getAutocomplete($input): array
     {
-        $clinet = new Client();
+        $client = new Client();
 
         $link = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input={$input}&types=address&key=" . self::GOOGLE_API_KEY;
 
-        $response = $clinet->request('GET', $link);
+        $response = $client->request('GET', $link);
 
         $data = $response->getBody();
         $data = json_decode($data);
@@ -29,6 +35,28 @@ class GoogleMap
     }
 
     /**
+     * Получить placeId места из ГуглКарт по координатам
+     *
+     * @param $latitude
+     * @param $longitude
+     * @return string|null
+     * @throws GuzzleException
+     */
+    public static function getPlaceId($latitude, $longitude)
+    {
+        $client = new Client();
+
+        $link = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$latitude},{$longitude}&key=" . self::GOOGLE_API_KEY;
+
+        $response = $client->request('GET', $link);
+
+        $data = $response->getBody();
+        $data = json_decode($data);
+
+        return !empty($data->results) ? $data->results[0]->place_id : null;
+    }
+
+    /**
      * Not used
      *
      * @param $place_id
@@ -37,11 +65,11 @@ class GoogleMap
      */
     public static function getCoordinates($place_id)
     {
-        $clinet = new Client();
+        $client = new Client();
 
         $link = "https://maps.googleapis.com/maps/api/place/details/json?place_id={$place_id}&key=" . self::GOOGLE_API_KEY;
 
-        $response = $clinet->request('GET', $link);
+        $response = $client->request('GET', $link);
 
         $data = $response->getBody();
         $data = json_decode($data);
@@ -53,27 +81,5 @@ class GoogleMap
             ];
 
         return null;
-    }
-
-    /**
-     * Получить placeId места из ГуглКарт
-     *
-     * @param $latitude
-     * @param $longitude
-     * @return mixed|null
-     * @throws GuzzleException
-     */
-    public static function getPlaceId($latitude, $longitude)
-    {
-        $clinet = new Client();
-
-        $link = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$latitude},{$longitude}&key=" . self::GOOGLE_API_KEY;
-
-        $response = $clinet->request('GET', $link);
-
-        $data = $response->getBody();
-        $data = json_decode($data);
-
-        return !empty($data->results) ? $data->results[0]->place_id : null;
     }
 }

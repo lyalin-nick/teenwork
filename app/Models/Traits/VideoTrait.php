@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Storage;
 trait VideoTrait
 {
 
+    /**
+     * Копирование загруженного видео и сохранение данных модель
+     * @param $temp_path
+     * @param $parent_id
+     * @return bool
+     */
     public function copyVideo($temp_path, $parent_id): bool
     {
         $video_path = $this->createPath($parent_id);
@@ -29,6 +35,11 @@ trait VideoTrait
         return false;
     }
 
+    /**
+     * Получение нового пути для сохранения
+     * @param null $parent_id
+     * @return string
+     */
     public function createPath($parent_id = null): string
     {
         $file_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
@@ -38,6 +49,12 @@ trait VideoTrait
         return $file_path;
     }
 
+    /**
+     * Копирование видео
+     * @param $temp_img_path
+     * @param $img_path
+     * @return false|string
+     */
     protected function copyToNewPath($temp_img_path, $img_path)
     {
         try {
@@ -50,12 +67,19 @@ trait VideoTrait
         }
     }
 
+    /**
+     * Проверка и удаление видео
+     */
     protected function checkExistVideoAndDelete(): void
     {
         if ($this->hasVideo())
             $this->deleteVideo();
     }
 
+    /**
+     * Проверка существования видео-файла
+     * @return bool
+     */
     public function hasVideo(): bool
     {
         $video_path = $this->getFullPath();
@@ -63,16 +87,30 @@ trait VideoTrait
         return !empty($video_path) && is_file(Storage::disk('public')->path($video_path));
     }
 
+    /**
+     * Получение текущего пути
+     * @return string
+     */
     public function getFullPath(): string
     {
         return $this->path . $this->name . "." . $this->ext;
     }
 
+    /**
+     * Удаление фото
+     * @return bool
+     */
     public function deleteVideo(): bool
     {
         return Storage::disk('public')->delete($this->getFullPath());
     }
 
+    /**
+     * Загрузка фото и сохранение данных в модель
+     * @param $video
+     * @param $parent_id
+     * @return bool
+     */
     public function uploadVideo($video, $parent_id)
     {
         $video_path = $this->createPath($parent_id);
@@ -91,6 +129,12 @@ trait VideoTrait
         return false;
     }
 
+    /**
+     * Загрузка видео
+     * @param $video
+     * @param $video_path
+     * @return false|string
+     */
     protected function createVideo($video, $video_path)
     {
         try {
@@ -103,6 +147,10 @@ trait VideoTrait
         }
     }
 
+    /**
+     * Получение ссылки на видео
+     * @return string|null
+     */
     public function getVideoLink(): ?string
     {
         return $this->hasVideo() ? asset(Storage::url($this->getFullPath())) : null;

@@ -9,10 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 /**
+ * @property integer $id
  * @property integer $task_id
  * @property string $name
  * @property string $path
  * @property string $ext
+ *
+ * @property Task $task
  *
  * @mixin Builder
  */
@@ -43,19 +46,36 @@ class TaskVideo extends Model
         return false;
     }
 
+
+
+    protected static function booted()
+    {
+        static::deleted(function (self $task_video) {
+            $task_video->checkExistVideoAndDelete();
+        });
+    }
+
     public function task()
     {
         $this->belongsTo(Task::class, 'task_id');
     }
 
+    /**
+     * Загрузка видео к задаче
+     * @param $video_uri
+     * @return bool
+     */
+//    public function uploadVideo($video_uri): bool
+//    {
+//        return $this->uploadVideoFromUri($video_uri, $this->task_id);
+//    }
+    /**
+     * Получение ссылки на видео
+     * @return string|null
+     */
     public function getLink()
     {
         return $this->getVideoLink();
-    }
-
-    public function uploadVideo($video_uri): bool
-    {
-        return $this->uploadVideoFromUri($video_uri, $this->task_id);
     }
 
 }

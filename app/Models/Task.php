@@ -26,6 +26,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $created_at
  * @property string $updated_at
  *
+ * @property TaskImage[] $images
+ * @property TaskVideo $video
+ * @property TaskAddress[] $addresses
+ * @property Language[] $languages
+ * @property User $user
+ * @property Category $category
+ *
  * @mixin Builder
  */
 class Task extends Model
@@ -47,6 +54,36 @@ class Task extends Model
         'safe_deal', 'hot_work', 'account_verified',
         'status', 'views_number'
     ];
+
+    protected static function booted()
+    {
+        static::created(function ($task) {
+            $profile = $task->profile;
+            if ($profile)
+                $profile->addNumberEmployerTask();
+        });
+
+        static::deleted(function (self $task) {
+            $task->languages()->detach(); //удалим прилинкованные языки
+
+            if ($task->video)
+                $task->video->delete();//удалим прикрепленное видео
+
+            if ($task->images)//удалим прикрепленные фото
+                foreach ($task->images as $image_model)
+                    $image_model->delete();
+
+            if ($task->addresses)//удалим прикрепленные адреса
+                foreach ($task->addresses as $address_model)
+                    $address_model->delete();
+
+        });
+    }
+
+    public function languages()
+    {
+        return $this->belongsToMany(Language::class);
+    }
 
     public function user()
     {
@@ -92,7 +129,6 @@ class Task extends Model
 
     /**
      * Получение полной информации о задаче
-     *
      * @return array
      */
     public function getFullInfo(): array
@@ -127,7 +163,6 @@ class Task extends Model
 
     /**
      * Получение краткой информации о пользователе создавший задачу
-     *
      * @return array
      */
     public function getUserInfo(): array
@@ -144,6 +179,10 @@ class Task extends Model
         return $info;
     }
 
+    /**
+     * Получение выбранных к задаче предпочитаемых языков в виде строки
+     * @return string
+     */
     public function getAllLanguages(): string
     {
         $languages = $this->languages;
@@ -158,6 +197,10 @@ class Task extends Model
         return implode(', ', $task_languages);
     }
 
+    /**
+     * Получение выбранных к задаче адресов в виде строки
+     * @return string
+     */
     public function getAllAddresses(): string
     {
         $addresses = $this->addresses;
@@ -172,6 +215,10 @@ class Task extends Model
         return implode(', ', $task_addresses);
     }
 
+    /**
+     * Получение массива ссылок прикрепленных к задаче фото
+     * @return array
+     */
     public function getAllImages(): array
     {
         $images = $this->images;
@@ -186,11 +233,19 @@ class Task extends Model
         return $task_images;
     }
 
+    /**
+     * Получение ссылки на видео прикрепленного к задаче
+     * @return null
+     */
     public function getVideoLink()
     {
         return ($this->video) ? $this->video->getLink() : null;
     }
 
+    /**
+     * Получение статуса задачи в виде строки
+     * @return string
+     */
     public function getStatusLabel(): string
     {
         $labels = self::getStatusLabels();
@@ -198,6 +253,10 @@ class Task extends Model
         return isset($labels[$this->status]) ? $labels[$this->status] : 'undefined';
     }
 
+    /**
+     * Получение массива всех статусов задачи
+     * @return string[]
+     */
     public static function getStatusLabels(): array
     {
         $labels = [
@@ -211,11 +270,20 @@ class Task extends Model
         return $labels;
     }
 
+    /**
+     * Мутатор на поле start_time
+     * @param $value
+     */
     public function setStartTimeAttribute($value)
     {
         $this->attributes['start_time'] = date('H:i:s', strtotime($value));
     }
 
+    /**
+     * Создание моделей с адресами к задаче
+     * @param $addresses
+     * @return bool
+     */
     public function createTaskAddresses($addresses): bool
     {
         if ($addresses) {
@@ -229,6 +297,10 @@ class Task extends Model
         return count($addresses) === count($addresses_models);
     }
 
+    /**
+     * Прилинковка предпочитаемых языков выбранных к задаче
+     * @param $languages
+     */
     public function linkToLanguages($languages)
     {
         $language_models = Language::where('id', Language::ENGLISH_LANGUAGE)->get();
@@ -241,11 +313,6 @@ class Task extends Model
             $this->languages()->detach();
             $this->languages()->attach($language_models);
         }
-    }
-
-    public function languages()
-    {
-        return $this->belongsToMany(Language::class);
     }
 
     public function addresses()

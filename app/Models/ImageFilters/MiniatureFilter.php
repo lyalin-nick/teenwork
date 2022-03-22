@@ -8,17 +8,24 @@ use Intervention\Image\Image;
 class MiniatureFilter implements FilterInterface
 {
     /**
-     * Size of filter effects
+     * Ширина картинки
      *
      * @var integer
      */
     private $width;
+
+    /**
+     * Высота картинки
+     *
+     * @var integer
+     */
     private $height;
 
     /**
-     * Creates new instance of filter
+     * Конструктор задающий размеры фото
      *
-     * @param integer $size
+     * @param integer $width
+     * @param integer $height
      */
     public function __construct($width, $height)
     {
@@ -27,12 +34,12 @@ class MiniatureFilter implements FilterInterface
     }
 
     /**
-     * Applies filter effects to given image
+     * Применение фильтра к фото
      *
-     * @param Intervention\Image\Image $img
-     * @return Intervention\Image\Image
+     * @param Image $img Исходное фото
+     * @return Image
      */
-    public function applyFilter(Image $img)
+    public function applyFilter(Image $img): Image
     {
         $width = $img->width();
         $height = $img->height();

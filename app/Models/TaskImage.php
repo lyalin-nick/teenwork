@@ -9,6 +9,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 /**
+ * @property integer $id
+ * @property integer $task_id
+ * @property string $path
+ * @property string $name
+ * @property string $ext
+ * @property string $alt
+ * @property string $pos
+ *
+ * @property Task $task
+ *
  * @mixin Builder
  */
 class TaskImage extends Model
@@ -31,6 +41,12 @@ class TaskImage extends Model
         'updated_at' => 'datetime'
     ];
 
+    /**
+     * Создание моделей прикрепленных фото к задаче и загрузка фото
+     * @param array $images
+     * @param $task_id
+     * @return bool
+     */
     public static function createModels(array $images, $task_id): bool
     {
 
@@ -59,6 +75,13 @@ class TaskImage extends Model
         return $this->path . $new_path . $this->name . '.' . $this->ext;
     }
     */
+
+    protected static function booted()
+    {
+        static::deleted(function (self $task_image) {
+            $task_image->checkExistImageAndDelete();
+        });
+    }
 
     public function task()
     {

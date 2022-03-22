@@ -12,6 +12,12 @@ use Intervention\Image\Facades\Image;
 trait ImageTrait
 {
 
+    /**
+     * Копирование загруженной фотографии и сохранение данных в модель
+     * @param $temp_path
+     * @param $parent_id
+     * @return bool
+     */
     public function copyImage($temp_path, $parent_id)
     {
         $img_path = $this->createPath($parent_id);
@@ -30,6 +36,11 @@ trait ImageTrait
         return false;
     }
 
+    /**
+     * Получение пути для сохранения фото
+     * @param null $parent_id
+     * @return string
+     */
     public function createPath($parent_id = null): string
     {
         $file_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
@@ -39,6 +50,12 @@ trait ImageTrait
         return $file_path;
     }
 
+    /**
+     * Копирование фото
+     * @param $temp_img_path
+     * @param $img_path
+     * @return false|string
+     */
     protected function copyToNewPath($temp_img_path, $img_path)
     {
         try {
@@ -51,6 +68,9 @@ trait ImageTrait
         }
     }
 
+    /**
+     * Проверка и удаление фото и его миниатюр
+     */
     public function checkExistImageAndDelete(): void
     {
         if ($this->hasImage()) {
@@ -59,6 +79,10 @@ trait ImageTrait
         }
     }
 
+    /**
+     * Проверка существования фото
+     * @return bool
+     */
     public function hasImage(): bool
     {
         $profile_photo_path = $this->getFullPath();
@@ -66,16 +90,28 @@ trait ImageTrait
         return !empty($profile_photo_path) && is_file(Storage::disk('public')->path($profile_photo_path));
     }
 
+    /**
+     * Получение текущего пути
+     * @param string $suffix
+     * @return string
+     */
     public function getFullPath($suffix = ''): string
     {
         return $this->path . $this->name . "{$suffix}." . $this->ext;
     }
 
+    /**
+     * Удаление фото из файловой системы
+     * @return bool
+     */
     public function deleteImage(): bool
     {
         return Storage::disk('public')->delete($this->getFullPath());
     }
 
+    /**
+     * Удаление миниатюр
+     */
     public function deleteResizedImages(): void
     {
         if ($this->configImages) {
@@ -87,6 +123,13 @@ trait ImageTrait
         }
     }
 
+    /**
+     * Создание миниатюр
+     * @param $path
+     * @param $name
+     * @param $ext
+     * @return bool
+     */
     public function createMiniature($path, $name, $ext): bool
     {
         try {
@@ -107,6 +150,12 @@ trait ImageTrait
         }
     }
 
+    /**
+     * Загрузка фото и сохранение данных в модель
+     * @param $image
+     * @param $parent_id
+     * @return bool
+     */
     public function uploadImage($image, $parent_id)
     {
         $img_path = $this->createPath($parent_id);
@@ -125,6 +174,11 @@ trait ImageTrait
         return false;
     }
 
+    /**
+     * @param $image
+     * @param $img_path
+     * @return false|string
+     */
     protected function createImage($image, $img_path)
     {
         try {
@@ -137,6 +191,11 @@ trait ImageTrait
         }
     }
 
+    /**
+     * Получение ссылок на фото
+     * @param null $suffix
+     * @return string
+     */
     public function getImageLink($suffix = null): string
     {
         return asset(Storage::url($this->getFullPath($suffix)));

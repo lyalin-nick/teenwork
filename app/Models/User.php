@@ -254,6 +254,11 @@ class User extends Authenticatable
         return $this->hasMany(Network::class, 'user_id', 'id');
     }
 
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'user_id', 'id');
+    }
+
     public function profile()
     {
         return $this->hasOne(Profile::class, 'user_id', 'id');
@@ -262,6 +267,21 @@ class User extends Authenticatable
     public function updatePhone($phone): bool
     {
         return $this->update(['phone' => $phone]);
+    }
+
+    public function getPushNotificationAttribute($value)
+    {
+        return (boolean)$value;
+    }
+
+    public function getEmailNotificationAttribute($value)
+    {
+        return (boolean)$value;
+    }
+
+    public function getInvisibleAttribute($value)
+    {
+        return (boolean)$value;
     }
 
     /**
