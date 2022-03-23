@@ -16,7 +16,7 @@ class UserHasPhone
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && !$request->user()->hasPhone()) {
+        if ($request->user() && $request->user()->hasPhone()) {
             $response = [
                 'success' => false,
                 'message' => 'Action not available. You have phone number already.'

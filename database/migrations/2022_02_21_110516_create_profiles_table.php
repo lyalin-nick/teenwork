@@ -27,7 +27,7 @@ class CreateProfilesTable extends Migration
             $table->string('address', 255)->nullable();
             $table->text('place_id')->nullable();
             $table->integer('number_performer_tasks', false, true)->default(0);
-            $table->integer('number_customer_tasks', false, true)->default(0);
+            $table->integer('number_employer_tasks', false, true)->default(0);
             $table->float('rating', 3, 2, true)->default(0.00);
             $table->integer('number_review', false, true)->default(0);
             $table->boolean('push_notification')->default(false);

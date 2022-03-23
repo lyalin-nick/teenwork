@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Employer\Task;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Models\Helpers\UploadingHelper;
 use App\Models\Task;
 use App\Models\TaskImage;
 use App\Models\TaskVideo;
@@ -16,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 
 class TaskController extends BaseController
 {
+
 
     public function store(Request $request): JsonResponse
     {
@@ -108,36 +108,15 @@ class TaskController extends BaseController
     }
 
 
-    public function uploadImages(Request $request)
+    public function delete($id, Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'images' => 'required|array|max:10',
-            'images.*' => 'image|mimes:jpeg,png,jpg',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
+        $user = $request->user();
+        $task = $user->tasks()->where('id', $id)->first();
+        if ($task) {
+            return ($task->delete()) ? $this->sendResponse([], 'Task delete', 201) : $this->sendError('Task deleting error', [], 500);
         }
 
-        $paths = UploadingHelper::uploadFiles($request->images);
-
-        return $this->sendResponse($paths, 'Uploading success');
-    }
-
-
-    public function uploadVideo(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'video' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $paths = UploadingHelper::uploadFile($request->video);
-
-        return $this->sendResponse($paths, 'Uploading success');
+        return $this->sendError('Task not found');
     }
 
 }

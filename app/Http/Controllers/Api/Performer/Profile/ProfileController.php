@@ -27,8 +27,8 @@ class ProfileController extends BaseController
             'languages.*' => 'integer',
             'categories' => 'required|array',
             'categories.*' => 'integer',
-            'image' => 'string',
-            'video' => 'string',
+            'image' => 'nullable|string',
+            'video' => 'nullable|string',
             'portfolio_images' => 'array',
             'portfolio_images.*' => 'array',
             'portfolio_links' => 'array',
@@ -86,53 +86,6 @@ class ProfileController extends BaseController
         return $this->sendError('Profile doesnt updated', [], 500);
     }
 
-    public function uploadImage(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'image' => 'image|mimes:jpeg,png,jpg',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $path = UploadingHelper::uploadFile($request->image);
-
-        return $this->sendResponse($path, 'Uploading success');
-    }
-
-    public function uploadImages(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'images' => 'required|array|max:10',
-            'images.*' => 'image|mimes:jpeg,png,jpg',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $paths = UploadingHelper::uploadFiles($request->images);
-
-        return $this->sendResponse($paths, 'Uploading success');
-    }
-
-
-    public function uploadVideo(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'video' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $path = UploadingHelper::uploadFile($request->video);
-
-        return $this->sendResponse($path, 'Uploading success');
-    }
-
 
     public function portfolio(Request $request)
     {
@@ -169,9 +122,7 @@ class ProfileController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'address' => 'required|string',
-            'place_id' => 'string',
-            'latitude' => 'string',
-            'longitude' => 'string'
+            'place_id' => 'string'
         ]);
 
         if ($validator->fails()) {
@@ -183,9 +134,11 @@ class ProfileController extends BaseController
         if (!$profile) {
             $profile = Profile::createProfile(['user_id' => $request->user()->id]);
         }
-        $profile->update($request->only('address', 'place_id', 'latitude', 'longitude'));
 
-        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
+        if ($profile->setLocation($request->get('address'), $request->get('place_id'))) {
+            return $this->sendResponse(['user' => $user->getFullData()], 'Profile update successful');
+        }
+        return $this->sendError('Profile update error', [], 501);
     }
 
     public function setRoleEmployer(Request $request)

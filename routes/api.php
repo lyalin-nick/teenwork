@@ -8,12 +8,12 @@ use App\Http\Controllers\Api\Dictionary\LanguageController;
 use App\Http\Controllers\Api\Employer\Profile\ProfileController as EmployerProfileController;
 use App\Http\Controllers\Api\Employer\Task\TaskController;
 use App\Http\Controllers\Api\Helper\GoogleMapController;
+use App\Http\Controllers\Api\Helper\UploadController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioImageController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
 use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
 use App\Http\Controllers\Api\Profile\ConfirmPhoneController;
 use App\Http\Controllers\Api\Profile\ProfileController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,8 +27,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('/send/email', [VerifyCodeController::class, 'sendEmail']);
-Route::post('/send/sms', [VerifyCodeController::class, 'sendSms']);
+Route::prefix('/send')->group(function () {
+
+    Route::post('/email', [VerifyCodeController::class, 'sendEmail']);
+    Route::post('/sms', [VerifyCodeController::class, 'sendSms']);
+
+});
 
 Route::prefix('/dictionary')->group(function () {
 
@@ -44,6 +48,8 @@ Route::prefix('/helper')->group(function () {
     Route::get('/coords', [GoogleMapController::class, 'c']);
     Route::get('/place-id', [GoogleMapController::class, 'placeId']);
 
+    Route::post('/upload-image', [UploadController::class, 'uploadImage']);
+    Route::post('/upload-video', [UploadController::class, 'uploadVideo']);
 });
 
 Route::prefix('/auth')->group(function () {
@@ -56,57 +62,41 @@ Route::prefix('/auth')->group(function () {
 
 });
 
+
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::prefix('/employer')->group(function () {
+    //================================= Методы доступные для роли Заказчик =============================================
+    Route::prefix('/employer')->middleware('employer')->group(function () {
 
         Route::prefix('/task')->group(function () {
-            Route::post('/store', [TaskController::class, 'store'])->middleware('employer');
-            Route::post('/upload-images', [TaskController::class, 'uploadImages']);
-            Route::post('/upload-video', [TaskController::class, 'uploadVideo']);
+            Route::post('/store', [TaskController::class, 'store']);
+            Route::delete('/{id}', [TaskController::class, 'delete']);
         });
 
     });
+    //==================================================================================================================
 
+
+    //================================= Методы доступные для роли Заказчик =============================================
     Route::prefix('/performer')->middleware('performer')->group(function () {
 
         Route::prefix('/profile')->group(function () {
             Route::post('/update', [PerformerProfileController::class, 'update']);
-            Route::post('/upload-image', [PerformerProfileController::class, 'uploadImage']);
-            Route::post('/upload-video', [PerformerProfileController::class, 'uploadVideo']);
-            Route::post('/portfolio/images', [PerformerProfileController::class, 'uploadImages']);
         });
 
     });
+    //==================================================================================================================
 
+
+    //=============================== Методы для работы с модулем Профиль  =============================================
     Route::prefix('/profile')->group(function () {
 
+        //================================ Общие методы ================================================================
         Route::get('/', [ProfileController::class, 'index']);
         Route::put('/base-info', [ProfileController::class, 'setBaseInfo']);
         Route::put('/about', [ProfileController::class, 'setAbout']);
-
-        Route::put('/address', [PerformerProfileController::class, 'setAddress'])->middleware('performer');
-        Route::put('/categories', [PerformerProfileController::class, 'setCategories'])->middleware('performer');
-
         Route::post('/image', [ProfileController::class, 'uploadImage']);
         Route::post('/video', [ProfileController::class, 'uploadVideo']);
-
-        Route::prefix('/portfolio')->middleware('performer')->group(function () {
-
-            Route::get('/', [PerformerProfileController::class, 'portfolio']);
-
-            Route::prefix('/image')->group(function () {
-                Route::post('/', [PortfolioImageController::class, 'store']);
-                Route::delete('/{id}', [PortfolioImageController::class, 'delete']);
-            });
-
-            Route::prefix('/link')->group(function () {
-                Route::post('/', [PortfolioLinkController::class, 'store']);
-                Route::put('/{id}', [PortfolioLinkController::class, 'edit']);
-                Route::delete('/{id}', [PortfolioLinkController::class, 'delete']);
-            });
-
-        });
 
         Route::prefix('/setting')->group(function () {
             Route::put('/push-notification', [ProfileController::class, 'setPushNotification']);
@@ -114,21 +104,48 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/invisible', [ProfileController::class, 'setInvisible']);
         });
 
+        Route::prefix('/confirm-phone')->middleware('user.phone')->group(function () {
+            Route::put('/send', [ConfirmPhoneController::class, 'send']);
+            Route::put('/confirm', [ConfirmPhoneController::class, 'confirm']);
+        });
+        //==============================================================================================================
+
+
+        //============================= Методы доступные для роли Исполнитель ==========================================
+        Route::middleware('performer')->group(function (){
+
+            Route::put('/address', [PerformerProfileController::class, 'setAddress']);
+            Route::put('/categories', [PerformerProfileController::class, 'setCategories']);
+
+            Route::prefix('/portfolio')->group(function () {
+
+                Route::get('/', [PerformerProfileController::class, 'portfolio']);
+
+                Route::prefix('/image')->group(function () {
+                    Route::post('/', [PortfolioImageController::class, 'store']);
+                    Route::delete('/{id}', [PortfolioImageController::class, 'delete']);
+                });
+
+                Route::prefix('/link')->group(function () {
+                    Route::post('/', [PortfolioLinkController::class, 'store']);
+                    Route::put('/{id}', [PortfolioLinkController::class, 'edit']);
+                    Route::delete('/{id}', [PortfolioLinkController::class, 'delete']);
+                });
+
+            });
+        });
+        //==============================================================================================================
+
+
         Route::prefix('/role')->group(function () {
             Route::put('/employer', [PerformerProfileController::class, 'setRoleEmployer'])->middleware('performer');
             Route::put('/performer', [EmployerProfileController::class, 'setRolePerformer'])->middleware('employer');
         });
 
-        Route::prefix('/confirm-phone')->middleware('user.phone')->group(function () {
-            Route::put('/send', [ConfirmPhoneController::class, 'send']);
-            Route::put('/confirm', [ConfirmPhoneController::class, 'confirm']);
-        });
-
     });
+    //==================================================================================================================
 
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+
     Route::post('/logout', [LogoutController::class, 'logout']);
 
 });
