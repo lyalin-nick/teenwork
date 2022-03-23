@@ -280,7 +280,7 @@ class Profile extends Model
     public function getCategoriesIds()
     {
         $categories = $this->categories;
-        return ($categories) ? Arr::pull($categories, 'id') : [];
+        return ($categories) ? Arr::pluck($categories, 'id') : [];
     }
 
     /**
