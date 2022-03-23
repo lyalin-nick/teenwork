@@ -310,7 +310,7 @@ class User extends Authenticatable
             'languages' => $profile->getLanguagesIds(),
             'categories' => $profile->getCategoriesIds(),
             'number_performer_tasks' => $profile->number_performer_tasks,
-            'number_customer_tasks' => $profile->number_customer_tasks,
+            'number_employer_tasks' => $profile->number_employer_tasks,
             'rating' => $profile->rating,
             'number_review' => $profile->number_review,
             'push_notification' => $this->push_notification,
