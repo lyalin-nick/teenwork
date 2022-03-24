@@ -59,9 +59,11 @@ trait ImageTrait
     protected function copyToNewPath($temp_img_path, $img_path)
     {
         try {
+            $new_path = Storage::disk('public')->putFile($img_path, new File(Storage::disk('public')->path($temp_img_path)));
+
             $this->checkExistImageAndDelete();
 
-            return Storage::disk('public')->putFile($img_path, new File(Storage::disk('public')->path($temp_img_path)));
+            return $new_path;
         } catch (Exception $e) {
             Log::error($e->getMessage(), $e->getTrace());
             return false;
@@ -182,9 +184,11 @@ trait ImageTrait
     protected function createImage($image, $img_path)
     {
         try {
+            $new_path = Storage::disk('public')->putFile($img_path, $image);
+
             $this->checkExistImageAndDelete();
 
-            return Storage::disk('public')->putFile($img_path, $image);
+            return $new_path;
         } catch (Exception $e) {
             Log::error($e->getMessage(), $e->getTrace());
             return false;
@@ -200,37 +204,4 @@ trait ImageTrait
     {
         return asset(Storage::url($this->getFullPath($suffix)));
     }
-
-    /*public function uploadImageFromUri($image_uri, $parent_id = null)
-    {
-        $image_uri_info = pathinfo($image_uri);
-
-        $img_path = strtolower(class_basename($this)) . DIRECTORY_SEPARATOR;
-        if ($parent_id)
-            $img_path .= $parent_id . DIRECTORY_SEPARATOR;
-
-        $ext = $image_uri_info['extension'];
-
-        try {
-            if ($this->hasImage()) {
-                $this->deleteImage();
-                $this->deleteResizedImages();
-            }
-
-            $created = Storage::disk('public')->put($img_path . $this->id . '.' . $ext, file_get_contents($image_uri));
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            $created = false;
-        }
-
-        if ($created) {
-
-            $this->path = $img_path;
-            $this->name = $this->id;
-            $this->ext = $ext;
-
-            return $this->createMiniature($img_path, $this->id, $ext) && $this->save();
-        }
-        return false;
-    }*/
 }

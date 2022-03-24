@@ -20,12 +20,14 @@ class CreateTasksTable extends Migration
             $table->string('name', 255);
             $table->text('description');
             $table->text('result');
+            $table->string('address');
+            $table->text('place_id');
             $table->date('start_date');
             $table->time('start_time')->default('00:00:00');
             $table->smallInteger('amount_of_workers', false, true)->default(0);
             $table->smallInteger('minimum_age', false, true)->default(0);
             $table->integer('price', false, true)->default(0);
-            $table->string('payment_type')->default('per');
+            $table->string('payment_type');
             $table->boolean('safe_deal')->default(false);
             $table->boolean('hot_work')->default(false);
             $table->boolean('account_verified')->default(false);

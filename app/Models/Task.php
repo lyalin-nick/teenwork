@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 
 /**
  * @property integer $category_id
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $name
  * @property string $description
  * @property string $result
+ * @property string $address
+ * @property string $place_id
  * @property string $start_date
  * @property string $start_time
  * @property integer $amount_of_workers
@@ -28,7 +31,6 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property TaskImage[] $images
  * @property TaskVideo $video
- * @property TaskAddress[] $addresses
  * @property Language[] $languages
  * @property User $user
  * @property Category $category
@@ -49,6 +51,7 @@ class Task extends Model
     protected $fillable = [
         'category_id', 'name',
         'description', 'result',
+        'address', 'place_id',
         'start_date', 'start_time', 'amount_of_workers',
         'minimum_age', 'price', 'payment_type',
         'safe_deal', 'hot_work', 'account_verified',
@@ -72,11 +75,6 @@ class Task extends Model
             if ($task->images)//удалим прикрепленные фото
                 foreach ($task->images as $image_model)
                     $image_model->delete();
-
-            if ($task->addresses)//удалим прикрепленные адреса
-                foreach ($task->addresses as $address_model)
-                    $address_model->delete();
-
         });
     }
 
@@ -140,9 +138,10 @@ class Task extends Model
             'name' => $this->name,
             'description' => $this->description,
             'result' => $this->result,
-            'languages' => $this->getAllLanguages(),
-            'addresses' => $this->getAllAddresses(),
-            'images' => $this->getAllImages(),
+            'languages' => $this->getLanguagesAsString(),
+            'address' => $this->address,
+            'place_id' => $this->place_id,
+            'images' => $this->getImagesAsLinks(),
             'video' => $this->getVideoLink(),
             'start_date' => $this->start_date,
             'start_time' => $this->start_time,
@@ -183,43 +182,29 @@ class Task extends Model
      * Получение выбранных к задаче предпочитаемых языков в виде строки
      * @return string
      */
-    public function getAllLanguages(): string
+    public function getLanguagesAsString(): string
     {
         $languages = $this->languages;
 
-        $task_languages = [];
-
-        if ($languages) {
-            foreach ($languages as $language)
-                $task_languages[] = $language->name;
-        }
-
-        return implode(', ', $task_languages);
+        return ($languages) ? implode(', ', Arr::pluck($languages, 'name')) : "";
     }
 
     /**
-     * Получение выбранных к задаче адресов в виде строки
+     * Получение выбранных к задаче предпочитаемых языков в виде массива
      * @return string
      */
-    public function getAllAddresses(): string
+    public function getLanguagesAsArray(): array
     {
-        $addresses = $this->addresses;
+        $languages = $this->languages;
 
-        $task_addresses = [];
-
-        if ($addresses) {
-            foreach ($addresses as $address)
-                $task_addresses[] = $address->name;
-        }
-
-        return implode(', ', $task_addresses);
+        return ($languages) ? Arr::pluck($languages, 'id') : [];
     }
 
     /**
      * Получение массива ссылок прикрепленных к задаче фото
      * @return array
      */
-    public function getAllImages(): array
+    public function getImagesAsLinks(): array
     {
         $images = $this->images;
 
@@ -231,6 +216,42 @@ class Task extends Model
         }
 
         return $task_images;
+    }
+
+    /**
+     * Получение массива ссылок прикрепленных к задаче фото
+     * @return array
+     */
+    public function getImagesAsArray(): array
+    {
+        $images = $this->images;
+
+        $task_images = [];
+
+        if ($images) {
+            foreach ($images as $image)
+                $task_images[] = [
+                    'link' => $image->getImageLink(),
+                    'path' => $image->getFullPath()
+                ];
+        }
+
+        return $task_images;
+    }
+
+    public function cleanImages(): void
+    {
+        foreach ($this->images as $image) {
+            $image->delete();
+        }
+    }
+
+
+    public function cleanVideo(): void
+    {
+        if ($this->video) {
+            $this->video->cleanUp();
+        }
     }
 
     /**
@@ -280,24 +301,6 @@ class Task extends Model
     }
 
     /**
-     * Создание моделей с адресами к задаче
-     * @param $addresses
-     * @return bool
-     */
-    public function createTaskAddresses($addresses): bool
-    {
-        if ($addresses) {
-            $addresses_models = [];
-            foreach ($addresses as $address) {
-                $address['task_id'] = $this->id;
-                $addresses_models[] = TaskAddress::create($address);
-            }
-        }
-
-        return count($addresses) === count($addresses_models);
-    }
-
-    /**
      * Прилинковка предпочитаемых языков выбранных к задаче
      * @param $languages
      */
@@ -313,11 +316,6 @@ class Task extends Model
             $this->languages()->detach();
             $this->languages()->attach($language_models);
         }
-    }
-
-    public function addresses()
-    {
-        return $this->hasMany(TaskAddress::class);
     }
 
     public function images()

@@ -70,6 +70,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('/task')->group(function () {
             Route::post('/store', [TaskController::class, 'store']);
+            Route::get('/{id}', [TaskController::class, 'edit']);
+            Route::put('/{id}', [TaskController::class, 'update']);
             Route::delete('/{id}', [TaskController::class, 'delete']);
         });
 
@@ -77,7 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //==================================================================================================================
 
 
-    //================================= Методы доступные для роли Заказчик =============================================
+    //================================= Методы доступные для роли Исполнитель =============================================
     Route::prefix('/performer')->middleware('performer')->group(function () {
 
         Route::prefix('/profile')->group(function () {

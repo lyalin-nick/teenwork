@@ -46,6 +46,33 @@ class TaskVideo extends Model
         return false;
     }
 
+    /**
+     * Создание модели видео
+     *
+     * @param $video_path string Путь до видео
+     * @param $task_id integer Идентификатор задачи
+     * @return bool
+     */
+    public static function updateModel($video_path, $task_id)
+    {
+        if (Storage::disk('public')->exists($video_path)) {
+            $video_model = TaskImage::where('task_id', $task_id)->first();
+            if (!$video_model) {
+                $video_model = self::create(['task_id' => $task_id]);
+            }
+
+            if ($video_model) {
+                return $video_model->copyVideo($video_path, $task_id);
+            }
+        }
+        return false;
+    }
+
+    public function cleanUp(): void
+    {
+        $this->checkExistVideoAndDelete();
+        $this->update(['path' => null, 'name' => null, 'ext' => null]);
+    }
 
 
     protected static function booted()
@@ -60,15 +87,6 @@ class TaskVideo extends Model
         $this->belongsTo(Task::class, 'task_id');
     }
 
-    /**
-     * Загрузка видео к задаче
-     * @param $video_uri
-     * @return bool
-     */
-//    public function uploadVideo($video_uri): bool
-//    {
-//        return $this->uploadVideoFromUri($video_uri, $this->task_id);
-//    }
     /**
      * Получение ссылки на видео
      * @return string|null

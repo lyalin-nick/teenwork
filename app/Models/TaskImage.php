@@ -54,7 +54,7 @@ class TaskImage extends Model
             $models = [];
             foreach ($images as $image_path) {
                 if (Storage::disk('public')->exists($image_path)) {
-                    $model = new TaskImage([
+                    $model = self::create([
                         'task_id' => $task_id
                     ]);
 
@@ -69,12 +69,47 @@ class TaskImage extends Model
         return false;
     }
 
-    /*
-    public function getNewFullPath($new_path)
+    /**
+     * Создание моделей прикрепленных фото к задаче и загрузка фото
+     * @param array $images
+     * @param $task_id
+     * @return bool
+     */
+    public static function updateModels(array $images, $task_id): bool
     {
-        return $this->path . $new_path . $this->name . '.' . $this->ext;
+        if ($images) {
+            $exists_models = TaskImage::where('task_id', $task_id)->get();
+
+            $updated_models = [];
+
+            foreach ($images as $i => $image_path) {
+                if (Storage::disk('public')->exists($image_path)) {
+                    if (isset($exists_models[$i])) {
+                        $model = $exists_models[$i];
+                        if ($model->copyImage($image_path, $task_id)) {
+                            $updated_models[$i] = $model;
+                        }
+                    } else {
+                        $model = self::create(['task_id' => $task_id]);
+
+                        if ($model->save() && $model->copyImage($image_path, $task_id)) {
+                            $updated_models[$i] = $model;
+                        }
+                    }
+                }
+            }
+
+            foreach ($exists_models as $pos => $exists_model) {
+                if (!isset($updated_models[$pos])) {
+                    $exists_model->delete();
+                }
+            }
+            return count($images) === count($updated_models);
+        }
+
+        return false;
     }
-    */
+
 
     protected static function booted()
     {
