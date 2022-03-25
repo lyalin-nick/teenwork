@@ -257,6 +257,11 @@ return [
             'url' => 'admin/languages',
             'icon' => 'fas fa-fw fa-language',
         ],
+        [
+            'text' => 'FAQ',
+            'url' => 'admin/faqs',
+            'icon' => 'fas fa-fw fa-question',
+        ],
         /*
     [
         'text'        => 'pages',
@@ -437,6 +442,21 @@ return [
                     'type' => 'js',
                     'asset' => false,
                     'location' => '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min.js',
+                ],
+            ],
+        ],
+        'Summernote' => [
+            'active' => false,
+            'files' => [
+                [
+                    'type' => 'css',
+                    'asset' => false,
+                    'location' => '//cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css',
+                ],
+                [
+                    'type' => 'js',
+                    'asset' => false,
+                    'location' => '//cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js',
                 ],
             ],
         ],

@@ -122,17 +122,14 @@ class TaskController extends BaseController
                 'safe_deal' => $task->safe_deal,
                 'hot_work' => $task->hot_work,
                 'account_verified' => $task->account_verified,
-                'languages' => $task->getLanguagesAsArray()
-            ];
-            if ($task->images) {
-                $task_arr['images'] = $task->getImagesAsArray();
-            }
-            if ($task->video) {
-                $task_arr['video'] = [
+                'languages' => $task->getLanguagesAsArray(),
+                'images' => $task->getImagesAsArray(),
+                'video' => ($task->video && $task->video->hasVideo()) ? [
                     'link' => $task->video->getLink(),
                     'path' => $task->video->getFullPath()
-                ];
-            }
+                ] : null
+            ];
+
             return $this->sendResponse($task_arr, 'Task info', 201);
         }
 

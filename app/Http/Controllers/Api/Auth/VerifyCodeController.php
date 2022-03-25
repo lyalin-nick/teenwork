@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\User;
+use App\Notifications\EmailCode;
+use App\Notifications\SmsCode;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -58,11 +60,11 @@ class VerifyCodeController extends BaseController
             return $this->sendError('Failed to update user. ' . $e->getMessage() . '. ' . $e->getLine(), [], 501);
         }
 
-//        try {
-//            $user->notify(new EmailCode($new_pass));
-//        } catch (\Exception $e) {
-//            return $this->sendError('Failed to send message. ' . $e->getMessage() . '. ' . $e->getLine(), [], 501);
-//        }
+        try {
+            $user->notify(new EmailCode($new_pass));
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to send message. ' . $e->getMessage() . '. ' . $e->getLine(), [], 501);
+        }
 
         return $this->sendResponse(['expires_in' => User::SECONDS_TO_EXPIRE], 'Code send successfully.');
     }

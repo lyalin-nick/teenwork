@@ -28,8 +28,17 @@ Route::namespace('App\Http\Controllers\Admin')->prefix('admin')->name('admin.')-
 
     Route::resource('/categories', 'CategoryController');
     Route::resource('/languages', 'LanguageController');
+    Route::resource('/faqs', 'FaqController');
 });
 
 Auth::routes();
+
+Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
+    \UniSharp\LaravelFilemanager\Lfm::routes();
+});
+
+Route::get('/phpinfo', function () {
+    phpinfo();
+});
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

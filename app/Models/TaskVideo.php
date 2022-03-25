@@ -56,7 +56,7 @@ class TaskVideo extends Model
     public static function updateModel($video_path, $task_id)
     {
         if (Storage::disk('public')->exists($video_path)) {
-            $video_model = TaskImage::where('task_id', $task_id)->first();
+            $video_model = self::where('task_id', $task_id)->first();
             if (!$video_model) {
                 $video_model = self::create(['task_id' => $task_id]);
             }

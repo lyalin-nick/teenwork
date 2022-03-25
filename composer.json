@@ -7,6 +7,7 @@
     "require": {
         "php": "^7.3|^8.0",
         "cviebrock/eloquent-sluggable": "^8.0",
+        "darkaonline/l5-swagger": "^8.3",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "intervention/image": "^2.7",
@@ -18,7 +19,9 @@
         "laravel/socialite": "^5.3",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.4",
-        "nexmo/laravel": "^2.4"
+        "nexmo/laravel": "^2.4",
+        "techguy/laravel-ckeditor": "^1.5",
+        "unisharp/laravel-filemanager": "^2.4"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
