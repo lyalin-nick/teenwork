@@ -3,32 +3,29 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
-use Throwable;
 
 /**
  * @property int $id
- * @property string $name
- * @property string $last_name
  * @property string $email
  * @property string $phone
  * @property bool $phone_verified
  * @property string $password
+ * @property Carbon $verified_at
  * @property string $verify_token
  * @property Carbon $verify_token_expire
- * @property Carbon $email_verified_at
- * @property string $phone_verify_token
- * @property Carbon $phone_verify_token_expire
- * @property Carbon $phone_verified_at
+ * @property string $reset_token
+ * @property Carbon $reset_token_expire
  * @property string $role
  * @property string $status
  * @mixin HasApiTokens
+ * @mixin Builder
  */
 class User extends Authenticatable
 {
@@ -36,6 +33,7 @@ class User extends Authenticatable
 
     public const STATUS_WAIT = 'wait';
     public const STATUS_ACTIVE = 'active';
+    public const STATUS_RESET = 'reset';
 
     public const ROLE_PERFORMER = 'performer';
     public const ROLE_EMPLOYER = 'employer';
@@ -48,8 +46,8 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name', 'last_name', 'email', 'phone', 'password', 'status', 'role',
-//        'verify_token', 'email_verified_at', 'verify_token_expire',
+        'email', 'phone', 'password', 'status', 'role', 'verify_token', 'verified_at', 'verify_token_expire',
+//       'name', 'last_name', 'verify_token', 'email_verified_at', 'verify_token_expire',
 //        'phone_verify_token', 'phone_verified_at', 'phone_verify_token_expire'
     ];
 
@@ -70,31 +68,60 @@ class User extends Authenticatable
     protected $casts = [
         'verified_at' => 'datetime',
         'verify_token_expire' => 'datetime',
-        'phone_verified_at' => 'datetime',
-        'phone_verify_token_expire' => 'datetime',
+        'reset_token_expire' => 'datetime',
+        //'phone_verified_at' => 'datetime',
+        //'phone_verify_token_expire' => 'datetime',
     ];
 
-    public static function register(string $name, string $email, string $password): self
+    public static function register(string $phone, string $password, string $verify_code)
     {
         return static::create([
-            'name' => $name,
-            'email' => $email,
+            'phone' => $phone,
             'password' => bcrypt($password),
-            'verify_token' => Str::uuid(),
+            'verify_token' => bcrypt($verify_code),
+            'verify_token_expire' => Carbon::now()->addSeconds(self::SECONDS_TO_EXPIRE),
             'role' => null,
             'status' => self::STATUS_WAIT,
         ]);
     }
 
-    public static function new($name, $email): self
+    public function verify(): void
     {
-        return static::create([
-            'name' => $name,
-            'email' => $email,
-            'password' => bcrypt(Str::random()),
-            'role' => null,
-            'status' => self::STATUS_ACTIVE,
-        ]);
+        $this->status = self::STATUS_ACTIVE;
+        $this->verify_token = null;
+        $this->verify_token_expire = null;
+        $this->verified_at = ($this->verified_at) ?: Carbon::now();
+        $this->saveOrFail();
+    }
+
+    public function setPassword($password): void
+    {
+        $this->password = bcrypt($password);
+        $this->status = self::STATUS_ACTIVE;
+        $this->saveOrFail();
+    }
+
+    public function setResetToken($verify_code): void
+    {
+        $this->reset_token = bcrypt($verify_code);
+        $this->reset_token_expire = Carbon::now()->addSeconds(self::SECONDS_TO_EXPIRE);
+        $this->status = self::STATUS_RESET;
+        $this->saveOrFail();
+    }
+
+    public function removeResetToken(): void
+    {
+        $this->password = null;
+        $this->reset_token = null;
+        $this->reset_token_expire = null;
+        $this->status = self::STATUS_RESET;
+        $this->saveOrFail();
+    }
+
+    public function setActive(): void
+    {
+        $this->status = self::STATUS_ACTIVE;
+        $this->saveOrFail();
     }
 
     /**
@@ -110,9 +137,9 @@ class User extends Authenticatable
      * @param $identifier
      * @return mixed
      */
-    public static function findByEmail($identifier)
+    public static function findResetByPhone($identifier)
     {
-        return self::where('email', $identifier)->first();
+        return self::where('phone', $identifier)->where('status', self::STATUS_RESET)->first();
     }
 
     public static function rolesList(): array
@@ -142,45 +169,6 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
-    }
-
-    public function verify(): void
-    {
-        $this->email_verified_at = ($this->email_verified_at) ?: Carbon::now();
-        $this->status = self::STATUS_ACTIVE;
-        $this->password = $this->verify_token;
-        $this->verify_token = null;
-        $this->verify_token_expire = null;
-        $this->saveOrFail();
-    }
-
-    public function verifyPhone(): void
-    {
-        $this->phone_verified_at = ($this->phone_verified_at) ?: Carbon::now();
-        $this->status = self::STATUS_ACTIVE;
-        $this->password = $this->verify_token;
-        $this->phone_verify_token = null;
-        $this->phone_verify_token_expire = null;
-        $this->saveOrFail();
-    }
-
-    /**
-     *
-     * @param $code
-     * @throws Throwable
-     */
-    public function setEmailVerificationData($code): void
-    {
-        $this->verify_token = bcrypt($code);
-        $this->verify_token_expire = Carbon::now()->addSeconds(self::SECONDS_TO_EXPIRE);
-        $this->saveOrFail();
-    }
-
-    public function setPhoneVerificationData($code)
-    {
-        $this->phone_verify_token = bcrypt($code);
-        $this->phone_verify_token_expire = Carbon::now()->addSeconds(self::SECONDS_TO_EXPIRE);
-        $this->saveOrFail();
     }
 
     /**
@@ -215,27 +203,19 @@ class User extends Authenticatable
         return $this->role === self::ROLE_EMPLOYER || $this->role === null;
     }
 
-    public function hasFilledProfile(): bool
-    {
-        return !empty($this->name) && !empty($this->last_name) && $this->isPhoneVerified();
-    }
-
     /**
      * @return bool
      */
-    public function isPhoneVerified(): bool
+    public function isVerified(): bool
     {
-        return !empty($this->phone_verified_at);
+        return !empty($this->verified_at);
     }
 
     /**
-     * @return bool
+     * Обновление пустой роли
+     *
+     * @param $role
      */
-    public function hasPhone(): bool
-    {
-        return !empty($this->phone) && $this->isPhoneVerified();
-    }
-
     public function checkEmptyRole($role): void
     {
         if ($this->role === null) {
@@ -264,21 +244,34 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class, 'user_id', 'id');
     }
 
-    public function updatePhone($phone): bool
-    {
-        return $this->update(['phone' => $phone]);
-    }
-
+    /**
+     * Аксессор
+     *
+     * @param $value
+     * @return bool
+     */
     public function getPushNotificationAttribute($value)
     {
         return (boolean)$value;
     }
 
+    /**
+     * Аксессор
+     *
+     * @param $value
+     * @return bool
+     */
     public function getEmailNotificationAttribute($value)
     {
         return (boolean)$value;
     }
 
+    /**
+     * Аксессор
+     *
+     * @param $value
+     * @return bool
+     */
     public function getInvisibleAttribute($value)
     {
         return (boolean)$value;

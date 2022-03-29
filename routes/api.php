@@ -1,19 +1,25 @@
 <?php
 
-use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
+use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\VerifyCodeController;
 use App\Http\Controllers\Api\Dictionary\CategoryController;
+use App\Http\Controllers\Api\Dictionary\FaqController;
 use App\Http\Controllers\Api\Dictionary\LanguageController;
 use App\Http\Controllers\Api\Employer\Profile\ProfileController as EmployerProfileController;
 use App\Http\Controllers\Api\Employer\Task\TaskController;
 use App\Http\Controllers\Api\Helper\GoogleMapController;
 use App\Http\Controllers\Api\Helper\UploadController;
+use App\Http\Controllers\Api\Home\HomeController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioImageController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
 use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
 use App\Http\Controllers\Api\Profile\ConfirmPhoneController;
+use App\Http\Controllers\Api\Profile\PersonalInformationController;
 use App\Http\Controllers\Api\Profile\ProfileController;
+use App\Http\Controllers\Api\Profile\SettingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,11 +40,34 @@ Route::prefix('/send')->group(function () {
 
 });
 
+Route::post('/login', [LoginController::class, 'login']);
+
+Route::prefix('/register')->group(function () {
+
+    Route::post('/phone', [RegisterController::class, 'phone']);
+    Route::post('/confirm', [RegisterController::class, 'confirm']);
+
+    Route::get('/{provider}', [RegisterController::class, 'getNetworkRedirect']);
+    Route::get('/{provider}/callback', [RegisterController::class, 'authByNetwork']);
+
+});
+Route::prefix('/reset')->group(function () {
+
+    Route::post('/phone', [ResetPasswordController::class, 'phone']);
+    Route::post('/confirm', [ResetPasswordController::class, 'confirm']);
+    Route::post('/password', [ResetPasswordController::class, 'password']);
+
+});
+
+
 Route::prefix('/dictionary')->group(function () {
 
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{flag}', [CategoryController::class, 'grouped'])->where('flag', '(online|offline)');
     Route::get('/languages', [LanguageController::class, 'index']);
+
+    Route::get('/faqs', [FaqController::class, 'index']);
+    Route::get('/faqs/{id}', [FaqController::class, 'answer']);
 
 });
 
@@ -52,16 +81,9 @@ Route::prefix('/helper')->group(function () {
     Route::post('/upload-video', [UploadController::class, 'uploadVideo']);
 });
 
-Route::prefix('/auth')->group(function () {
-
-    Route::post('/email', [AuthController::class, 'authByEmail']);
-    Route::post('/phone', [AuthController::class, 'authByPhone']);
-
-    Route::get('/{provider}', [AuthController::class, 'getNetworkRedirect']);
-    Route::get('/{provider}/callback', [AuthController::class, 'authByNetwork']);
-
+Route::prefix('/home')->group(function () {
+    Route::get('/', [HomeController::class, 'index']);
 });
-
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -95,15 +117,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
         //================================ Общие методы ================================================================
         Route::get('/', [ProfileController::class, 'index']);
-        Route::put('/base-info', [ProfileController::class, 'setBaseInfo']);
-        Route::put('/about', [ProfileController::class, 'setAbout']);
-        Route::post('/image', [ProfileController::class, 'uploadImage']);
-        Route::post('/video', [ProfileController::class, 'uploadVideo']);
+
+        Route::put('/base-info', [PersonalInformationController::class, 'setBaseInfo']);
+        Route::put('/about', [PersonalInformationController::class, 'setAbout']);
+        Route::post('/image', [PersonalInformationController::class, 'uploadImage']);
+        Route::post('/video', [PersonalInformationController::class, 'uploadVideo']);
 
         Route::prefix('/setting')->group(function () {
-            Route::put('/push-notification', [ProfileController::class, 'setPushNotification']);
-            Route::put('/email-notification', [ProfileController::class, 'setEmailNotification']);
-            Route::put('/invisible', [ProfileController::class, 'setInvisible']);
+            Route::put('/push-notification', [SettingController::class, 'setPushNotification']);
+            Route::put('/email-notification', [SettingController::class, 'setEmailNotification']);
+            Route::put('/invisible', [SettingController::class, 'setInvisible']);
         });
 
         Route::prefix('/confirm-phone')->middleware('user.phone')->group(function () {
@@ -114,7 +137,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         //============================= Методы доступные для роли Исполнитель ==========================================
-        Route::middleware('performer')->group(function (){
+        Route::middleware('performer')->group(function () {
 
             Route::put('/address', [PerformerProfileController::class, 'setAddress']);
             Route::put('/categories', [PerformerProfileController::class, 'setCategories']);
@@ -137,7 +160,6 @@ Route::middleware('auth:sanctum')->group(function () {
             });
         });
         //==============================================================================================================
-
 
         Route::prefix('/role')->group(function () {
             Route::put('/employer', [PerformerProfileController::class, 'setRoleEmployer'])->middleware('performer');

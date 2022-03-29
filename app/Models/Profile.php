@@ -133,14 +133,14 @@ class Profile extends Model
     /**
      * Получить ссылку на видео
      *
-     * @return string
+     * @return string|null
      */
-    public function getProfileVideoLink(): string
+    public function getProfileVideoLink()
     {
         if ($this->profileVideo) {
             return $this->profileVideo->getLink();
         }
-        return '';
+        return null;
     }
 
     /**

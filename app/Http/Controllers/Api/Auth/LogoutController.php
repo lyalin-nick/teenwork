@@ -33,19 +33,11 @@ class LogoutController extends BaseController
     {
         $user = $request->user();
 
-        $header_auth = $request->header('Authorization');
-        $header_auth = str_replace('Bearer ', '', $header_auth);
-        $header_auth_arr = explode('|', $header_auth);
-        if (isset($header_auth_arr[0])) {
-            $header_id = $header_auth_arr[0];
-
-            $result = $user->tokens()->where('id', $header_id)->delete();
-            if ($result) {
-                return $this->sendResponse(['deleted' => $result], 'Token delete successfully');
-            }
-
-            return $this->sendError('Token not found', []);
+        $result = $user->currentAccessToken()->delete();
+        if ($result) {
+            return $this->sendResponse(['deleted' => $result], 'Token delete successfully');
         }
-        return $this->sendError('Header auth token not found', 401);
+
+        return $this->sendError('Token not found', 401);
     }
 }
