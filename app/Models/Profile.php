@@ -220,6 +220,16 @@ class Profile extends Model
     }
 
     /**
+     * Аксессор
+     * @param $value
+     * @return string
+     */
+    public function getFullNameAttribute(): string
+    {
+        return $this->attributes['first_name'] . ' ' . $this->attributes['last_name'];
+    }
+
+    /**
      * Аксессор на получение даты рождения
      * @param $value
      * @return string

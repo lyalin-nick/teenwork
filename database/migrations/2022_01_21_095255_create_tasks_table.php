@@ -33,6 +33,7 @@ class CreateTasksTable extends Migration
             $table->boolean('account_verified')->default(false);
             $table->tinyInteger('status')->default(1);
             $table->integer('views_number')->default(0);
+            $table->dateTime('expired_at')->nullable();
             $table->timestamps();
         });
     }

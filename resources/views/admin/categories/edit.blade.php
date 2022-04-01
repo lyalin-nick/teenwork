@@ -20,6 +20,8 @@
                             <option value="{{$id}}" @if($id === $model->flag) selected @endif >{{$flag_label}}</option>
                         @endforeach
                     </x-adminlte-select>
+                @else
+                    <x-adminlte-input name="icon_name" label="IconName" placeholder="icon_name" value="{{$model->icon_name}}" enable-old-support/>
                 @endif
                 <input type="hidden" name="category_id" value="{{$model->category_id}}">
             </div>

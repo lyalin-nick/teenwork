@@ -37,5 +37,8 @@ return [
     'nexmo' => [
         'sms_from' => '79512992213',
     ],
+    'google_api' => [
+        'key' => env('GOOGLE_API_KEY', 'AIzaSyCBtiB9qc9100FDxgoeeq2F6kpBea2HOuQ')
+    ]
 
 ];

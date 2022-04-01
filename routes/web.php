@@ -18,6 +18,16 @@ Route::get('/clear', function () {
     Artisan::call('config:cache');
     Artisan::call('view:clear');
     Artisan::call('route:clear');
+
+    $images = \App\Models\PortfolioImage::all();
+    foreach ($images as $image) {
+        $image->delete();
+    }
+    $links= \App\Models\PortfolioLink::all();
+    foreach ($links as $link) {
+        $link->delete();
+    }
+
     return "clear!!!!";
 });
 

@@ -18,6 +18,8 @@
                             <option value="{{$id}}">{{$flag_label}}</option>
                         @endforeach
                     </x-adminlte-select>
+                @else
+                    <x-adminlte-input name="icon_name" label="IconName" placeholder="icon_name" enable-old-support/>
                 @endif
                 <input type="hidden" name="category_id" value="{{$category_id}}">
             </div>

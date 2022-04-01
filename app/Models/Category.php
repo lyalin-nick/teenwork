@@ -123,6 +123,20 @@ class Category extends Model
 
     protected static function booted()
     {
+        static::updated(function (self $category) {
+            if ($category->children) {
+                foreach ($category->children as $child)
+                    $child->update(['icon_name' => $category->icon_name]);
+            }elseif ($category->parent){
+                $category->update(['icon_name' => $category->parent->icon_name]);
+            }
+        });
+        static::created(function (self $category) {
+            if ($category->parent){
+                $category->update(['icon_name' => $category->parent->icon_name]);
+            }
+        });
+
         static::deleted(function (self $category) {
             $category->profiles()->detach();//убираем прилинкованные категории к профилю
 
@@ -205,4 +219,5 @@ class Category extends Model
             ]
         ];
     }
+
 }

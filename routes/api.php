@@ -4,7 +4,6 @@ use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
-use App\Http\Controllers\Api\Auth\VerifyCodeController;
 use App\Http\Controllers\Api\Dictionary\CategoryController;
 use App\Http\Controllers\Api\Dictionary\FaqController;
 use App\Http\Controllers\Api\Dictionary\LanguageController;
@@ -16,7 +15,6 @@ use App\Http\Controllers\Api\Home\HomeController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioImageController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
 use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
-use App\Http\Controllers\Api\Profile\ConfirmPhoneController;
 use App\Http\Controllers\Api\Profile\PersonalInformationController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use App\Http\Controllers\Api\Profile\SettingController;
@@ -32,13 +30,6 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
-Route::prefix('/send')->group(function () {
-
-    Route::post('/email', [VerifyCodeController::class, 'sendEmail']);
-    Route::post('/sms', [VerifyCodeController::class, 'sendSms']);
-
-});
 
 Route::post('/login', [LoginController::class, 'login']);
 
@@ -82,7 +73,7 @@ Route::prefix('/helper')->group(function () {
 });
 
 Route::prefix('/home')->group(function () {
-    Route::get('/', [HomeController::class, 'index']);
+    Route::get('/{flag}', [HomeController::class, 'index'])->where('flag', '(online|offline)');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -127,11 +118,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/push-notification', [SettingController::class, 'setPushNotification']);
             Route::put('/email-notification', [SettingController::class, 'setEmailNotification']);
             Route::put('/invisible', [SettingController::class, 'setInvisible']);
-        });
-
-        Route::prefix('/confirm-phone')->middleware('user.phone')->group(function () {
-            Route::put('/send', [ConfirmPhoneController::class, 'send']);
-            Route::put('/confirm', [ConfirmPhoneController::class, 'confirm']);
         });
         //==============================================================================================================
 

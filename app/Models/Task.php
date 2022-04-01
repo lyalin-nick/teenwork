@@ -28,6 +28,7 @@ use Illuminate\Support\Arr;
  * @property integer $status
  * @property string $created_at
  * @property string $updated_at
+ * @property string $expired_at
  *
  * @property TaskImage[] $images
  * @property TaskVideo $video
@@ -60,6 +61,12 @@ class Task extends Model
 
     protected static function booted()
     {
+        static::creating(function ($task) {
+            $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
+        });
+        static::updating(function ($task) {
+            $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
+        });
         static::created(function ($task) {
             $profile = $task->profile;
             if ($profile)
@@ -76,6 +83,81 @@ class Task extends Model
                 foreach ($task->images as $image_model)
                     $image_model->delete();
         });
+    }
+
+    public static function search($flag, $params)
+    {
+        $tasks = Task::query()
+            ->where('tasks.expired_at', '>', date('Y-m-d H:i:s'))
+            ->join('users as u', 'u.id', '=', 'tasks.user_id')
+            ->join('profiles as p', 'u.id', '=', 'p.user_id')
+            ->join('categories as c', 'tasks.category_id', '=', 'c.id')
+            ->whereIn('c.flag', Category::getFlagsConstants($flag))
+            ->select([
+                'tasks.id',
+                'tasks.user_id',
+                'tasks.name',
+                'tasks.price',
+                'tasks.description',
+                'tasks.place_id',
+                'tasks.hot_work',
+                'tasks.safe_deal',
+                'tasks.created_at',
+                'tasks.start_date',
+                'p.rating',
+                'c.icon_name as icon_name',
+            ]);
+
+        if (isset($params['categories']))
+            $tasks->whereIn('tasks.category_id', $params['categories']);
+
+        if (isset($params['languages']))
+            $tasks->join('language_task as l', 'tasks.id', '=', 'l.task_id')
+                ->whereIn('l.language_id', $params['languages']);
+
+        if (isset($params['place_id']))
+            $tasks->where('tasks.place_id', $params['place_id']);
+
+        if (isset($params['days'])) {
+            foreach ($params['days'] as $i => $day){
+                $params['days'][$i] = date('Y-m-d', strtotime($day));
+            }
+            $tasks->whereIn('tasks.start_date', $params['days']);
+        }
+        if (isset($params['price']))
+            $tasks->where('tasks.price', '>=', $params['price']);
+
+        if (isset($params['safe_deal']))
+            $tasks->where('tasks.safe_deal', '=', filter_var($params['safe_deal'], FILTER_VALIDATE_BOOLEAN));
+
+        if (isset($params['hot_work']))
+            $tasks->where('tasks.hot_work', '=', filter_var($params['hot_work'], FILTER_VALIDATE_BOOLEAN));
+
+
+        $params['sort'] = isset($params['sort']) ?: 'default';
+        switch ($params['sort']) {
+            case "price":
+                $tasks->orderBy('tasks.price', 'desc');
+                break;
+            case "rating":
+                $tasks->orderBy('p.rating', 'desc');
+                break;
+            default:
+                $tasks->orderBy('start_date');
+                $tasks->orderBy('hot_work', 'desc');
+                break;
+        }
+
+        $tasks = $tasks->simplePaginate(20);
+
+        $tasks->makeHidden(['user', 'images']);
+        $tasks = $tasks->each(function ($item, $key) {
+            $item['user_data'] = $item->getUserInfo();
+            $item['images_links'] = $item->getImagesAsLinks();
+            $item['status'] = $item->getStatusLabel();
+        });
+
+        return $tasks->toArray();
     }
 
     public function languages()
@@ -104,6 +186,16 @@ class Task extends Model
     }
 
     /**
+     * Мутатор на поле start_date
+     *
+     * @param $value
+     */
+    public function getCreatedAtAttribute($value): string
+    {
+        return date('Y-m-d H:i:s', strtotime($value));
+    }
+
+    /**
      * Аксессор поля start_date
      *
      * @param $value
@@ -112,6 +204,39 @@ class Task extends Model
     public function getStartTimeAttribute($value): string
     {
         return date('H:i A', strtotime($value));
+    }
+
+    /**
+     * Аксессор поля start_date
+     *
+     * @param $value
+     * @return string
+     */
+    public function getSafeDealAttribute($value): bool
+    {
+        return (boolean)$value;
+    }
+
+    /**
+     * Аксессор поля start_date
+     *
+     * @param $value
+     * @return string
+     */
+    public function getHotWorkAttribute($value): bool
+    {
+        return (boolean)$value;
+    }
+
+    /**
+     * Аксессор поля start_date
+     *
+     * @param $value
+     * @return string
+     */
+    public function getAccountVerifiedAttribute($value): bool
+    {
+        return (boolean)$value;
     }
 
     /**
@@ -170,7 +295,7 @@ class Task extends Model
         $profile = $user->profile;
         $info = [
             'id' => $user->id,
-            'name' => $profile->first_name . ' ' . $profile->last_name,
+            'name' => $profile->full_name,
             'photo' => $profile->getProfileImageLink(),
             'rating' => $profile->rating,
         ];
@@ -212,7 +337,7 @@ class Task extends Model
 
         if ($images) {
             foreach ($images as $image)
-                $task_images[] = $image->getImageLink();
+                $task_images[] = ['image' => $image->getImageLink(), 'preview' => $image->getImageLink('_mini')];
         }
 
         return $task_images;

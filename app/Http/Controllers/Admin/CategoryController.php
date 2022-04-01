@@ -44,11 +44,11 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer|min:0',
             'flag' => 'integer',
+            'icon_name' => 'nullable|string|max:255',
         ]);
 
         $model = Category::create($request->all());
 
-        dd($model);
         $request->session()->flash('success', 'Запись добавлена');
 
         return redirect()->route('admin.categories.index', ['category_id' => $model->category_id]);
@@ -78,7 +78,8 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer|min:0',
-            'flag' => 'integer'
+            'flag' => 'integer',
+            'icon_name' => 'nullable|string|max:255',
         ]);
 
         $model = Category::where('id', $id)->first();

@@ -7,8 +7,6 @@ use GuzzleHttp\Exception\GuzzleException;
 
 class GoogleMap
 {
-    const GOOGLE_API_KEY = "AIzaSyCBtiB9qc9100FDxgoeeq2F6kpBea2HOuQ";
-
     /**
      * Получение мест для автокомплита выбора адреса
      * @param $input
@@ -17,9 +15,11 @@ class GoogleMap
      */
     public static function getAutocomplete($input): array
     {
+        $key = config('services.google_api.key');
+
         $client = new Client();
 
-        $link = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input={$input}&types=address&key=" . self::GOOGLE_API_KEY;
+        $link = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input={$input}&types=address&key={$key}";
 
         $response = $client->request('GET', $link);
 
@@ -44,9 +44,11 @@ class GoogleMap
      */
     public static function getPlaceId($latitude, $longitude)
     {
+        $key = config('services.google_api.key');
+
         $client = new Client();
 
-        $link = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$latitude},{$longitude}&key=" . self::GOOGLE_API_KEY;
+        $link = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$latitude},{$longitude}&key={$key}";
 
         $response = $client->request('GET', $link);
 
@@ -65,9 +67,11 @@ class GoogleMap
      */
     public static function getCoordinates($place_id)
     {
+        $key = config('services.google_api.key');
+
         $client = new Client();
 
-        $link = "https://maps.googleapis.com/maps/api/place/details/json?place_id={$place_id}&key=" . self::GOOGLE_API_KEY;
+        $link = "https://maps.googleapis.com/maps/api/place/details/json?place_id={$place_id}&key={$key}";
 
         $response = $client->request('GET', $link);
 
