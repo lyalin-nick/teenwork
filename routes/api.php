@@ -73,6 +73,7 @@ Route::prefix('/helper')->group(function () {
 });
 
 Route::prefix('/home')->group(function () {
+    Route::get('/count', [HomeController::class, 'count']);
     Route::get('/{flag}', [HomeController::class, 'index'])->where('flag', '(online|offline)');
 });
 
@@ -115,9 +116,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/video', [PersonalInformationController::class, 'uploadVideo']);
 
         Route::prefix('/setting')->group(function () {
-            Route::put('/push-notification', [SettingController::class, 'setPushNotification']);
-            Route::put('/email-notification', [SettingController::class, 'setEmailNotification']);
-            Route::put('/invisible', [SettingController::class, 'setInvisible']);
+            Route::put('/push-notification', [SettingController::class, 'pushNotification']);
+            Route::put('/email-notification', [SettingController::class, 'emailNotification']);
+            Route::put('/invisible', [SettingController::class, 'invisible']);
         });
         //==============================================================================================================
 

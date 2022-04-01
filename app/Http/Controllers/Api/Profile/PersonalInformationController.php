@@ -75,6 +75,7 @@ class PersonalInformationController extends BaseController
         }
 
         if ($profile->uploadProfileImage($request->image)) {
+            $user->refresh();
             return $this->sendResponse(['user' => $user->getFullData()], 'Image upload successful');
         }
 
@@ -100,6 +101,7 @@ class PersonalInformationController extends BaseController
         }
 
         if ($profile->uploadProfileVideo($request->video)) {
+            $user->refresh();
             return $this->sendResponse(['user' => $user->getFullData()], 'Video upload successful');
         }
 

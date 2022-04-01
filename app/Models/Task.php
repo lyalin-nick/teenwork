@@ -119,7 +119,7 @@ class Task extends Model
             $tasks->where('tasks.place_id', $params['place_id']);
 
         if (isset($params['days'])) {
-            foreach ($params['days'] as $i => $day){
+            foreach ($params['days'] as $i => $day) {
                 $params['days'][$i] = date('Y-m-d', strtotime($day));
             }
             $tasks->whereIn('tasks.start_date', $params['days']);
@@ -158,6 +158,26 @@ class Task extends Model
         });
 
         return $tasks->toArray();
+    }
+
+    public static function countOnline()
+    {
+        $tasks = Task::query()
+            ->where('tasks.expired_at', '>', date('Y-m-d H:i:s'))
+            ->join('categories as c', 'tasks.category_id', '=', 'c.id')
+            ->whereIn('c.flag', Category::getFlagsConstants('online'));
+
+        return $tasks->count();
+    }
+
+    public static function countOffline()
+    {
+        $tasks = Task::query()
+            ->where('tasks.expired_at', '>', date('Y-m-d H:i:s'))
+            ->join('categories as c', 'tasks.category_id', '=', 'c.id')
+            ->whereIn('c.flag', Category::getFlagsConstants('offline'));
+
+        return $tasks->count();
     }
 
     public function languages()

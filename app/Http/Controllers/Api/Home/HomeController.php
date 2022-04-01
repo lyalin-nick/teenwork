@@ -16,4 +16,9 @@ class HomeController extends BaseController
 
         return $this->sendResponse($tasks, 'Success', 201);
     }
+
+    public function count()
+    {
+        return $this->sendResponse(['online' => Task::countOnline(), 'offline' => Task::countOffline()], 'Result', 201);
+    }
 }
