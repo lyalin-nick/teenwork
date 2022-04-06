@@ -65,9 +65,9 @@ class Task extends Model
      * @param string $flag
      * @param array $params
      * @param false $getAll
-     * @return array
+     * @return Builder
      */
-    public static function search($flag, $params, $getAll = false)
+    public static function search($flag, $params): Builder
     {
         $tasks = Task::query()
             ->with('user')
@@ -118,7 +118,7 @@ class Task extends Model
             $tasks->where('tasks.hot_work', '=', filter_var($params['hot_work'], FILTER_VALIDATE_BOOLEAN));
 
 
-        $params['sort'] = isset($params['sort']) ? $params['sort'] : 'default';
+        $params['sort'] = $params['sort'] ?? 'default';
         switch ($params['sort']) {
             case "price":
                 $tasks->orderBy('tasks.price', 'desc');
@@ -132,17 +132,7 @@ class Task extends Model
                 break;
         }
 
-        $tasks = ($getAll) ? $tasks->get() : $tasks->simplePaginate(20);
-
-
-        $tasks = $tasks->each(function ($item, $key) {
-            $item->makeHidden(['user', 'images']);
-            $item['user_info'] = $item->user_info;
-            $item['images_links'] = $item->images_links;
-            $item['status'] = $item->status_label;
-        });
-
-        return $tasks->toArray();
+        return $tasks;
     }
 
     /**

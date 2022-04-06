@@ -75,6 +75,7 @@ Route::prefix('/helper')->group(function () {
 
 Route::prefix('/home')->group(function () {
     Route::get('/count', [HomeController::class, 'count']);
+    Route::get('/count/{flag}', [HomeController::class, 'count'])->where('flag', '(online|offline)');
     Route::get('/{flag}', [HomeController::class, 'index'])->where('flag', '(online|offline)');
     Route::get('/map/{flag}', [HomeController::class, 'map'])->where('flag', '(online|offline)');
 });

@@ -14,7 +14,18 @@ class HomeController extends BaseController
         $params = $request->all();
         $tasks = Task::search($flag, $params);
 
-        return $this->sendResponse($tasks, 'Success', 201);
+        $tasks = $tasks->simplePaginate(20);
+
+        $tasks = $tasks->each(function ($item, $key) {
+            $item->makeHidden(['user', 'images']);
+            $item['user_info'] = $item->user_info;
+            $item['images_links'] = $item->images_links;
+            $item['status'] = $item->status_label;
+        });
+
+        //return $tasks->toArray();
+
+        return $this->sendResponse($tasks->toArray(), 'Success', 201);
     }
 
     public function map($flag, Request $request)
@@ -22,11 +33,27 @@ class HomeController extends BaseController
         $params = $request->all();
         $tasks = Task::search($flag, $params, true);
 
-        return $this->sendResponse($tasks, 'Success', 201);
+        $tasks = $tasks->get();
+
+
+        $tasks = $tasks->each(function ($item, $key) {
+            $item->makeHidden(['user', 'images']);
+            $item['user_info'] = $item->user_info;
+            $item['images_links'] = $item->images_links;
+            $item['status'] = $item->status_label;
+        });
+
+        return $this->sendResponse($tasks->toArray(), 'Success', 201);
     }
 
-    public function count()
+    public function count($flag = null, Request $request)
     {
+        if ($flag) {
+            $params = $request->all();
+            $tasks = Task::search($flag, $params);
+
+            return $this->sendResponse($tasks->count(), 'Result', 201);
+        }
         return $this->sendResponse(['online' => Task::countOnline(), 'offline' => Task::countOffline()], 'Result', 201);
     }
 }
