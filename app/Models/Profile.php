@@ -16,7 +16,6 @@ use Illuminate\Support\Arr;
  * @property string $about
  * @property string $address
  * @property string $place_id
- * @property string $longitude
  * @property integer $number_performer_tasks
  * @property integer $number_employer_tasks
  * @property float $rating
@@ -82,9 +81,14 @@ class Profile extends Model
         });
     }
 
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class);
+    }
+
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -214,6 +218,39 @@ class Profile extends Model
         return $this->hasMany(PortfolioLink::class);
     }
 
+    /**
+     * Аксессор
+     *
+     * @param $value
+     * @return bool
+     */
+    public function getPushNotificationAttribute($value)
+    {
+        return (boolean)$value;
+    }
+
+    /**
+     * Аксессор
+     *
+     * @param $value
+     * @return bool
+     */
+    public function getEmailNotificationAttribute($value)
+    {
+        return (boolean)$value;
+    }
+
+    /**
+     * Аксессор
+     *
+     * @param $value
+     * @return bool
+     */
+    public function getInvisibleAttribute($value)
+    {
+        return (boolean)$value;
+    }
+
     public function portfolioImages()
     {
         return $this->hasMany(PortfolioImage::class);
@@ -276,11 +313,6 @@ class Profile extends Model
         }
 
         return false;
-    }
-
-    public function categories()
-    {
-        return $this->belongsToMany(Category::class);
     }
 
     /**

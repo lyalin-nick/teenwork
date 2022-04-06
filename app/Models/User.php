@@ -24,6 +24,9 @@ use Laravel\Sanctum\HasApiTokens;
  * @property Carbon $reset_token_expire
  * @property string $role
  * @property string $status
+ * @property Task[] $tasks
+ * @property Review[] $reviews
+ *
  * @mixin HasApiTokens
  * @mixin Builder
  */
@@ -161,51 +164,6 @@ class User extends Authenticatable
         $this->saveOrFail();
     }
 
-    public function isWait(): bool
-    {
-        return $this->status === self::STATUS_WAIT;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->status === self::STATUS_ACTIVE;
-    }
-
-    /**
-     * Route notifications for the Nexmo channel.
-     *
-     * @param $notification
-     * @return string
-     */
-    public function routeNotificationForNexmo($notification)
-    {
-        return $this->phone;
-    }
-
-    /**
-     * Маршрутизация уведомлений для почтового канала.
-     *
-     * @param Notification $notification
-     * @return array|string
-     */
-    public function routeNotificationForMail($notification)
-    {
-        return $this->email;
-    }
-
-    public function isPerformer(): bool
-    {
-        return $this->role === self::ROLE_PERFORMER || $this->role === null;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isVerified(): bool
-    {
-        return !empty($this->verified_at);
-    }
-
     /**
      * Обновление пустой роли
      *
@@ -234,37 +192,36 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class, 'user_id', 'id');
     }
 
-    /**
-     * Аксессор
-     *
-     * @param $value
-     * @return bool
-     */
-    public function getPushNotificationAttribute($value)
+    public function tasks()
     {
-        return (boolean)$value;
+        return $this->hasMany(Task::class, 'user_id', 'id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'performer_id', 'id');
     }
 
     /**
-     * Аксессор
+     * Идентификатор для отправки смс
      *
-     * @param $value
-     * @return bool
+     * @param $notification
+     * @return string
      */
-    public function getEmailNotificationAttribute($value)
+    public function routeNotificationForNexmo($notification)
     {
-        return (boolean)$value;
+        return $this->phone;
     }
 
     /**
-     * Аксессор
+     * Маршрутизация уведомлений для почтового канала.
      *
-     * @param $value
-     * @return bool
+     * @param Notification $notification
+     * @return array|string
      */
-    public function getInvisibleAttribute($value)
+    public function routeNotificationForMail($notification)
     {
-        return (boolean)$value;
+        return $this->email;
     }
 
     /**
@@ -314,14 +271,44 @@ class User extends Authenticatable
         return $tasks;
     }
 
+    /**
+     * Роль заказчик
+     *
+     * @return bool
+     */
     public function isEmployer(): bool
     {
         return $this->role === self::ROLE_EMPLOYER || $this->role === null;
     }
 
-    public function tasks()
+    /**
+     * Роль исполнитель
+     *
+     * @return bool
+     */
+    public function isPerformer(): bool
     {
-        return $this->hasMany(Task::class, 'user_id', 'id');
+        return $this->role === self::ROLE_PERFORMER || $this->role === null;
+    }
+
+    /**
+     * Подтвержденный профиль
+     *
+     * @return bool
+     */
+    public function isVerified(): bool
+    {
+        return !empty($this->verified_at);
+    }
+
+    public function isWait(): bool
+    {
+        return $this->status === self::STATUS_WAIT;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
     }
 
     /**
@@ -353,9 +340,9 @@ class User extends Authenticatable
             'number_employer_tasks' => $profile->number_employer_tasks,
             'rating' => $profile->rating,
             'number_review' => $profile->number_review,
-            'push_notification' => $this->push_notification,
-            'email_notification' => $this->email_notification,
-            'invisible' => $this->invisible,
+            'push_notification' => $profile->push_notification,
+            'email_notification' => $profile->email_notification,
+            'invisible' => $profile->invisible,
             'created_at' => date('Y-m-d', strtotime($this->created_at))
         ];
 

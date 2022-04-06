@@ -19,9 +19,6 @@ class CreateUsersTable extends Migration
             $table->string('role', 16)->nullable();
             $table->string('email')->unique()->nullable();
             $table->string('password')->nullable();
-            $table->boolean('push_notification')->default(true);
-            $table->boolean('email_notification')->default(false);
-            $table->boolean('invisible')->default(false);
             $table->string('status', 16);
             $table->string('reset_token')->nullable();
             $table->timestamp('reset_token_expire')->nullable();
@@ -30,11 +27,6 @@ class CreateUsersTable extends Migration
             $table->timestamp('verify_token_expire')->nullable();
             $table->rememberToken();
             $table->timestamps();
-            //$table->string('name')->nullable();
-            //$table->string('last_name')->nullable();
-            //$table->date('date_of_birth')->nullable();
-            //$table->timestamp('email_verified_at')->nullable();
-            //$table->boolean('phone_auth')->default(false);
         });
     }
 
