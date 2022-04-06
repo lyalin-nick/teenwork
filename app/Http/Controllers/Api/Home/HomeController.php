@@ -17,6 +17,14 @@ class HomeController extends BaseController
         return $this->sendResponse($tasks, 'Success', 201);
     }
 
+    public function map($flag, Request $request)
+    {
+        $params = $request->all();
+        $tasks = Task::search($flag, $params, true);
+
+        return $this->sendResponse($tasks, 'Success', 201);
+    }
+
     public function count()
     {
         return $this->sendResponse(['online' => Task::countOnline(), 'offline' => Task::countOffline()], 'Result', 201);

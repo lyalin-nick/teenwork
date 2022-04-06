@@ -85,6 +85,43 @@ class User extends Authenticatable
         ]);
     }
 
+    /**
+     * @param $identifier
+     * @return mixed
+     */
+    public static function findByPhone($identifier)
+    {
+        return self::where('phone', $identifier)->first();
+    }
+
+    /**
+     * @param $identifier
+     * @return mixed
+     */
+    public static function findResetByPhone($identifier)
+    {
+        return self::where('phone', $identifier)->where('status', self::STATUS_RESET)->first();
+    }
+
+    public static function rolesList(): array
+    {
+        return [
+            self::ROLE_PERFORMER => 'Performer',
+            self::ROLE_EMPLOYER => 'Employer'
+        ];
+    }
+
+    /**
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            Profile::createProfile(['user_id' => $user->id]);
+        });
+    }
+
     public function verify(): void
     {
         $this->status = self::STATUS_ACTIVE;
@@ -124,43 +161,6 @@ class User extends Authenticatable
         $this->saveOrFail();
     }
 
-    /**
-     * @param $identifier
-     * @return mixed
-     */
-    public static function findByPhone($identifier)
-    {
-        return self::where('phone', $identifier)->first();
-    }
-
-    /**
-     * @param $identifier
-     * @return mixed
-     */
-    public static function findResetByPhone($identifier)
-    {
-        return self::where('phone', $identifier)->where('status', self::STATUS_RESET)->first();
-    }
-
-    public static function rolesList(): array
-    {
-        return [
-            self::ROLE_PERFORMER => 'Performer',
-            self::ROLE_EMPLOYER => 'Employer'
-        ];
-    }
-
-    /**
-     *
-     * @return void
-     */
-    protected static function booted()
-    {
-        static::created(function ($user) {
-            Profile::createProfile(['user_id' => $user->id]);
-        });
-    }
-
     public function isWait(): bool
     {
         return $this->status === self::STATUS_WAIT;
@@ -198,11 +198,6 @@ class User extends Authenticatable
         return $this->role === self::ROLE_PERFORMER || $this->role === null;
     }
 
-    public function isEmployer(): bool
-    {
-        return $this->role === self::ROLE_EMPLOYER || $this->role === null;
-    }
-
     /**
      * @return bool
      */
@@ -232,11 +227,6 @@ class User extends Authenticatable
     public function networks()
     {
         return $this->hasMany(Network::class, 'user_id', 'id');
-    }
-
-    public function tasks()
-    {
-        return $this->hasMany(Task::class, 'user_id', 'id');
     }
 
     public function profile()
@@ -275,6 +265,63 @@ class User extends Authenticatable
     public function getInvisibleAttribute($value)
     {
         return (boolean)$value;
+    }
+
+    /**
+     *
+     * @param $value
+     * @return bool
+     */
+    public function getShortInfo(): array
+    {
+        $profile = $this->profile;
+        return [
+            'id' => $this->id,
+            'name' => $profile->full_name,
+            'photo' => $profile->getProfileImageLink(),
+            'rating' => $profile->rating,
+        ];
+    }
+
+    public function getTaskList()
+    {
+        $tasks = [];
+
+        if ($this->isEmployer()) {
+            $tasks = $this->tasks()
+                ->with('images')
+                ->select([
+                    'tasks.id',
+                    'tasks.name',
+                    'tasks.price',
+                    'tasks.description',
+                    'tasks.status',
+                    'tasks.safe_deal',
+                ])
+                ->orderBy('status')
+                ->orderBy('id', 'desc')
+                ->limit(100)
+                ->get();
+
+            $tasks = $tasks->each(function ($item, $key) {
+                $item->makeHidden(['images']);
+                $item['images_links'] = $item->images_links;
+                $item['status'] = $item->status_label;
+            });
+
+        }
+
+        return $tasks;
+    }
+
+    public function isEmployer(): bool
+    {
+        return $this->role === self::ROLE_EMPLOYER || $this->role === null;
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'user_id', 'id');
     }
 
     /**

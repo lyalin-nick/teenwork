@@ -33,7 +33,7 @@ class TaskImage extends Model
     ];
 
     protected $fillable = [
-        'name', 'task_id', 'name', 'alt', 'path', 'pos', 'ext'
+        'task_id', 'path', 'name', 'ext', 'alt', 'pos'
     ];
 
     protected $casts = [

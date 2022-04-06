@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerPro
 use App\Http\Controllers\Api\Profile\PersonalInformationController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use App\Http\Controllers\Api\Profile\SettingController;
+use App\Http\Controllers\Api\Task\TasksController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -75,9 +76,13 @@ Route::prefix('/helper')->group(function () {
 Route::prefix('/home')->group(function () {
     Route::get('/count', [HomeController::class, 'count']);
     Route::get('/{flag}', [HomeController::class, 'index'])->where('flag', '(online|offline)');
+    Route::get('/map/{flag}', [HomeController::class, 'map'])->where('flag', '(online|offline)');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('/tasks')->middleware('employer')->group(function () {
+        Route::get('/', [TasksController::class, 'index']);
+    });
 
     //================================= Методы доступные для роли Заказчик =============================================
     Route::prefix('/employer')->middleware('employer')->group(function () {

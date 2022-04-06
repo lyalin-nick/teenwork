@@ -56,38 +56,22 @@ class Task extends Model
         'start_date', 'start_time', 'amount_of_workers',
         'minimum_age', 'price', 'payment_type',
         'safe_deal', 'hot_work', 'account_verified',
-        'status', 'views_number'
+        'status', 'views_number', 'expired_at'
     ];
 
-    protected static function booted()
-    {
-        static::creating(function ($task) {
-            $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
-        });
-        static::updating(function ($task) {
-            $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
-        });
-        static::created(function ($task) {
-            $profile = $task->profile;
-            if ($profile)
-                $profile->addNumberEmployerTask();
-        });
-
-        static::deleted(function (self $task) {
-            $task->languages()->detach(); //удалим прилинкованные языки
-
-            if ($task->video)
-                $task->video->delete();//удалим прикрепленное видео
-
-            if ($task->images)//удалим прикрепленные фото
-                foreach ($task->images as $image_model)
-                    $image_model->delete();
-        });
-    }
-
-    public static function search($flag, $params)
+    /**
+     * Поиск активных задач
+     *
+     * @param string $flag
+     * @param array $params
+     * @param false $getAll
+     * @return array
+     */
+    public static function search($flag, $params, $getAll = false)
     {
         $tasks = Task::query()
+            ->with('user')
+            ->with('images')
             ->where('tasks.expired_at', '>', date('Y-m-d H:i:s'))
             ->join('users as u', 'u.id', '=', 'tasks.user_id')
             ->join('profiles as p', 'u.id', '=', 'p.user_id')
@@ -134,7 +118,7 @@ class Task extends Model
             $tasks->where('tasks.hot_work', '=', filter_var($params['hot_work'], FILTER_VALIDATE_BOOLEAN));
 
 
-        $params['sort'] = isset($params['sort']) ?: 'default';
+        $params['sort'] = isset($params['sort']) ? $params['sort'] : 'default';
         switch ($params['sort']) {
             case "price":
                 $tasks->orderBy('tasks.price', 'desc');
@@ -148,18 +132,24 @@ class Task extends Model
                 break;
         }
 
-        $tasks = $tasks->simplePaginate(20);
+        $tasks = ($getAll) ? $tasks->get() : $tasks->simplePaginate(20);
 
-        $tasks->makeHidden(['user', 'images']);
+
         $tasks = $tasks->each(function ($item, $key) {
-            $item['user_data'] = $item->getUserInfo();
-            $item['images_links'] = $item->getImagesAsLinks();
-            $item['status'] = $item->getStatusLabel();
+            $item->makeHidden(['user', 'images']);
+            $item['user_info'] = $item->user_info;
+            $item['images_links'] = $item->images_links;
+            $item['status'] = $item->status_label;
         });
 
         return $tasks->toArray();
     }
 
+    /**
+     * Кол-во задач online/offline
+     *
+     * @return int
+     */
     public static function countOnline()
     {
         $tasks = Task::query()
@@ -178,6 +168,32 @@ class Task extends Model
             ->whereIn('c.flag', Category::getFlagsConstants('offline'));
 
         return $tasks->count();
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($task) {
+            $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
+        });
+        static::updating(function ($task) {
+            $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
+        });
+        static::created(function ($task) {
+            $profile = $task->profile;
+            if ($profile)
+                $profile->addNumberEmployerTask();
+        });
+
+        static::deleted(function (self $task) {
+            $task->languages()->detach(); //удалим прилинкованные языки
+
+            if ($task->video)
+                $task->video->delete();//удалим прикрепленное видео
+
+            if ($task->images)//удалим прикрепленные фото
+                foreach ($task->images as $image_model)
+                    $image_model->delete();
+        });
     }
 
     public function languages()
@@ -209,10 +225,21 @@ class Task extends Model
      * Мутатор на поле start_date
      *
      * @param $value
+     * @return string
      */
     public function getCreatedAtAttribute($value): string
     {
         return date('Y-m-d H:i:s', strtotime($value));
+    }
+
+    /**
+     * Мутатор на поле user_data
+     *
+     * @param $value
+     */
+    public function getUserInfoAttribute(): array
+    {
+        return $this->user->getShortInfo();
     }
 
     /**
@@ -271,14 +298,57 @@ class Task extends Model
     }
 
     /**
+     * Аксессор поля status_label
+     *
+     * @param $value
+     * @return int
+     */
+    public function getStatusLabelAttribute($value): string
+    {
+        $labels = self::getStatusLabels();
+
+        return isset($labels[$this->status]) ? $labels[$this->status] : 'undefined';
+    }
+
+    /**
+     * Получение массива всех статусов задачи
+     *
+     * @return string[]
+     */
+    public static function getStatusLabels(): array
+    {
+        $labels = [
+            self::STATUS_WAIT => "Waiting for response",
+            self::STATUS_PROGRESS => "In progress",
+            self::STATUS_FAIL => "Fail",
+            self::STATUS_EXPIRE => "Expire",
+            self::STATUS_COMPLETE => "Completed"
+        ];
+
+        return $labels;
+    }
+
+    /**
+     * Аксессор поля video_link
+     *
+     * @param $value
+     * @return int
+     */
+    public function getVideoLinkAttribute()
+    {
+        return ($this->video) ? $this->video->getLink() : null;
+    }
+
+    /**
      * Получение полной информации о задаче
+     *
      * @return array
      */
     public function getFullInfo(): array
     {
         $task = [
             'id' => $this->id,
-            'user' => $this->getUserInfo(),
+            'user' => $this->user_info,
             'category' => $this->category->getFullPathName(),
             'name' => $this->name,
             'description' => $this->description,
@@ -286,8 +356,8 @@ class Task extends Model
             'languages' => $this->getLanguagesAsString(),
             'address' => $this->address,
             'place_id' => $this->place_id,
-            'images' => $this->getImagesAsLinks(),
-            'video' => $this->getVideoLink(),
+            'images' => $this->images_links,
+            'video' => $this->video_link,
             'start_date' => $this->start_date,
             'start_time' => $this->start_time,
             'amount_of_workers' => $this->amount_of_workers,
@@ -306,25 +376,8 @@ class Task extends Model
     }
 
     /**
-     * Получение краткой информации о пользователе создавший задачу
-     * @return array
-     */
-    public function getUserInfo(): array
-    {
-        $user = $this->user;
-        $profile = $user->profile;
-        $info = [
-            'id' => $user->id,
-            'name' => $profile->full_name,
-            'photo' => $profile->getProfileImageLink(),
-            'rating' => $profile->rating,
-        ];
-
-        return $info;
-    }
-
-    /**
      * Получение выбранных к задаче предпочитаемых языков в виде строки
+     *
      * @return string
      */
     public function getLanguagesAsString(): string
@@ -335,7 +388,20 @@ class Task extends Model
     }
 
     /**
+     * Получение статуса задачи в виде строки
+     *
+     * @return string
+     */
+    public function getStatusLabel(): string
+    {
+        $labels = self::getStatusLabels();
+
+        return isset($labels[$this->status]) ? $labels[$this->status] : 'undefined';
+    }
+
+    /**
      * Получение выбранных к задаче предпочитаемых языков в виде массива
+     *
      * @return string
      */
     public function getLanguagesAsArray(): array
@@ -347,6 +413,7 @@ class Task extends Model
 
     /**
      * Получение массива ссылок прикрепленных к задаче фото
+     *
      * @return array
      */
     public function getImagesAsLinks(): array
@@ -364,7 +431,18 @@ class Task extends Model
     }
 
     /**
+     * Аксессор поля images_links
+     *
+     * @return array
+     */
+    public function getImagesLinksAttribute(): array
+    {
+        return $this->getImagesAsArray();
+    }
+
+    /**
      * Получение массива ссылок прикрепленных к задаче фото
+     *
      * @return array
      */
     public function getImagesAsArray(): array
@@ -391,7 +469,6 @@ class Task extends Model
         }
     }
 
-
     public function cleanVideo(): void
     {
         if ($this->video) {
@@ -401,6 +478,7 @@ class Task extends Model
 
     /**
      * Получение ссылки на видео прикрепленного к задаче
+     *
      * @return null
      */
     public function getVideoLink()
@@ -409,35 +487,8 @@ class Task extends Model
     }
 
     /**
-     * Получение статуса задачи в виде строки
-     * @return string
-     */
-    public function getStatusLabel(): string
-    {
-        $labels = self::getStatusLabels();
-
-        return isset($labels[$this->status]) ? $labels[$this->status] : 'undefined';
-    }
-
-    /**
-     * Получение массива всех статусов задачи
-     * @return string[]
-     */
-    public static function getStatusLabels(): array
-    {
-        $labels = [
-            self::STATUS_WAIT => "Waiting for response",
-            self::STATUS_PROGRESS => "In progress",
-            self::STATUS_FAIL => "Fail",
-            self::STATUS_EXPIRE => "Expire",
-            self::STATUS_COMPLETE => "Completed"
-        ];
-
-        return $labels;
-    }
-
-    /**
      * Мутатор на поле start_time
+     *
      * @param $value
      */
     public function setStartTimeAttribute($value)
@@ -447,6 +498,7 @@ class Task extends Model
 
     /**
      * Прилинковка предпочитаемых языков выбранных к задаче
+     *
      * @param $languages
      */
     public function linkToLanguages($languages)
