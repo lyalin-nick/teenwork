@@ -49,9 +49,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'email', 'phone', 'password', 'status', 'role', 'verify_token', 'verified_at', 'verify_token_expire',
-//       'name', 'last_name', 'verify_token', 'email_verified_at', 'verify_token_expire',
-//        'phone_verify_token', 'phone_verified_at', 'phone_verify_token_expire'
+        'email', 'phone', 'password', 'status', 'role', 'verify_token', 'verified_at', 'verify_token_expire'
     ];
 
     /**
@@ -71,9 +69,7 @@ class User extends Authenticatable
     protected $casts = [
         'verified_at' => 'datetime',
         'verify_token_expire' => 'datetime',
-        'reset_token_expire' => 'datetime',
-        //'phone_verified_at' => 'datetime',
-        //'phone_verify_token_expire' => 'datetime',
+        'reset_token_expire' => 'datetime'
     ];
 
     public static function register(string $phone, string $password, string $verify_code)
@@ -235,7 +231,7 @@ class User extends Authenticatable
         return [
             'id' => $this->id,
             'name' => $profile->full_name,
-            'photo' => $profile->getProfileImageLink(),
+            'photo' => $profile->getProfilePreviewImageLink(),
             'rating' => $profile->rating,
         ];
     }
@@ -347,5 +343,18 @@ class User extends Authenticatable
         ];
 
         return $user_data;
+    }
+
+    public function recountRating($review_rating)
+    {
+        $profile = $this->profile;
+        $rating_sum = $this->reviews()->sum('rating');
+        $reviews_sum = $this->reviews()->count();
+        if ($rating_sum > 0 && $reviews_sum > 0) {
+            $profile->rating = (float)$rating_sum / $reviews_sum;
+        } else {
+            $profile->rating = (float)$review_rating;
+        }
+        $profile->save();
     }
 }

@@ -20,6 +20,7 @@ class CreateReviewsTable extends Migration
             $table->bigInteger('performer_id', false, true);
             $table->smallInteger('rating', false, true)->default(0);
             $table->text('text');
+            $table->date('date')->nullable();
             $table->timestamps();
         });
     }

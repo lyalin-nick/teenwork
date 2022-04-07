@@ -326,15 +326,6 @@ class Profile extends Model
     }
 
     /**
-     * Пересчет рейтинга профиля
-     */
-    public function recountRating(): void
-    {
-        $this->rating = 5.0;
-        $this->save();
-    }
-
-    /**
      * Добавить количество выполненных задач
      */
     public function addNumberPerformerTask(): void

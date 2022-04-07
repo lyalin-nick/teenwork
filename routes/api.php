@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Home\HomeController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioImageController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
 use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
+use App\Http\Controllers\Api\Performer\Profile\ReviewController;
 use App\Http\Controllers\Api\Profile\PersonalInformationController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use App\Http\Controllers\Api\Profile\SettingController;
@@ -150,6 +151,10 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/{id}', [PortfolioLinkController::class, 'delete']);
                 });
 
+            });
+            Route::prefix('/reviews')->group(function () {
+                Route::get('/', [ReviewController::class, 'index']);
+                Route::get('/count', [ReviewController::class, 'count']);
             });
         });
         //==============================================================================================================
