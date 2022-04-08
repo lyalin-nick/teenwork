@@ -235,6 +235,28 @@ class Profile extends Model
      * @param $value
      * @return bool
      */
+    public function getRatingAttribute($value)
+    {
+        return round($value, 2);
+    }
+
+    /**
+     * Мутатор
+     *
+     * @param $value
+     * @return bool
+     */
+    public function setRatingAttribute($value)
+    {
+        $this->attributes['rating'] = round($value, 2);
+    }
+
+    /**
+     * Аксессор
+     *
+     * @param $value
+     * @return bool
+     */
     public function getEmailNotificationAttribute($value)
     {
         return (boolean)$value;

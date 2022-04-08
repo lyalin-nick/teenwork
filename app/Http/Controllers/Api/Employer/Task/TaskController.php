@@ -93,7 +93,7 @@ class TaskController extends BaseController
                 ProcessDeleteFiles::dispatchAfterResponse($request->video);
             }
 
-            return $this->sendResponse(['task' => $response_task->getFullInfo()], 'Task create');
+            return $this->sendResponse(['task' => $response_task->getFullInfo(), 'employers' => $response_task->getRecommendedPerformers()], 'Task create');
         }
         return $this->sendError('Task doesnt created', [], 500);
 
@@ -150,8 +150,8 @@ class TaskController extends BaseController
                 'images' => 'array|max:10',
                 'images.*' => 'string',
                 'video' => 'nullable|string',
-                'address' => 'required|string|max:255',
-                'place_id' => 'required|string',
+                'address' => 'nullable|string|max:255',
+                'place_id' => 'nullable|string',
                 'start_date' => 'required|string',
                 'start_time' => 'required|string',
                 'amount_of_workers' => 'required|integer',
@@ -200,7 +200,7 @@ class TaskController extends BaseController
 
                 $task->refresh();
 
-                return $this->sendResponse(['task' => $task->getFullInfo()], 'Task create');
+                return $this->sendResponse(['task' => $task->getFullInfo(), 'employers' => $task->getRecommendedPerformers()], 'Task create');
             }
             return $this->sendError('Task update error', [], 502);
 
@@ -219,6 +219,17 @@ class TaskController extends BaseController
         }
 
         return $this->sendError('Task not found');
+    }
+
+    public function recommended($id, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $task = $user->tasks()->where('id', $id)->first();
+        if ($task) {
+            return $this->sendResponse($task->getRecommendedPerformers(), 'Users');
+        }
+
+        return $this->sendError([], 'Users not found');
     }
 
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property integer $category_id
@@ -513,6 +514,35 @@ class Task extends Model
     public function video()
     {
         return $this->hasOne(TaskVideo::class);
+    }
+
+    public function getRecommendedPerformers()
+    {
+        $profile_ids[0] = DB::table('language_profile')
+            ->whereIn('language_id', $this->getLanguagesAsArray())
+            ->join('category_profile as c', 'language_profile.profile_id', '=', 'c.profile_id')
+            ->where('c.category_id', '=', $this->category_id)
+            ->pluck('language_profile.profile_id');
+        $profile_ids[1] = DB::table('category_profile')->where('category_id', '=', $this->category_id)->pluck('profile_id');
+        $profile_ids[2] = DB::table('language_profile')->whereIn('language_id', $this->getLanguagesAsArray())->pluck('profile_id');
+        $profile_ids = array_unique(Arr::collapse($profile_ids));
+
+        $profiles = Profile::whereIn('profiles.id', $profile_ids)
+            ->join('users', 'users.id', '=','profiles.user_id')
+            ->where('users.role', '=', User::ROLE_PERFORMER)
+            ->limit(4)
+            ->get();
+
+        $profiles = $profiles->each(function ($item, $users) {
+            $item['users'] = $item->user->getShortInfo();
+        });
+
+        $profiles = $profiles->toArray();
+        foreach ($profiles as $i => $profile) {
+            $profiles[$i] = $profile['users'];
+        }
+
+        return $profiles;
     }
 
 }
