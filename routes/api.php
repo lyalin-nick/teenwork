@@ -95,7 +95,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/{id}', [TaskController::class, 'update']);
             Route::delete('/{id}', [TaskController::class, 'delete']);
 
-            Route::get('/recommended/{id}', [TaskController::class, 'recommended']);
+            Route::get('/{id}/recommended/', [TaskController::class, 'recommended']);
+            Route::get('/{id}/responses/', [TaskController::class, 'responses']);
+            Route::get('/{id}/view/', [TaskController::class, 'responses']);
         });
 
     });

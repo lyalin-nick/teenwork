@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 /**
+ * @property integer $id
  * @property integer $category_id
  * @property integer $user_id
  * @property string $name
@@ -30,12 +31,17 @@ use Illuminate\Support\Facades\DB;
  * @property string $created_at
  * @property string $updated_at
  * @property string $expired_at
+ * @property array $responses_info
+ * @property string $video_link
+ * @property string $images_links
+ * @property string $user_info
  *
  * @property TaskImage[] $images
  * @property TaskVideo $video
  * @property Language[] $languages
  * @property User $user
  * @property Category $category
+ * @property TaskResponse[] $responses
  *
  * @mixin Builder
  */
@@ -202,6 +208,11 @@ class Task extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function responses()
+    {
+        return $this->hasMany(TaskResponse::class);
+    }
+
     /**
      * Мутатор на поле start_date
      *
@@ -275,6 +286,26 @@ class Task extends Model
     public function getAccountVerifiedAttribute($value): bool
     {
         return (boolean)$value;
+    }
+
+    /**
+     * Аксессор поля start_date
+     *
+     * @param $value
+     * @return string
+     */
+    public function getResponsesInfoAttribute(): array
+    {
+        $responses = $this->responses()->with('user')->get();
+        if ($responses) {
+            $responses = $responses->filter(function ($item, $key) {
+                $item['user_info'] = $item->user->getShortInfo();
+                $item->makeHidden('task_id', 'user_id', 'created_at', 'updated_at', 'user');
+                return $item->user->isPerformer();
+            });
+            return $responses->toArray();
+        }
+        return [];
     }
 
     /**
@@ -361,6 +392,7 @@ class Task extends Model
             'status' => $this->getStatusLabel(),
             'created_at' => date('Y-m-d H:i:s', strtotime($this->created_at)),
             'views_number' => $this->views_number,
+            'responses' => $this->responses_info,
         ];
 
         return $task;
@@ -528,7 +560,7 @@ class Task extends Model
         $profile_ids = array_unique(Arr::collapse($profile_ids));
 
         $profiles = Profile::whereIn('profiles.id', $profile_ids)
-            ->join('users', 'users.id', '=','profiles.user_id')
+            ->join('users', 'users.id', '=', 'profiles.user_id')
             ->where('users.role', '=', User::ROLE_PERFORMER)
             ->limit(4)
             ->get();

@@ -232,4 +232,26 @@ class TaskController extends BaseController
         return $this->sendError([], 'Users not found');
     }
 
+    public function responses($id, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $task = $user->tasks()->where('id', $id)->first();
+        if ($task) {
+            return $this->sendResponse($task->responses_info, 'Responses');
+        }
+
+        return $this->sendError([], 'Task not found');
+    }
+
+    public function view($id, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $task = $user->tasks()->where('id', $id)->first();
+        if ($task) {
+            return $this->sendResponse(['task' => $task->getFullInfo(), 'recommended' => $task->getRecommendedPerformers()], 'Task');
+        }
+
+        return $this->sendError([], 'Task not found');
+    }
+
 }
