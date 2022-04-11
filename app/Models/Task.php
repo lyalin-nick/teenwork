@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Helpers\GoogleMap;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +36,8 @@ use Illuminate\Support\Facades\DB;
  * @property string $video_link
  * @property string $images_links
  * @property string $user_info
+ * @property double $lat
+ * @property double $lng
  *
  * @property TaskImage[] $images
  * @property TaskVideo $video
@@ -133,6 +136,14 @@ class Task extends Model
             case "rating":
                 $tasks->orderBy('p.rating', 'desc');
                 break;
+            case "nearby":
+                if (isset($params['ulat']) && isset($params['ulng'])) {
+                    $tasks->addSelect('tasks.lat as lat'); // широта
+                    $tasks->addSelect('tasks.lng as lng'); // долгота
+                    $tasks->addSelect(DB::raw("ACOS(SIN(PI()*lat/180.0)*SIN(PI()*{$params['ulat']}/180.0)+COS(PI()*lat/180.0)*COS(PI()*{$params['ulat']}/180.0)*COS(PI()*{$params['ulng']}/180.0-PI()*lng/180.0))*6371 AS distance")); // формула расчета расстояния от заданных координат
+                    $tasks->orderBy('distance');
+                }
+                break;
             default:
                 $tasks->orderBy('start_date');
                 $tasks->orderBy('hot_work', 'desc');
@@ -171,10 +182,23 @@ class Task extends Model
     {
         static::creating(function ($task) {
             $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
+
+            $coords = GoogleMap::getCoordinates($task->place_id);
+            $coords = $coords ?: ['lat' => 53.21367237101714, 'lng' => 45.061300887730965];
+            $task->lat = $coords['lat'];
+            $task->lng = $coords['lng'];
         });
         static::updating(function ($task) {
             $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
+
+            if ($task->isDirty('place_id')) {
+                $coords = GoogleMap::getCoordinates($task->place_id);
+                $coords = $coords ?: ['lat' => 53.21367237101714, 'lng' => 45.061300887730965];
+                $task->lat = $coords['lat'];
+                $task->lng = $coords['lng'];
+            }
         });
+
         static::created(function ($task) {
             $profile = $task->profile;
             if ($profile)

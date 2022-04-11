@@ -22,6 +22,8 @@ class CreateTasksTable extends Migration
             $table->text('result');
             $table->string('address');
             $table->text('place_id');
+            $table->double('lat', 10, 6)->nullable();
+            $table->double('lng', 10, 6)->nullable();
             $table->date('start_date');
             $table->time('start_time')->default('00:00:00');
             $table->smallInteger('amount_of_workers', false, true)->default(0);

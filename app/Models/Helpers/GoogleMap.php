@@ -80,8 +80,8 @@ class GoogleMap
 
         if (!empty($data->result))
             return [
-                'latitude' => $data->result->geometry->location->lat,
-                'longitude' => $data->result->geometry->location->lng
+                'lat' => $data->result->geometry->location->lat,
+                'lng' => $data->result->geometry->location->lng
             ];
 
         return null;

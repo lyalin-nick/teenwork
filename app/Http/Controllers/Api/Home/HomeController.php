@@ -14,7 +14,9 @@ class HomeController extends BaseController
         $params = $request->all();
         $tasks = Task::search($flag, $params);
 
-        $tasks = $tasks->simplePaginate(20);
+        $tasks = $tasks->paginate(20);
+        $curPage = $tasks->currentPage();
+        $lastPage = $tasks->lastPage();
 
         $tasks = $tasks->each(function ($item, $key) {
             $item->makeHidden(['user', 'images']);
@@ -23,9 +25,7 @@ class HomeController extends BaseController
             $item['status'] = $item->status_label;
         });
 
-        //return $tasks->toArray();
-
-        return $this->sendResponse($tasks->toArray(), 'Success', 201);
+        return $this->sendResponse(['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => $tasks->toArray()], 'Success', 201);
     }
 
     public function map($flag, Request $request)
@@ -34,7 +34,6 @@ class HomeController extends BaseController
         $tasks = Task::search($flag, $params, true);
 
         $tasks = $tasks->get();
-
 
         $tasks = $tasks->each(function ($item, $key) {
             $item->makeHidden(['user', 'images']);
