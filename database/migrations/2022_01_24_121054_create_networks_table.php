@@ -16,11 +16,8 @@ class CreateNetworksTable extends Migration
         Schema::create('networks', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('user_id', false, true);
-            $table->bigInteger('network_user_id', false, true);
             $table->string('network');
-            $table->string('token');
-            $table->string('refreshToken')->nullable();
-            $table->timestamp('expiresIn')->nullable();
+            $table->bigInteger('network_user_id', false, true);
             $table->timestamps();
         });
     }

@@ -8,16 +8,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Socialite\Facades\Socialite;
 
 class LoginController extends BaseController
 {
-    /**
-     * @OA\Post (
-     *     path="/login",
-     *     operationId="login",
-     *     tags={"Auth"},
-     * )
-     */
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -45,5 +39,30 @@ class LoginController extends BaseController
         $token = $user->createToken($request->device_name);
 
         return $this->sendResponse(['token' => $token->plainTextToken], 'Success auth');
+    }
+
+    public function network($provider, Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'access_token' => 'required|string',
+            'device_name' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+        $socialite_user = Socialite::driver($provider)->userFromToken($request->access_token);
+
+        if ($socialite_user) {
+            $user = User::findByNetwork($provider, $socialite_user);
+
+            $user->tokens()->where('name', $request->device_name)->delete();
+
+            $token = $user->createToken($request->device_name);
+
+            return $this->sendResponse(['token' => $token->plainTextToken], 'Success auth');
+        }
+
+        return $this->sendError([], 'FB user not found');
     }
 }

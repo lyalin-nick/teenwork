@@ -84,6 +84,22 @@ class User extends Authenticatable
         ]);
     }
 
+    public static function registerFromNetwork($provider, $socialite_user)
+    {
+        $user = static::create([
+            'email' => $socialite_user->email,
+            'role' => null,
+            'status' => self::STATUS_ACTIVE,
+        ]);
+
+        $user->networks()->create([
+            'network' => $provider,
+            'network_user_id' => $socialite_user->id,
+        ]);
+
+        return $user;
+    }
+
     /**
      * @param $identifier
      * @return mixed
@@ -91,6 +107,42 @@ class User extends Authenticatable
     public static function findByPhone($identifier)
     {
         return self::where('phone', $identifier)->first();
+    }
+
+    /**
+     * @param $identifier
+     * @return mixed
+     */
+    public static function findByEmail($identifier)
+    {
+        return self::where('email', $identifier)->first();
+    }
+
+    /**
+     * @param $identifier
+     * @return mixed
+     */
+    public static function findByNetwork($provider, $socialite_user)
+    {
+        $user = self::query()->whereHas('networks', function (Builder $query) use ($provider, $socialite_user) {
+            $query->where('network', $provider)->where('network_user_id', $socialite_user->id);
+        })->first(); //ищем пользователя по модели Network
+
+        if (!$user) { // если не нашли, то ищем с такой же почтой
+            $user = self::findByEmail($socialite_user->email);
+            if ($user){
+                $user->networks()->create([
+                    'network' => $provider,
+                    'network_user_id' => $socialite_user->id,
+                ]);
+            }
+        }
+
+        if (!$user) { // если не нашли по почте, то регистрируем
+            $user = self::registerFromNetwork($provider, $socialite_user);
+        }
+
+        return $user;
     }
 
     /**
@@ -193,6 +245,11 @@ class User extends Authenticatable
         return $this->hasMany(Task::class, 'user_id', 'id');
     }
 
+    public function responses()
+    {
+        return $this->hasMany(TaskResponse::class, 'user_id', 'id');
+    }
+
     public function reviews()
     {
         return $this->hasMany(Review::class, 'performer_id', 'id');
@@ -262,6 +319,22 @@ class User extends Authenticatable
                 $item['status'] = $item->status_label;
             });
 
+        } else {
+            $responses = $this->responses()->with(['task' => function ($query) {
+                $query->with('images');
+            }])->get();
+            $tasks = [];
+            foreach ($responses as $response) {
+                $tasks[] = [
+                    'id' => $response->task->id,
+                    'name' => $response->task->name,
+                    'price' => $response->task->price,
+                    'description' => $response->task->description,
+                    'status' => $response->task->status_label,
+                    'safe_deal' => $response->task->safe_deal,
+                    'images_links' => $response->task->images_links,
+                ];
+            }
         }
 
         return $tasks;
