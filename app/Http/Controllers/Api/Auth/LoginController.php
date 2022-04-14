@@ -63,6 +63,6 @@ class LoginController extends BaseController
             return $this->sendResponse(['token' => $token->plainTextToken], 'Success auth');
         }
 
-        return $this->sendError([], 'FB user not found');
+        return $this->sendError('FB user not found');
     }
 }

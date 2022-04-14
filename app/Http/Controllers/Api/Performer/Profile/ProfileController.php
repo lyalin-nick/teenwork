@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Performer\Profile;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Models\Helpers\UploadingHelper;
 use App\Models\PortfolioImage;
 use App\Models\PortfolioLink;
 use App\Models\Profile;
@@ -112,7 +111,7 @@ class ProfileController extends BaseController
             $profile = Profile::createProfile(['user_id' => $request->user()->id]);
         }
         if (!$profile->updateCategories($request->categories)) {
-            $this->sendError([], 'Error updating');
+            return $this->sendError('Error updating');
         }
 
         return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $task_id
  * @property int $user_id
  * @property string $text
+ *
  * @property Task $task
  * @property User $user
  *
@@ -20,6 +21,10 @@ class TaskResponse extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'task_id', 'user_id', 'text'
+    ];
+
     public function task()
     {
         return $this->belongsTo(Task::class);
@@ -28,5 +33,20 @@ class TaskResponse extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @param int $task_id
+     * @param int $user_id
+     * @param string $text
+     * @return TaskResponse|Model|string[]
+     */
+    public static function new($task_id, $user_id, $text)
+    {
+        return self::create([
+            'user_id' => $user_id,
+            'task_id' => $task_id,
+            'text' => $text
+        ]);
     }
 }

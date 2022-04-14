@@ -18,6 +18,7 @@ class CreateTaskResponsesTable extends Migration
             $table->bigInteger('task_id');
             $table->bigInteger('user_id');
             $table->text('text');
+            $table->boolean('is_new')->default(true);
             $table->timestamps();
         });
     }

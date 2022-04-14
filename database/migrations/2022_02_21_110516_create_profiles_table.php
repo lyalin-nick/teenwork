@@ -23,6 +23,8 @@ class CreateProfilesTable extends Migration
             $table->string('status')->nullable();
             $table->string('address', 255)->nullable();
             $table->text('place_id')->nullable();
+            $table->double('lat', 10, 6)->nullable();
+            $table->double('lng', 10, 6)->nullable();
             $table->integer('number_performer_tasks', false, true)->default(0);
             $table->integer('number_employer_tasks', false, true)->default(0);
             $table->float('rating', 3, 2, true)->default(0.00);

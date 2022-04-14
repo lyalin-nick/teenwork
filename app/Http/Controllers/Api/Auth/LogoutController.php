@@ -8,26 +8,9 @@ use Illuminate\Http\Request;
 
 class LogoutController extends BaseController
 {
-
     /**
-     * @OA\Post (
-     *     path="/logout",
-     *     operationId="logout",
-     *     tags={"Auth"},
-     *     @OA\Response(
-     *         response="200",
-     *         description="Success logout",
-     *     ),
-     *     @OA\Response(
-     *         response="404",
-     *         description="Token not found.",
-     *     ),
-     *     @OA\Response(
-     *         response="401",
-     *         description="Header auth token not found.",
-     *     ),
-     *     security={{"Bearer": {}}}
-     * )
+     * @param Request $request
+     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
@@ -38,6 +21,6 @@ class LogoutController extends BaseController
             return $this->sendResponse(['deleted' => $result], 'Token delete successfully');
         }
 
-        return $this->sendError('Token not found', 401);
+        return $this->sendError('Token not found', [], 401);
     }
 }

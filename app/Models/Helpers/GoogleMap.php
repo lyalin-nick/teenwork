@@ -4,14 +4,13 @@ namespace App\Models\Helpers;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\Log;
 
 class GoogleMap
 {
     /**
-     * Получение мест для автокомплита выбора адреса
      * @param $input
      * @return array
-     * @throws GuzzleException
      */
     public static function getAutocomplete($input): array
     {
@@ -21,14 +20,19 @@ class GoogleMap
 
         $link = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input={$input}&types=address&key={$key}";
 
-        $response = $client->request('GET', $link);
-
-        $data = $response->getBody();
-        $data = json_decode($data);
-
         $autocomplete = [];
-        foreach ($data->predictions as $prediction) {
-            $autocomplete[] = ['address' => $prediction->description, 'place_id' => $prediction->place_id];
+        try {
+            $response = $client->request('GET', $link);
+
+            $data = $response->getBody();
+            $data = json_decode($data);
+            if (isset($data->predictions)) {
+                foreach ($data->predictions as $prediction) {
+                    $autocomplete[] = ['address' => $prediction->description, 'place_id' => $prediction->place_id];
+                }
+            }
+        } catch (GuzzleException $e) {
+            Log::error($e->getMessage());
         }
 
         return $autocomplete;
@@ -40,7 +44,6 @@ class GoogleMap
      * @param $latitude
      * @param $longitude
      * @return string|null
-     * @throws GuzzleException
      */
     public static function getPlaceId($latitude, $longitude)
     {
@@ -49,13 +52,17 @@ class GoogleMap
         $client = new Client();
 
         $link = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$latitude},{$longitude}&key={$key}";
+        try {
+            $response = $client->request('GET', $link);
+            $data = $response->getBody();
+            $data = json_decode($data);
 
-        $response = $client->request('GET', $link);
+            return !empty($data->results) ? $data->results[0]->place_id : null;
 
-        $data = $response->getBody();
-        $data = json_decode($data);
-
-        return !empty($data->results) ? $data->results[0]->place_id : null;
+        } catch (GuzzleException $exception) {
+            Log::error($exception->getMessage());
+        }
+        return null;
     }
 
     /**
@@ -73,17 +80,21 @@ class GoogleMap
 
         $link = "https://maps.googleapis.com/maps/api/place/details/json?place_id={$place_id}&key={$key}";
 
-        $response = $client->request('GET', $link);
+        try {
+            $response = $client->request('GET', $link);
 
-        $data = $response->getBody();
-        $data = json_decode($data);
+            $data = $response->getBody();
+            $data = json_decode($data);
 
-        if (!empty($data->result))
-            return [
-                'lat' => $data->result->geometry->location->lat,
-                'lng' => $data->result->geometry->location->lng
-            ];
-
+            if (!empty($data->result))
+                return [
+                    'lat' => $data->result->geometry->location->lat,
+                    'lng' => $data->result->geometry->location->lng
+                ];
+        } catch (GuzzleException $exception) {
+            Log::error($exception->getMessage());
+        }
+        
         return null;
     }
 }

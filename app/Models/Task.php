@@ -83,8 +83,7 @@ class Task extends Model
             ->with('user')
             ->with('images')
             ->where('tasks.expired_at', '>', date('Y-m-d H:i:s'))
-            ->join('users as u', 'u.id', '=', 'tasks.user_id')
-            ->join('profiles as p', 'u.id', '=', 'p.user_id')
+            ->join('profiles as p', 'tasks.user_id', '=', 'p.user_id')
             ->join('categories as c', 'tasks.category_id', '=', 'c.id')
             ->whereIn('c.flag', Category::getFlagsConstants($flag))
             ->select([
@@ -99,7 +98,7 @@ class Task extends Model
                 'tasks.created_at',
                 'tasks.start_date',
                 'p.rating',
-                'c.icon_name as icon_name',
+                'c.icon_name as icon_name'
             ]);
 
         if (isset($params['categories']))
@@ -109,8 +108,9 @@ class Task extends Model
             $tasks->join('language_task as l', 'tasks.id', '=', 'l.task_id')
                 ->whereIn('l.language_id', $params['languages']);
 
-        if (isset($params['place_id']))
-            $tasks->where('tasks.place_id', $params['place_id']);
+        if (isset($params['place_id'])) {
+            $tasks->where('tasks.place_id', '=', $params['place_id']);
+        }
 
         if (isset($params['days'])) {
             foreach ($params['days'] as $i => $day) {
@@ -184,7 +184,7 @@ class Task extends Model
             $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
 
             $coords = GoogleMap::getCoordinates($task->place_id);
-            $coords = $coords ?: ['lat' => 53.21367237101714, 'lng' => 45.061300887730965];
+            $coords = $coords ?: ['lat' => 53.213672, 'lng' => 45.061300];
             $task->lat = $coords['lat'];
             $task->lng = $coords['lng'];
         });
@@ -193,7 +193,7 @@ class Task extends Model
 
             if ($task->isDirty('place_id')) {
                 $coords = GoogleMap::getCoordinates($task->place_id);
-                $coords = $coords ?: ['lat' => 53.21367237101714, 'lng' => 45.061300887730965];
+                $coords = $coords ?: ['lat' => 53.213672, 'lng' => 45.061300];
                 $task->lat = $coords['lat'];
                 $task->lng = $coords['lng'];
             }
@@ -230,11 +230,6 @@ class Task extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
-    }
-
-    public function responses()
-    {
-        return $this->hasMany(TaskResponse::class);
     }
 
     /**
@@ -332,6 +327,11 @@ class Task extends Model
         return [];
     }
 
+    public function responses()
+    {
+        return $this->hasMany(TaskResponse::class);
+    }
+
     /**
      * Аксессор поля views_number
      *
@@ -400,6 +400,7 @@ class Task extends Model
             'description' => $this->description,
             'result' => $this->result,
             'languages' => $this->getLanguagesAsString(),
+            'accepted_offers' => [],
             'address' => $this->address,
             'place_id' => $this->place_id,
             'images' => $this->images_links,
@@ -413,10 +414,9 @@ class Task extends Model
             'safe_deal' => $this->safe_deal,
             'hot_work' => $this->hot_work,
             'account_verified' => $this->account_verified,
-            'status' => $this->getStatusLabel(),
+            'status' => $this->status_label,
             'created_at' => date('Y-m-d H:i:s', strtotime($this->created_at)),
-            'views_number' => $this->views_number,
-            'responses' => $this->responses_info,
+            'views_number' => $this->views_number
         ];
 
         return $task;
@@ -444,18 +444,6 @@ class Task extends Model
         $labels = self::getStatusLabels();
 
         return isset($labels[$this->status]) ? $labels[$this->status] : 'undefined';
-    }
-
-    /**
-     * Получение выбранных к задаче предпочитаемых языков в виде массива
-     *
-     * @return string
-     */
-    public function getLanguagesAsArray(): array
-    {
-        $languages = $this->languages;
-
-        return ($languages) ? Arr::pluck($languages, 'id') : [];
     }
 
     /**
@@ -574,31 +562,48 @@ class Task extends Model
 
     public function getRecommendedPerformers()
     {
-        $profile_ids[0] = DB::table('language_profile')
-            ->whereIn('language_id', $this->getLanguagesAsArray())
-            ->join('category_profile as c', 'language_profile.profile_id', '=', 'c.profile_id')
-            ->where('c.category_id', '=', $this->category_id)
-            ->pluck('language_profile.profile_id');
-        $profile_ids[1] = DB::table('category_profile')->where('category_id', '=', $this->category_id)->pluck('profile_id');
-        $profile_ids[2] = DB::table('language_profile')->whereIn('language_id', $this->getLanguagesAsArray())->pluck('profile_id');
-        $profile_ids = array_unique(Arr::collapse($profile_ids));
-
-        $profiles = Profile::whereIn('profiles.id', $profile_ids)
-            ->join('users', 'users.id', '=', 'profiles.user_id')
-            ->where('users.role', '=', User::ROLE_PERFORMER)
-            ->limit(4)
+        $task_languages = $this->getLanguagesAsArray();
+        $category_id = $this->category_id;
+        $profiles = Profile::query()
+            ->where(function ($query) use ($task_languages, $category_id) {
+                $query->whereHas('languages', function ($lang_query) use ($task_languages) {
+                    $lang_query->whereIn('id', $task_languages);
+                })->orWhereHas('categories', function ($cat_query) use ($category_id) {
+                    $cat_query->where('id', $category_id);
+                });
+            })
+            ->whereHas('user', function ($query) {
+                $query->where('role', '=', User::ROLE_PERFORMER);
+            })
+            ->with('user')
+            ->limit(50)
             ->get();
 
-        $profiles = $profiles->each(function ($item, $users) {
-            $item['users'] = $item->user->getShortInfo();
-        });
+        $users = [];
 
-        $profiles = $profiles->toArray();
-        foreach ($profiles as $i => $profile) {
-            $profiles[$i] = $profile['users'];
+        foreach ($profiles as $profile) {
+            $users[] = $profile->user->getShortInfo();
         }
 
-        return $profiles;
+        return $users;
+    }
+
+    /**
+     * Получение выбранных к задаче предпочитаемых языков в виде массива
+     *
+     * @return string
+     */
+    public function getLanguagesAsArray(): array
+    {
+        $languages = $this->languages;
+
+        return ($languages) ? Arr::pluck($languages, 'id') : [];
+    }
+
+    public function addViews(): void
+    {
+        $this->views_number += 1;
+        $this->save();
     }
 
 }

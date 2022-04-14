@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Performer\Profile\PortfolioImageController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
 use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
 use App\Http\Controllers\Api\Performer\Profile\ReviewController;
+use App\Http\Controllers\Api\Performer\Task\TaskController as PerformerTaskController;
 use App\Http\Controllers\Api\Profile\PersonalInformationController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use App\Http\Controllers\Api\Profile\SettingController;
@@ -33,7 +34,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('/login', [LoginController::class, 'login']);
+Route::prefix('/login')->group(function () {
+
+    Route::post('/', [LoginController::class, 'login']);
+    Route::post('/{provider}', [LoginController::class, 'network'])->where('flag', '(facebook)');
+
+});
 
 Route::prefix('/register')->group(function () {
 
@@ -44,6 +50,7 @@ Route::prefix('/register')->group(function () {
     Route::get('/{provider}/callback', [RegisterController::class, 'authByNetwork']);
 
 });
+
 Route::prefix('/reset')->group(function () {
 
     Route::post('/phone', [ResetPasswordController::class, 'phone']);
@@ -67,7 +74,6 @@ Route::prefix('/dictionary')->group(function () {
 Route::prefix('/helper')->group(function () {
 
     Route::get('/autocomplete', [GoogleMapController::class, 'autocomplete']);
-    Route::get('/coords', [GoogleMapController::class, 'c']);
     Route::get('/place-id', [GoogleMapController::class, 'placeId']);
 
     Route::post('/upload-image', [UploadController::class, 'uploadImage']);
@@ -81,8 +87,13 @@ Route::prefix('/home')->group(function () {
     Route::get('/map/{flag}', [HomeController::class, 'map'])->where('flag', '(online|offline)');
 });
 
+Route::prefix('/task')->group(function () {
+    Route::get('/{id}', [TasksController::class, 'view']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::prefix('/tasks')->middleware('employer')->group(function () {
+
+    Route::prefix('/tasks')->group(function () {
         Route::get('/', [TasksController::class, 'index']);
     });
 
@@ -97,7 +108,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('/{id}/recommended/', [TaskController::class, 'recommended']);
             Route::get('/{id}/responses/', [TaskController::class, 'responses']);
-            Route::get('/{id}/view/', [TaskController::class, 'responses']);
+            Route::post('/{id}/offer', [TaskController::class, 'offer']);
         });
 
     });
@@ -109,6 +120,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('/profile')->group(function () {
             Route::post('/update', [PerformerProfileController::class, 'update']);
+        });
+
+        Route::prefix('/task')->group(function () {
+            Route::post('/{id}/response', [PerformerTaskController::class, 'response']);
+            // Route::post('/{id}/offer', [PerformerTaskController::class, 'offer']);
         });
 
     });
