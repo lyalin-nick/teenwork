@@ -60,7 +60,7 @@ class Task extends Model
         STATUS_COMPLETE = 5;
 
     protected $fillable = [
-        'category_id', 'name',
+        'user_id', 'category_id', 'name',
         'description', 'result',
         'address', 'place_id',
         'start_date', 'start_time', 'amount_of_workers',
@@ -68,6 +68,48 @@ class Task extends Model
         'safe_deal', 'hot_work', 'account_verified',
         'status', 'views_number', 'expired_at'
     ];
+
+    public static function new($task_data, $languages, $images, $video)
+    {
+        $task = self::create($task_data);
+        if ($task) {
+
+            $task->linkToLanguages($languages);
+            if ($images) {
+                TaskImage::createModels($images, $task->id);
+            }
+            if ($video) {
+                TaskVideo::updateModel($video, $task->id);
+            }
+
+            return $task;
+        }
+        return null;
+    }
+
+    /**
+     * Прилинковка предпочитаемых языков выбранных к задаче
+     *
+     * @param $languages
+     */
+    public function linkToLanguages($languages)
+    {
+        $language_models = Language::where('id', Language::ENGLISH_LANGUAGE)->get();
+
+        if ($languages) {
+            $language_models = Language::whereIn('id', $languages)->get();
+        }
+
+        if ($language_models) {
+            $this->languages()->detach();
+            $this->languages()->attach($language_models);
+        }
+    }
+
+    public function languages()
+    {
+        return $this->belongsToMany(Language::class);
+    }
 
     /**
      * Поиск активных задач
@@ -215,11 +257,6 @@ class Task extends Model
                 foreach ($task->images as $image_model)
                     $image_model->delete();
         });
-    }
-
-    public function languages()
-    {
-        return $this->belongsToMany(Language::class);
     }
 
     public function user()
@@ -529,25 +566,6 @@ class Task extends Model
     public function setStartTimeAttribute($value)
     {
         $this->attributes['start_time'] = date('H:i:s', strtotime($value));
-    }
-
-    /**
-     * Прилинковка предпочитаемых языков выбранных к задаче
-     *
-     * @param $languages
-     */
-    public function linkToLanguages($languages)
-    {
-        $language_models = Language::where('id', Language::ENGLISH_LANGUAGE)->get();
-
-        if ($languages) {
-            $language_models = Language::whereIn('id', $languages)->get();
-        }
-
-        if ($language_models) {
-            $this->languages()->detach();
-            $this->languages()->attach($language_models);
-        }
     }
 
     public function images()

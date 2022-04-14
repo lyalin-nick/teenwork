@@ -3,19 +3,25 @@
 namespace App\Http\Controllers\Api\Employer\Task;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Jobs\ProcessDeleteFiles;
 use App\Models\Task;
 use App\Models\TaskImage;
+use App\Models\TaskOffer;
 use App\Models\TaskVideo;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class TaskController extends BaseController
 {
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -46,7 +52,7 @@ class TaskController extends BaseController
             return $this->sendError('Validation Error.', $validator->errors(), Response::HTTP_BAD_REQUEST);
         }
 
-        $dates = $request->dates;
+        $dates = Arr::sort($request->dates);
 
         $response_task = null;
         foreach ($dates as $date) {
@@ -55,51 +61,36 @@ class TaskController extends BaseController
                 'minimum_age', 'price', 'payment_type', 'safe_deal', 'hot_work', 'account_verified');
 
             $task_attributes['start_date'] = $date;
+            $user = $request->user();
+            $user->checkEmptyRole(User::ROLE_EMPLOYER);
+            $task_attributes['user_id'] = $user->id;
 
-            $task = Task::create($task_attributes);
+            $task = Task::new($task_attributes, $request->get('languages'), $request->images, $request->video);
 
-            if ($task) {
-
-                $user = $request->user();
-                if ($user) {
-                    $task->user_id = $user->id;
-                    $task->save();
-                    $user->checkEmptyRole(User::ROLE_EMPLOYER);
-                }
-
-                $task->linkToLanguages($request->get('languages'));
-
-                if ($request->images) {
-                    $result = TaskImage::createModels($request->images, $task->id);
-
-                    if (!$result)
-                        return $this->sendError('Images upload error!', [], 513);
-                }
-
-                if ($request->video) {
-                    $result = TaskVideo::updateModel($request->video, $task->id);
-
-                    if (!$result)
-                        return $this->sendError('Video upload error!', [], 514);
-                }
-
-                $response_task = (!$response_task || ($response_task && strtotime($response_task->start_date) > strtotime($task->start_date))) ? $task : $response_task;
+            if (!$response_task && $task) {
+                $response_task = $task;
             }
         }
         if ($response_task) {
             if ($request->images)
-                ProcessDeleteFiles::dispatchAfterResponse($request->images);
+                Storage::disk('public')->delete($request->images);
             if ($request->video) {
-                ProcessDeleteFiles::dispatchAfterResponse($request->video);
+                Storage::disk('public')->delete($request->video);
             }
 
             return $this->sendResponse(['task' => $response_task->getFullInfo(), 'employers' => $response_task->getRecommendedPerformers()], 'Task create');
         }
+
         return $this->sendError('Task doesnt created', [], 500);
 
     }
 
-    public function edit($id, Request $request): JsonResponse
+    /**
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function edit(int $id, Request $request): JsonResponse
     {
         $user = $request->user();
         $task = $user->tasks()->where('id', $id)->first();
@@ -136,7 +127,12 @@ class TaskController extends BaseController
         return $this->sendError('Task not found');
     }
 
-    public function update($id, Request $request): JsonResponse
+    /**
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function update(int $id, Request $request): JsonResponse
     {
         $user = $request->user();
         $task = $user->tasks()->where('id', $id)->first();
@@ -175,27 +171,21 @@ class TaskController extends BaseController
                 $task->linkToLanguages($request->get('languages'));
 
                 if ($request->images) {
-                    $result = TaskImage::updateModels($request->images, $task->id);
-
-                    if (!$result)
-                        return $this->sendError('Images upload error!', [], 513);
+                    TaskImage::updateModels($request->images, $task->id);
                 } else {
                     $task->cleanImages();
                 }
 
                 if ($request->video) {
-                    $result = TaskVideo::updateModel($request->video, $task->id);
-
-                    if (!$result)
-                        return $this->sendError('Video upload error!', [], 514);
+                    TaskVideo::updateModel($request->video, $task->id);
                 } else {
                     $task->cleanVideo();
                 }
 
                 if ($request->images)
-                    ProcessDeleteFiles::dispatchAfterResponse($request->images);
+                    Storage::disk('public')->delete($request->images);
                 if ($request->video) {
-                    ProcessDeleteFiles::dispatchAfterResponse($request->video);
+                    Storage::disk('public')->delete($request->video);
                 }
 
                 $task->refresh();
@@ -206,11 +196,15 @@ class TaskController extends BaseController
 
         }
 
-
         return $this->sendError('Task not found');
     }
 
-    public function delete($id, Request $request): JsonResponse
+    /**
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function delete(int $id, Request $request): JsonResponse
     {
         $user = $request->user();
         $task = $user->tasks()->where('id', $id)->first();
@@ -221,7 +215,12 @@ class TaskController extends BaseController
         return $this->sendError('Task not found');
     }
 
-    public function recommended($id, Request $request): JsonResponse
+    /**
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function recommended(int $id, Request $request): JsonResponse
     {
         $user = $request->user();
         $task = $user->tasks()->where('id', $id)->first();
@@ -229,10 +228,15 @@ class TaskController extends BaseController
             return $this->sendResponse($task->getRecommendedPerformers(), 'Users');
         }
 
-        return $this->sendError([], 'Users not found');
+        return $this->sendError('Users not found');
     }
 
-    public function responses($id, Request $request): JsonResponse
+    /**
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function responses(int $id, Request $request): JsonResponse
     {
         $user = $request->user();
         $task = $user->tasks()->where('id', $id)->first();
@@ -240,18 +244,38 @@ class TaskController extends BaseController
             return $this->sendResponse($task->responses_info, 'Responses');
         }
 
-        return $this->sendError([], 'Task not found');
+        return $this->sendError('Task not found');
     }
 
-    public function view($id, Request $request): JsonResponse
+    /**
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function offer($id, Request $request): JsonResponse
     {
-        $user = $request->user();
-        $task = $user->tasks()->where('id', $id)->first();
-        if ($task) {
-            return $this->sendResponse(['task' => $task->getFullInfo(), 'recommended' => $task->getRecommendedPerformers()], 'Task');
+        if (!Task::where('id', '=', $id)->first()) {
+            return $this->sendError("Task #{$id} not found");
         }
 
-        return $this->sendError([], 'Task not found');
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+            'text' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        $user = $request->user();
+
+        $offer = TaskOffer::new($id, $user->id, $request->get('text'));
+
+        if ($offer) {
+            return $this->sendResponse([], 'Offer create', 201);
+        }
+
+        return $this->sendError('Error creating', [], 501);
     }
 
 }

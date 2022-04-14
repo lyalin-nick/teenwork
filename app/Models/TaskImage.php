@@ -45,11 +45,9 @@ class TaskImage extends Model
      * Создание моделей прикрепленных фото к задаче и загрузка фото
      * @param array $images
      * @param $task_id
-     * @return bool
      */
-    public static function createModels(array $images, $task_id): bool
+    public static function createModels(array $images, $task_id)
     {
-
         if ($images) {
             $models = [];
             foreach ($images as $image_path) {
@@ -63,19 +61,15 @@ class TaskImage extends Model
                     }
                 }
             }
-            return count($images) === count($models);
         }
-
-        return false;
     }
 
     /**
      * Создание моделей прикрепленных фото к задаче и загрузка фото
      * @param array $images
-     * @param $task_id
-     * @return bool
+     * @param int $task_id
      */
-    public static function updateModels(array $images, $task_id): bool
+    public static function updateModels(array $images, int $task_id)
     {
         if ($images) {
             $exists_models = TaskImage::where('task_id', $task_id)->get();
@@ -104,10 +98,7 @@ class TaskImage extends Model
                     $exists_model->delete();
                 }
             }
-            return count($images) === count($updated_models);
         }
-
-        return false;
     }
 
 

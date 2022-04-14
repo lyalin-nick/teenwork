@@ -27,33 +27,14 @@ class TaskVideo extends Model
         'task_id', 'name', 'path', 'ext'
     ];
 
-    /**
-     * Создание модели видео
-     *
-     * @param $video_path string Путь до видео
-     * @param $task_id integer Идентификатор задачи
-     * @return bool
-     */
-    public static function createModel($video_path, $task_id)
-    {
-        if (Storage::disk('public')->exists($video_path)) {
-            $video = self::create(['task_id' => $task_id]);
-
-            if ($video) {
-                return $video->copyVideo($video_path, $task_id);
-            }
-        }
-        return false;
-    }
 
     /**
      * Создание модели видео
      *
-     * @param $video_path string Путь до видео
-     * @param $task_id integer Идентификатор задачи
-     * @return bool
+     * @param string $video_path
+     * @param integer $task_id
      */
-    public static function updateModel($video_path, $task_id)
+    public static function updateModel(string $video_path, int $task_id)
     {
         if (Storage::disk('public')->exists($video_path)) {
             $video_model = self::where('task_id', $task_id)->first();
@@ -62,24 +43,22 @@ class TaskVideo extends Model
             }
 
             if ($video_model) {
-                return $video_model->copyVideo($video_path, $task_id);
+                $video_model->copyVideo($video_path, $task_id);
             }
         }
-        return false;
     }
-
-    public function cleanUp(): void
-    {
-        $this->checkExistVideoAndDelete();
-        $this->update(['path' => null, 'name' => null, 'ext' => null]);
-    }
-
 
     protected static function booted()
     {
         static::deleted(function (self $task_video) {
             $task_video->checkExistVideoAndDelete();
         });
+    }
+
+    public function cleanUp(): void
+    {
+        $this->checkExistVideoAndDelete();
+        $this->update(['path' => null, 'name' => null, 'ext' => null]);
     }
 
     public function task()
@@ -91,9 +70,22 @@ class TaskVideo extends Model
      * Получение ссылки на видео
      * @return string|null
      */
-    public function getLink()
+    public function getLink(): ?string
     {
         return $this->getVideoLink();
     }
 
+    /*
+    public static function createModel($video_path, $task_id)
+        {
+            if (Storage::disk('public')->exists($video_path)) {
+                $video = self::create(['task_id' => $task_id]);
+
+                if ($video) {
+                    return $video->copyVideo($video_path, $task_id);
+                }
+            }
+            return false;
+        }
+    */
 }
