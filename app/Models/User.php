@@ -443,4 +443,29 @@ class User extends Authenticatable
         $profile->save();
     }
 
+    public function getStars(): array
+    {
+        return [
+            5 => $this->reviews()->where('rating', '=', 5)->count(),
+            4 => $this->reviews()->where('rating', '=', 4)->count(),
+            3 => $this->reviews()->where('rating', '=', 3)->count(),
+            2 => $this->reviews()->where('rating', '=', 2)->count(),
+            1 => $this->reviews()->where('rating', '=', 1)->count(),
+        ];
+    }
+
+    public function getLastReview(): array
+    {
+        $review = $this->reviews()->orderBy('id', 'DESC')->first();
+        if (!$review){
+            return [];
+        }
+
+        return [
+            'user' => $review->getEmployerInfoAttribute(),
+            'rating' => $review->rating,
+            'text' => $review->text
+        ];
+    }
+
 }

@@ -18,13 +18,7 @@ class ReviewController extends BaseController
     {
         $user = $request->user();
 
-        $count_by_rating = [
-            5 => $user->reviews()->where('rating', '=', 5)->count(),
-            4 => $user->reviews()->where('rating', '=', 4)->count(),
-            3 => $user->reviews()->where('rating', '=', 3)->count(),
-            2 => $user->reviews()->where('rating', '=', 2)->count(),
-            1 => $user->reviews()->where('rating', '=', 1)->count(),
-        ];
+        $count_by_rating = $user->getStars();
 
         return $this->sendResponse($count_by_rating, 'Portfolio info');
     }
