@@ -94,7 +94,7 @@ class GoogleMap
         } catch (GuzzleException $exception) {
             Log::error($exception->getMessage());
         }
-        
+
         return null;
     }
 }

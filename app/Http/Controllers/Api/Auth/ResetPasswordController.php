@@ -34,7 +34,7 @@ class ResetPasswordController extends BaseController
         try {
             $user->setResetToken($verify_code);
 //            $user->notify(new SmsCode($verify_code));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->sendError('Failed to send message. ' . $e->getMessage() . '. ' . $e->getLine());
         }
 

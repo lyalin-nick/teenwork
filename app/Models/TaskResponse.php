@@ -25,16 +25,6 @@ class TaskResponse extends Model
         'task_id', 'user_id', 'text'
     ];
 
-    public function task()
-    {
-        return $this->belongsTo(Task::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
     /**
      * @param int $task_id
      * @param int $user_id
@@ -48,5 +38,15 @@ class TaskResponse extends Model
             'task_id' => $task_id,
             'text' => $text
         ]);
+    }
+
+    public function task()
+    {
+        return $this->belongsTo(Task::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

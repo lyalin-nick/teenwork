@@ -14,9 +14,8 @@ class Favorite extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['task_id', 'user_id'];
-
     public $timestamps = false;
+    protected $fillable = ['task_id', 'user_id'];
 
     public function task()
     {

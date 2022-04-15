@@ -28,10 +28,10 @@ class Faq extends Model
     public static function getQuestions($str = ''): array
     {
         $faqs = Faq::query()->where('active', true);
-        if ($str){
-            $faqs->where(function($query) use ($str){
-               $query->where('question', 'LIKE', "%{$str}%");
-               $query->orWhere('answer', 'LIKE', "%{$str}%");
+        if ($str) {
+            $faqs->where(function ($query) use ($str) {
+                $query->where('question', 'LIKE', "%{$str}%");
+                $query->orWhere('answer', 'LIKE', "%{$str}%");
             });
         }
         return $faqs->select('id', 'question')->get()->toArray();

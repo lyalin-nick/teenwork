@@ -127,12 +127,12 @@ class Category extends Model
             if ($category->children) {
                 foreach ($category->children as $child)
                     $child->update(['icon_name' => $category->icon_name]);
-            }elseif ($category->parent){
+            } elseif ($category->parent) {
                 $category->update(['icon_name' => $category->parent->icon_name]);
             }
         });
         static::created(function (self $category) {
-            if ($category->parent){
+            if ($category->parent) {
                 $category->update(['icon_name' => $category->parent->icon_name]);
             }
         });

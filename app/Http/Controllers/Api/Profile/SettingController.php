@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Models\Profile;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class SettingController extends BaseController
 {

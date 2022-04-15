@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,37 +31,9 @@ class Review extends Model
         'task_id', 'employer_id', 'performer_id', 'rating', 'text'
     ];
 
-
-    public function task()
-    {
-        return $this->belongsTo(Task::class);
-    }
-
-    public function employer()
-    {
-        return $this->belongsTo(User::class, 'employer_id');
-    }
-
-    public function performer()
-    {
-        return $this->belongsTo(User::class, 'performer_id');
-    }
-
     public static function createReview($params)
     {
         $review = self::create($params);
-    }
-
-    public function getEmployerInfoAttribute()
-    {
-        $employer = $this->employer;
-        return $employer->getShortInfo();
-    }
-
-    public function getTaskInfoAttribute()
-    {
-        $task = $this->task;
-        return $task->only('id', 'name');
     }
 
     public static function search($request)
@@ -88,7 +61,7 @@ class Review extends Model
     {
         static::creating(function (self $review) {
             if (self::where(['task_id' => $review->task_id, 'employer_id' => $review->employer_id, 'performer_id' => $review->performer_id])->first()) {
-                throw new \Exception("Такой отзыв уже создан");
+                throw new Exception("Такой отзыв уже создан");
             }
             $review->date = date('Y-m-d');
         });
@@ -99,5 +72,32 @@ class Review extends Model
         static::deleted(function (self $review) {
             $review->performer->recountRating($review->rating);
         });
+    }
+
+    public function task()
+    {
+        return $this->belongsTo(Task::class);
+    }
+
+    public function employer()
+    {
+        return $this->belongsTo(User::class, 'employer_id');
+    }
+
+    public function performer()
+    {
+        return $this->belongsTo(User::class, 'performer_id');
+    }
+
+    public function getEmployerInfoAttribute()
+    {
+        $employer = $this->employer;
+        return $employer->getShortInfo();
+    }
+
+    public function getTaskInfoAttribute()
+    {
+        $task = $this->task;
+        return $task->only('id', 'name');
     }
 }

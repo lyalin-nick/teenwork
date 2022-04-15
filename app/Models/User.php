@@ -85,22 +85,6 @@ class User extends Authenticatable
         ]);
     }
 
-    public static function registerFromNetwork($provider, $socialite_user)
-    {
-        $user = static::create([
-            'email' => $socialite_user->email,
-            'role' => null,
-            'status' => self::STATUS_ACTIVE,
-        ]);
-
-        $user->networks()->create([
-            'network' => $provider,
-            'network_user_id' => $socialite_user->id,
-        ]);
-
-        return $user;
-    }
-
     /**
      * @param $identifier
      * @return mixed
@@ -108,15 +92,6 @@ class User extends Authenticatable
     public static function findByPhone($identifier)
     {
         return self::where('phone', $identifier)->first();
-    }
-
-    /**
-     * @param $identifier
-     * @return mixed
-     */
-    public static function findByEmail($identifier)
-    {
-        return self::where('email', $identifier)->first();
     }
 
     /**
@@ -144,6 +119,41 @@ class User extends Authenticatable
         }
 
         return $user;
+    }
+
+    /**
+     * @param $identifier
+     * @return mixed
+     */
+    public static function findByEmail($identifier)
+    {
+        return self::where('email', $identifier)->first();
+    }
+
+    public static function registerFromNetwork($provider, $socialite_user)
+    {
+        $user = static::create([
+            'email' => $socialite_user->email,
+            'role' => null,
+            'status' => self::STATUS_ACTIVE,
+        ]);
+
+        $user->networks()->create([
+            'network' => $provider,
+            'network_user_id' => $socialite_user->id,
+        ]);
+
+        return $user;
+    }
+
+    /**
+     * Связь с моделями авторизованных через соцсети
+     *
+     * @return HasMany
+     */
+    public function networks()
+    {
+        return $this->hasMany(Network::class, 'user_id', 'id');
     }
 
     /**
@@ -226,39 +236,9 @@ class User extends Authenticatable
         }
     }
 
-    /**
-     * Связь с моделями авторизованных через соцсети
-     *
-     * @return HasMany
-     */
-    public function networks()
-    {
-        return $this->hasMany(Network::class, 'user_id', 'id');
-    }
-
     public function profile()
     {
         return $this->hasOne(Profile::class, 'user_id', 'id');
-    }
-
-    public function tasks()
-    {
-        return $this->hasMany(Task::class, 'user_id', 'id');
-    }
-
-    public function responses()
-    {
-        return $this->hasMany(TaskResponse::class, 'user_id', 'id');
-    }
-
-    public function reviews()
-    {
-        return $this->hasMany(Review::class, 'performer_id', 'id');
-    }
-
-    public function favorites()
-    {
-        return $this->hasMany(Favorite::class);
     }
 
     /**
@@ -297,11 +277,6 @@ class User extends Authenticatable
             'photo' => $profile->getProfilePreviewImageLink(),
             'rating' => $profile->rating,
         ];
-    }
-
-    public function getFavoritesId(): array
-    {
-        return $this->favorites()->pluck('task_id')->toArray();
     }
 
     public function getTaskList()
@@ -359,6 +334,16 @@ class User extends Authenticatable
     public function isEmployer(): bool
     {
         return $this->role === self::ROLE_EMPLOYER || $this->role === null;
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'user_id', 'id');
+    }
+
+    public function responses()
+    {
+        return $this->hasMany(TaskResponse::class, 'user_id', 'id');
     }
 
     /**
@@ -430,6 +415,16 @@ class User extends Authenticatable
         return $user_data;
     }
 
+    public function getFavoritesId(): array
+    {
+        return $this->favorites()->pluck('task_id')->toArray();
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
     public function recountRating($review_rating)
     {
         $profile = $this->profile;
@@ -441,6 +436,11 @@ class User extends Authenticatable
             $profile->rating = (float)$review_rating;
         }
         $profile->save();
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'performer_id', 'id');
     }
 
     public function getStars(): array
@@ -457,7 +457,7 @@ class User extends Authenticatable
     public function getLastReview(): array
     {
         $review = $this->reviews()->orderBy('id', 'DESC')->first();
-        if (!$review){
+        if (!$review) {
             return [];
         }
 

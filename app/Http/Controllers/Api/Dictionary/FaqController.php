@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Dictionary;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Faq;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 
 class FaqController extends BaseController

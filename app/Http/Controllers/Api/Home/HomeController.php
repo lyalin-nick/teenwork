@@ -37,7 +37,7 @@ class HomeController extends BaseController
     /**
      * @param string $flag
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function map($flag, Request $request): JsonResponse
     {
