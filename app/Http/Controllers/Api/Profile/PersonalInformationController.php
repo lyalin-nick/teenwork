@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 class PersonalInformationController extends BaseController
 {
 
-    public function setBaseInfo(Request $request)
+    public function baseInfo(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
@@ -37,7 +37,7 @@ class PersonalInformationController extends BaseController
         return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
     }
 
-    public function setAbout(Request $request)
+    public function about(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'about' => 'required|string'
@@ -57,7 +57,7 @@ class PersonalInformationController extends BaseController
         return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
     }
 
-    public function uploadImage(Request $request)
+    public function image(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'image' => 'required|image|mimes:jpeg,png,jpg',
@@ -83,7 +83,7 @@ class PersonalInformationController extends BaseController
     }
 
 
-    public function uploadVideo(Request $request)
+    public function video(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'video' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',

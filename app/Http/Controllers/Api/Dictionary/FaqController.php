@@ -4,15 +4,17 @@ namespace App\Http\Controllers\Api\Dictionary;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Faq;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 
 class FaqController extends BaseController
 {
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $data = Faq::getQuestions();
+        $str = htmlspecialchars($request->get('search'));
+        $data = Faq::getQuestions($str);
 
         return $this->sendResponse($data, 'Faq data');
     }

@@ -34,9 +34,10 @@ class TasksController extends BaseController
         if (!$task) {
             return $this->sendError('Task not found');
         }
+        $task_info = $task->getFullInfo();
 
         $task->addViews();
 
-        return $this->sendResponse($task->getFullInfo(), 'Task was found');
+        return $this->sendResponse($task_info, 'Task was found');
     }
 }

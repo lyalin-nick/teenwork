@@ -25,7 +25,7 @@ class HomeController extends BaseController
         $lastPage = $tasks->lastPage();
 
         $tasks = $tasks->each(function ($item, $key) {
-            $item->makeHidden(['user', 'images']);
+            $item->makeHidden(['user', 'user_id', 'rating', 'images']);
             $item['user_info'] = $item->user_info;
             $item['images_links'] = $item->images_links;
             $item['status'] = $item->status_label;
@@ -54,7 +54,7 @@ class HomeController extends BaseController
         $lastPage = 1;//$tasks->lastPage();
 
         $tasks = $tasks->each(function ($item, $key) {
-            $item->makeHidden(['user', 'images']);
+            $item->makeHidden(['user', 'user_id', 'rating', 'images']);
             $item['user_info'] = $item->user_info;
             $item['images_links'] = $item->images_links;
             $item['status'] = $item->status_label;

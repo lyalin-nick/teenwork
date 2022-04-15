@@ -26,6 +26,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $status
  * @property Task[] $tasks
  * @property Review[] $reviews
+ * @property Favorite[] $favorites
  *
  * @mixin HasApiTokens
  * @mixin Builder
@@ -130,7 +131,7 @@ class User extends Authenticatable
 
         if (!$user) { // если не нашли, то ищем с такой же почтой
             $user = self::findByEmail($socialite_user->email);
-            if ($user){
+            if ($user) {
                 $user->networks()->create([
                     'network' => $provider,
                     'network_user_id' => $socialite_user->id,
@@ -255,6 +256,11 @@ class User extends Authenticatable
         return $this->hasMany(Review::class, 'performer_id', 'id');
     }
 
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
     /**
      * Идентификатор для отправки смс
      *
@@ -291,6 +297,11 @@ class User extends Authenticatable
             'photo' => $profile->getProfilePreviewImageLink(),
             'rating' => $profile->rating,
         ];
+    }
+
+    public function getFavoritesId(): array
+    {
+        return $this->favorites()->pluck('task_id')->toArray();
     }
 
     public function getTaskList()
@@ -412,7 +423,8 @@ class User extends Authenticatable
             'push_notification' => $profile->push_notification,
             'email_notification' => $profile->email_notification,
             'invisible' => $profile->invisible,
-            'created_at' => date('Y-m-d', strtotime($this->created_at))
+            'created_at' => date('Y-m-d', strtotime($this->created_at)),
+            'favorites' => $this->getFavoritesId()
         ];
 
         return $user_data;
@@ -430,4 +442,5 @@ class User extends Authenticatable
         }
         $profile->save();
     }
+
 }

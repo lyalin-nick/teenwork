@@ -25,9 +25,16 @@ class Faq extends Model
         'question', 'answer'
     ];
 
-    public static function getQuestions(): array
+    public static function getQuestions($str = ''): array
     {
-        return Faq::where('active', true)->select('id', 'question')->get()->toArray();
+        $faqs = Faq::query()->where('active', true);
+        if ($str){
+            $faqs->where(function($query) use ($str){
+               $query->where('question', 'LIKE', "%{$str}%");
+               $query->orWhere('answer', 'LIKE', "%{$str}%");
+            });
+        }
+        return $faqs->select('id', 'question')->get()->toArray();
     }
 
     public static function getAnswerById($id): array

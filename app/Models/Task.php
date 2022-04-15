@@ -139,6 +139,8 @@ class Task extends Model
                 'tasks.safe_deal',
                 'tasks.created_at',
                 'tasks.start_date',
+                'tasks.lat as lat',
+                'tasks.lng as lng',
                 'p.rating',
                 'c.icon_name as icon_name'
             ]);
@@ -180,8 +182,6 @@ class Task extends Model
                 break;
             case "nearby":
                 if (isset($params['ulat']) && isset($params['ulng'])) {
-                    $tasks->addSelect('tasks.lat as lat'); // широта
-                    $tasks->addSelect('tasks.lng as lng'); // долгота
                     $tasks->addSelect(DB::raw("ACOS(SIN(PI()*lat/180.0)*SIN(PI()*{$params['ulat']}/180.0)+COS(PI()*lat/180.0)*COS(PI()*{$params['ulat']}/180.0)*COS(PI()*{$params['ulng']}/180.0-PI()*lng/180.0))*6371 AS distance")); // формула расчета расстояния от заданных координат
                     $tasks->orderBy('distance');
                 }

@@ -94,7 +94,7 @@ class ProfileController extends BaseController
         return $this->sendResponse($profile->getPortfolio(), 'Portfolio info');
     }
 
-    public function setCategories(Request $request)
+    public function categories(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'categories' => 'required|array',
@@ -117,7 +117,7 @@ class ProfileController extends BaseController
         return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
     }
 
-    public function setAddress(Request $request)
+    public function address(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'address' => 'required|string',

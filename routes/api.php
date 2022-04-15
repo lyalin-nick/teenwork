@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Employer\Task\TaskController;
 use App\Http\Controllers\Api\Helper\GoogleMapController;
 use App\Http\Controllers\Api\Helper\UploadController;
 use App\Http\Controllers\Api\Home\HomeController;
+use App\Http\Controllers\Api\Performer\FavoriteController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioImageController;
 use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
 use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\Api\Profile\PersonalInformationController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use App\Http\Controllers\Api\Profile\SettingController;
 use App\Http\Controllers\Api\Task\TasksController;
+use App\Http\Controllers\Api\User\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -90,6 +92,9 @@ Route::prefix('/home')->group(function () {
 Route::prefix('/task')->group(function () {
     Route::get('/{id}', [TasksController::class, 'view']);
 });
+Route::prefix('/user')->group(function () {
+    Route::get('/{id}', [UserController::class, 'view']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -106,8 +111,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/{id}', [TaskController::class, 'update']);
             Route::delete('/{id}', [TaskController::class, 'delete']);
 
-            Route::get('/{id}/recommended/', [TaskController::class, 'recommended']);
-            Route::get('/{id}/responses/', [TaskController::class, 'responses']);
+            Route::get('/{id}/recommended', [TaskController::class, 'recommended']);
+            Route::get('/{id}/responses', [TaskController::class, 'responses']);
             Route::post('/{id}/offer', [TaskController::class, 'offer']);
         });
 
@@ -130,6 +135,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     //==================================================================================================================
 
+    Route::prefix('/favorite')->middleware('performer')->group(function () {
+        Route::get('/', [FavoriteController::class, 'view']);
+        Route::post('/{taskId}', [FavoriteController::class, 'add']);
+        Route::delete('/{taskId}', [FavoriteController::class, 'remove']);
+    });
 
     //=============================== Методы для работы с модулем Профиль  =============================================
     Route::prefix('/profile')->group(function () {
@@ -137,10 +147,10 @@ Route::middleware('auth:sanctum')->group(function () {
         //================================ Общие методы ================================================================
         Route::get('/', [ProfileController::class, 'index']);
 
-        Route::put('/base-info', [PersonalInformationController::class, 'setBaseInfo']);
-        Route::put('/about', [PersonalInformationController::class, 'setAbout']);
-        Route::post('/image', [PersonalInformationController::class, 'uploadImage']);
-        Route::post('/video', [PersonalInformationController::class, 'uploadVideo']);
+        Route::put('/base-info', [PersonalInformationController::class, 'baseInfo']);
+        Route::put('/about', [PersonalInformationController::class, 'about']);
+        Route::post('/image', [PersonalInformationController::class, 'image']);
+        Route::post('/video', [PersonalInformationController::class, 'video']);
 
         Route::prefix('/setting')->group(function () {
             Route::put('/push-notification', [SettingController::class, 'pushNotification']);
@@ -153,8 +163,8 @@ Route::middleware('auth:sanctum')->group(function () {
         //============================= Методы доступные для роли Исполнитель ==========================================
         Route::middleware('performer')->group(function () {
 
-            Route::put('/address', [PerformerProfileController::class, 'setAddress']);
-            Route::put('/categories', [PerformerProfileController::class, 'setCategories']);
+            Route::put('/address', [PerformerProfileController::class, 'address']);
+            Route::put('/categories', [PerformerProfileController::class, 'categories']);
 
             Route::prefix('/portfolio')->group(function () {
 
