@@ -7,21 +7,21 @@ use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Dictionary\CategoryController;
 use App\Http\Controllers\Api\Dictionary\FaqController;
 use App\Http\Controllers\Api\Dictionary\LanguageController;
-use App\Http\Controllers\Api\Employer\Profile\ProfileController as EmployerProfileController;
-use App\Http\Controllers\Api\Employer\Task\TaskController;
+use App\Http\Controllers\Api\Dictionary\ReportTitleController;
+use App\Http\Controllers\Api\Favorite\FavoriteController;
 use App\Http\Controllers\Api\Helper\GoogleMapController;
 use App\Http\Controllers\Api\Helper\UploadController;
 use App\Http\Controllers\Api\Home\HomeController;
-use App\Http\Controllers\Api\Performer\FavoriteController;
-use App\Http\Controllers\Api\Performer\Profile\PortfolioImageController;
-use App\Http\Controllers\Api\Performer\Profile\PortfolioLinkController;
-use App\Http\Controllers\Api\Performer\Profile\ProfileController as PerformerProfileController;
-use App\Http\Controllers\Api\Performer\Profile\ReviewController;
-use App\Http\Controllers\Api\Performer\Task\TaskController as PerformerTaskController;
-use App\Http\Controllers\Api\Profile\PersonalInformationController;
+use App\Http\Controllers\Api\Profile\PerformerProfileController;
+use App\Http\Controllers\Api\Profile\Portfolio\PortfolioImageController;
+use App\Http\Controllers\Api\Profile\Portfolio\PortfolioLinkController;
 use App\Http\Controllers\Api\Profile\ProfileController;
+use App\Http\Controllers\Api\Profile\ReviewController;
+use App\Http\Controllers\Api\Profile\RoleController;
 use App\Http\Controllers\Api\Profile\SettingController;
-use App\Http\Controllers\Api\Task\TasksController;
+use App\Http\Controllers\Api\Task\EmployerTaskController;
+use App\Http\Controllers\Api\Task\PerformerTaskController;
+use App\Http\Controllers\Api\Task\TaskController;
 use App\Http\Controllers\Api\User\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,7 +61,6 @@ Route::prefix('/reset')->group(function () {
 
 });
 
-
 Route::prefix('/dictionary')->group(function () {
 
     Route::get('/categories', [CategoryController::class, 'index']);
@@ -70,6 +69,8 @@ Route::prefix('/dictionary')->group(function () {
 
     Route::get('/faqs', [FaqController::class, 'index']);
     Route::get('/faqs/{id}', [FaqController::class, 'answer']);
+
+    Route::get('/report-titles', [ReportTitleController::class, 'index']);
 
 });
 
@@ -90,30 +91,33 @@ Route::prefix('/home')->group(function () {
 });
 
 Route::prefix('/task')->group(function () {
-    Route::get('/{id}', [TasksController::class, 'view']);
+    Route::get('/{id}', [TaskController::class, 'view']);
+    Route::post('/{id}/report', [TaskController::class, 'report'])->middleware('auth:sanctum');
 });
+
 Route::prefix('/user')->group(function () {
     Route::get('/{id}', [UserController::class, 'view']);
+    Route::post('/{id}/report', [UserController::class, 'report'])->middleware('auth:sanctum');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('/tasks')->group(function () {
-        Route::get('/', [TasksController::class, 'index']);
+        Route::get('/', [TaskController::class, 'tasks']);
     });
 
     //================================= Методы доступные для роли Заказчик =============================================
     Route::prefix('/employer')->middleware('employer')->group(function () {
 
         Route::prefix('/task')->group(function () {
-            Route::post('/store', [TaskController::class, 'store']);
-            Route::get('/{id}', [TaskController::class, 'edit']);
-            Route::put('/{id}', [TaskController::class, 'update']);
-            Route::delete('/{id}', [TaskController::class, 'delete']);
+            Route::post('/store', [EmployerTaskController::class, 'store']);
+            Route::get('/{id}', [EmployerTaskController::class, 'edit']);
+            Route::put('/{id}', [EmployerTaskController::class, 'update']);
+            Route::delete('/{id}', [EmployerTaskController::class, 'delete']);
 
-            Route::get('/{id}/recommended', [TaskController::class, 'recommended']);
-            Route::get('/{id}/responses', [TaskController::class, 'responses']);
-            Route::post('/{id}/offer', [TaskController::class, 'offer']);
+            Route::get('/{id}/recommended', [EmployerTaskController::class, 'recommended']);
+            Route::get('/{id}/responses', [EmployerTaskController::class, 'responses']);
+            Route::post('/{id}/offer', [EmployerTaskController::class, 'offer']);
         });
 
     });
@@ -147,10 +151,9 @@ Route::middleware('auth:sanctum')->group(function () {
         //================================ Общие методы ================================================================
         Route::get('/', [ProfileController::class, 'index']);
 
-        Route::put('/base-info', [PersonalInformationController::class, 'baseInfo']);
-        Route::put('/about', [PersonalInformationController::class, 'about']);
-        Route::post('/image', [PersonalInformationController::class, 'image']);
-        Route::post('/video', [PersonalInformationController::class, 'video']);
+        Route::put('/base-info', [ProfileController::class, 'baseInfo']);
+        Route::post('/image', [ProfileController::class, 'image']);
+        Route::post('/video', [ProfileController::class, 'video']);
 
         Route::prefix('/setting')->group(function () {
             Route::put('/push-notification', [SettingController::class, 'pushNotification']);
@@ -163,12 +166,12 @@ Route::middleware('auth:sanctum')->group(function () {
         //============================= Методы доступные для роли Исполнитель ==========================================
         Route::middleware('performer')->group(function () {
 
-            Route::put('/address', [PerformerProfileController::class, 'address']);
-            Route::put('/categories', [PerformerProfileController::class, 'categories']);
+            Route::put('/address', [ProfileController::class, 'address']);
+            Route::put('/categories', [ProfileController::class, 'categories']);
 
             Route::prefix('/portfolio')->group(function () {
 
-                Route::get('/', [PerformerProfileController::class, 'portfolio']);
+                Route::get('/', [ProfileController::class, 'portfolio']);
 
                 Route::prefix('/image')->group(function () {
                     Route::post('/', [PortfolioImageController::class, 'store']);
@@ -190,8 +193,8 @@ Route::middleware('auth:sanctum')->group(function () {
         //==============================================================================================================
 
         Route::prefix('/role')->group(function () {
-            Route::put('/employer', [PerformerProfileController::class, 'setRoleEmployer'])->middleware('performer');
-            Route::put('/performer', [EmployerProfileController::class, 'setRolePerformer'])->middleware('employer');
+            Route::put('/employer', [RoleController::class, 'roleEmployer'])->middleware('performer');
+            Route::put('/performer', [RoleController::class, 'rolePerformer'])->middleware('employer');
         });
 
     });

@@ -262,6 +262,11 @@ return [
             'url' => 'admin/faqs',
             'icon' => 'fas fa-fw fa-question',
         ],
+        [
+            'text' => 'Report titles',
+            'url' => 'admin/report-titles',
+            'icon' => 'fas fa-fw fa-edit',
+        ],
         /*
     [
         'text'        => 'pages',

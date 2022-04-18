@@ -1,12 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\Api\Performer;
+namespace App\Http\Controllers\Api\Favorite;
 
 use App\Http\Controllers\Api\BaseController;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FavoriteController extends BaseController
 {
+    /**
+     * Добавить задачу в избранное
+     *
+     * @param int $taskId
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function add($taskId, Request $request)
     {
         $user = $request->user();
@@ -18,6 +26,12 @@ class FavoriteController extends BaseController
         return $this->sendResponse($user->getFavoritesId(), 'Success');
     }
 
+    /**
+     * Все задачи в избранном
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function view(Request $request)
     {
         $user = $request->user();
@@ -46,6 +60,13 @@ class FavoriteController extends BaseController
         return $this->sendResponse($tasks, 'Success');
     }
 
+    /**
+     * Удаление задачи из избранного
+     *
+     * @param int $taskId
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function remove($taskId, Request $request)
     {
         $user = $request->user();

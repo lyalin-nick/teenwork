@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Employer\Task;
+namespace App\Http\Controllers\Api\Task;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Task;
@@ -15,10 +15,12 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-class TaskController extends BaseController
+class EmployerTaskController extends BaseController
 {
 
     /**
+     * Создание задачи (Заказчик)
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -86,6 +88,8 @@ class TaskController extends BaseController
     }
 
     /**
+     * Получение данных о задаче для редактирования (Заказчик)
+     *
      * @param int $id
      * @param Request $request
      * @return JsonResponse
@@ -128,6 +132,8 @@ class TaskController extends BaseController
     }
 
     /**
+     * Обновление существующей задачи (Заказчик)
+     *
      * @param int $id
      * @param Request $request
      * @return JsonResponse
@@ -200,6 +206,8 @@ class TaskController extends BaseController
     }
 
     /**
+     * Удаление задачи (Заказчик)
+     *
      * @param int $id
      * @param Request $request
      * @return JsonResponse
@@ -216,6 +224,8 @@ class TaskController extends BaseController
     }
 
     /**
+     * Получение рекомендуемых пользователей (Заказчик)
+     *
      * @param int $id
      * @param Request $request
      * @return JsonResponse
@@ -232,6 +242,8 @@ class TaskController extends BaseController
     }
 
     /**
+     * Получение откликов на задачу (Заказчик)
+     *
      * @param int $id
      * @param Request $request
      * @return JsonResponse
@@ -248,6 +260,9 @@ class TaskController extends BaseController
     }
 
     /**
+     * Отправка офера исполнителю (Заказчик)
+     * TODO:недоделан
+     *
      * @param int $id
      * @param Request $request
      * @return JsonResponse

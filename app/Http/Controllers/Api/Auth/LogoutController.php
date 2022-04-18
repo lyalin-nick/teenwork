@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 class LogoutController extends BaseController
 {
     /**
+     * Выход
+     *
      * @param Request $request
      * @return JsonResponse
      */

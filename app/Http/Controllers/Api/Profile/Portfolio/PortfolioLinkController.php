@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Performer\Profile;
+namespace App\Http\Controllers\Api\Profile\Portfolio;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\PortfolioLink;
@@ -41,7 +41,7 @@ class PortfolioLinkController extends BaseController
     /**
      * Обновление уже созданной ссылки
      *
-     * @param $id
+     * @param int $id
      * @param Request $request
      * @return JsonResponse
      */
@@ -58,7 +58,7 @@ class PortfolioLinkController extends BaseController
         $user = $request->user();
         $profile = $user->profile;
 
-        $link = $profile->portfolioLinks()->where('id', $id)->first();
+        $link = $profile->portfolioLinks()->where('id', '=', $id)->first();
 
 
         if ($link) {
@@ -84,7 +84,7 @@ class PortfolioLinkController extends BaseController
         $user = $request->user();
         $profile = $user->profile;
 
-        $link = $profile->portfolioLinks()->where('id', $id)->first();
+        $link = $profile->portfolioLinks()->where('id', '=', $id)->first();
 
         if ($link) {
             if ($link->delete()) {

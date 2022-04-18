@@ -12,6 +12,12 @@ use Laravel\Socialite\Facades\Socialite;
 
 class LoginController extends BaseController
 {
+    /**
+     * Логинизация
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -41,6 +47,13 @@ class LoginController extends BaseController
         return $this->sendResponse(['token' => $token->plainTextToken], 'Success auth');
     }
 
+    /**
+     * Авторизация через соцсети
+     *
+     * @param $provider
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function network($provider, Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Helpers\GoogleMap;
 use App\Models\Traits\ImageTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -61,6 +62,15 @@ class Profile extends Model
 
     protected static function booted()
     {
+        static::updating(function ($profile) {
+            if ($profile->isDirty('place_id')) { // обновление координат, если был изменен адрес
+                $coords = GoogleMap::getCoordinates($profile->place_id);
+                $coords = $coords ?: ['lat' => 53.213672, 'lng' => 45.061300];
+                $profile->lat = $coords['lat'];
+                $profile->lng = $coords['lng'];
+            }
+        });
+
         static::deleted(function (self $profile) {
             $profile->categories()->detach(); //удалим прилинкованные категории
 
@@ -86,9 +96,45 @@ class Profile extends Model
         return $this->belongsToMany(Category::class);
     }
 
-    public function user()
+    /**
+     * @param array|null $profile_data
+     * @param array|null $languages
+     * @param array|null $categories
+     * @param string|null $image
+     * @param string|null $video
+     * @param array|null $portfolio_images
+     * @param array|null $portfolio_links
+     * @return self $this
+     */
+    public function performerProfile($profile_data, $languages, $categories, $image, $video, $portfolio_images, $portfolio_links)
     {
-        return $this->belongsTo(User::class);
+        $this->update($profile_data);
+
+        if ($languages) {
+            $this->linkToLanguages($languages);
+        }
+
+        if ($categories) {
+            $this->updateCategories($categories);
+        }
+
+        if ($image) {
+            $this->uploadProfileImage($image);
+        }
+
+        if ($video) {
+            $this->uploadProfileVideo($video);
+        }
+
+        if ($portfolio_images) {
+            $result = PortfolioImage::createModels($portfolio_images, $this->id);
+        }
+
+        if ($portfolio_links) {
+            $result = PortfolioLink::createModels($portfolio_links, $this->id);
+        }
+
+        return $this;
     }
 
     /**
@@ -112,6 +158,58 @@ class Profile extends Model
     public function languages()
     {
         return $this->belongsToMany(Language::class);
+    }
+
+    /**
+     * Прилинковка предпочитаемых категорий профиля
+     * @param $categories
+     * @return bool
+     */
+    public function updateCategories($categories): bool
+    {
+        if ($categories) {
+            $this->categories()->detach();
+            $this->categories()->attach($categories);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Загрузка фото профиля
+     * @param $image object|string
+     * @return bool
+     */
+    public function uploadProfileImage($image)
+    {
+        $profile_image = $this->profileImage;
+        if (!$profile_image) {
+            $profile_image = ProfileImage::create(['profile_id' => $this->id]);
+        }
+
+        return is_string($image) ? $profile_image->copyImage($image, $this->id) : $profile_image->uploadImage($image, $this->id);
+    }
+
+    /**
+     * Загрузка видео профиля
+     * @param $video object|string
+     * @return bool
+     */
+    public function uploadProfileVideo($video): bool
+    {
+        $profile_video = $this->profileVideo;
+        if (!$profile_video) {
+            $profile_video = ProfileVideo::create(['profile_id' => $this->id]);
+        }
+
+        return is_string($video) ? $profile_video->copyVideo($video, $this->id) : $profile_video->uploadVideo($video, $this->id);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -197,7 +295,8 @@ class Profile extends Model
                 $images[] = [
                     'id' => $model->id,
                     'image' => $model->getLink(),
-                    'image_preview' => $model->getPreviewLink()
+                    'image_preview' => $model->getPreviewLink(),
+                    'description' => $model->description
                 ];
             }
 
@@ -244,7 +343,6 @@ class Profile extends Model
      * Мутатор
      *
      * @param $value
-     * @return bool
      */
     public function setRatingAttribute($value)
     {
@@ -321,23 +419,6 @@ class Profile extends Model
     }
 
     /**
-     * Прилинковка предпочитаемых категорий профиля
-     * @param $categories
-     * @return bool
-     */
-    public function updateCategories($categories): bool
-    {
-        if ($categories) {
-            $this->categories()->detach();
-            $this->categories()->attach($categories);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Получение ID предпочитаемых категорий профиля
      * @return array
      */
@@ -372,35 +453,5 @@ class Profile extends Model
     {
         $this->number_review += 1;
         $this->save();
-    }
-
-    /**
-     * Загрузка фото профиля
-     * @param $image object|string
-     * @return bool
-     */
-    public function uploadProfileImage($image)
-    {
-        $profile_image = $this->profileImage;
-        if (!$profile_image) {
-            $profile_image = ProfileImage::create(['profile_id' => $this->id]);
-        }
-
-        return is_string($image) ? $profile_image->copyImage($image, $this->id) : $profile_image->uploadImage($image, $this->id);
-    }
-
-    /**
-     * Загрузка видео профиля
-     * @param $video object|string
-     * @return bool
-     */
-    public function uploadProfileVideo($video): bool
-    {
-        $profile_video = $this->profileVideo;
-        if (!$profile_video) {
-            $profile_video = ProfileVideo::create(['profile_id' => $this->id]);
-        }
-
-        return is_string($video) ? $profile_video->copyVideo($video, $this->id) : $profile_video->uploadVideo($video, $this->id);
     }
 }

@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\User;
-use App\Notifications\SmsCode;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +14,12 @@ use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends BaseController
 {
+    /**
+     * Регистрация по телефону
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function phone(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -43,6 +49,12 @@ class RegisterController extends BaseController
         return $this->sendResponse(['expires_in' => User::SECONDS_TO_EXPIRE], 'Code send successfully.');
     }
 
+    /**
+     * Подтверждение телефона
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function confirm(Request $request)
     {
         $validator = Validator::make($request->all(), [

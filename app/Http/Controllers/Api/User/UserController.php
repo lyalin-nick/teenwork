@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\User;
+use App\Models\UserReport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 
 class UserController extends BaseController
@@ -37,5 +39,37 @@ class UserController extends BaseController
         }
 
         return $this->sendError('User not found');
+    }
+
+    public function report($id, Request $request)
+    {
+        $reporter = $request->user();
+        $user = User::where('id', '=', $id)->first();
+
+        if (!$user) {
+            return $this->sendError('User not found');
+        }
+
+        if ($user->id == !$reporter->id) {
+            return $this->sendError('You`re an idiot?');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'title_id' => 'required|integer',
+            'title' => 'string',
+            'text' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        $report = UserReport::new($reporter->id, $user->id, $request->title_id, $request->title, $request->text);
+        if (!$report) {
+            return $this->sendError('Error report creating', [], 502);
+        }
+        return $this->sendResponse(['report_id' => $report->id], 'Report was create', 201);
+
+
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Performer\Profile;
+namespace App\Http\Controllers\Api\Profile\Portfolio;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\PortfolioImage;

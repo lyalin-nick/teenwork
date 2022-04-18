@@ -11,6 +11,12 @@ use Illuminate\Http\Request;
 class FaqController extends BaseController
 {
 
+    /**
+     * Получение списка вопросов FAQ
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $str = htmlspecialchars($request->get('search'));
@@ -19,6 +25,12 @@ class FaqController extends BaseController
         return $this->sendResponse($data, 'Faq data');
     }
 
+    /**
+     * Просмотр ответа
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
     public function answer($id): JsonResponse
     {
         $data = Faq::getAnswerById($id);

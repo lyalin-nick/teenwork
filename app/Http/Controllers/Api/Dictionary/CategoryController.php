@@ -4,9 +4,15 @@ namespace App\Http\Controllers\Api\Dictionary;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Category;
+use Illuminate\Http\JsonResponse;
 
 class CategoryController extends BaseController
 {
+    /**
+     * Получение списка категорий
+     *
+     * @return JsonResponse
+     */
     public function index()
     {
         $data = Category::getAllCategoriesAsArray();
@@ -14,6 +20,12 @@ class CategoryController extends BaseController
         return $this->sendResponse($data, '');
     }
 
+    /**
+     * Получение задач по флагу
+     *
+     * @param string $flag
+     * @return JsonResponse
+     */
     public function grouped($flag)
     {
         $data = Category::getAllCategoriesAsArrayByFlag($flag);

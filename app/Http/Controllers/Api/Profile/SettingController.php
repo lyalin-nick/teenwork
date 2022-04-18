@@ -3,10 +3,17 @@
 namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Api\BaseController;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class SettingController extends BaseController
 {
+    /**
+     * PUSH-уведомления
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function pushNotification(Request $request)
     {
         $user = $request->user();
@@ -18,6 +25,12 @@ class SettingController extends BaseController
         return $this->sendError('Error! Setting don`t update!');
     }
 
+    /**
+     * Email-уведомления
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function emailNotification(Request $request)
     {
         $user = $request->user();
@@ -28,6 +41,12 @@ class SettingController extends BaseController
         return $this->sendError('Error! Setting don`t update!');
     }
 
+    /**
+     * Мод невидимка
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function invisible(Request $request)
     {
         $user = $request->user();

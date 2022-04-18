@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Validator;
 class GoogleMapController extends BaseController
 {
     /**
+     * Получение списка на автоподставление
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -33,6 +35,8 @@ class GoogleMapController extends BaseController
     }
 
     /**
+     * Получение place_id по координатам
+     *
      * @param Request $request
      * @return JsonResponse
      */

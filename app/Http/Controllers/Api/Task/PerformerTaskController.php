@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Performer\Task;
+namespace App\Http\Controllers\Api\Task;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Task;
@@ -9,9 +9,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class TaskController extends BaseController
+class PerformerTaskController extends BaseController
 {
     /**
+     * Отправка отклика (Исполнитель)
+     *
      * @param int $id
      * @param Request $request
      * @return JsonResponse
