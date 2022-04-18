@@ -57,6 +57,7 @@ Route::namespace('App\Http\Controllers\Admin')->prefix('admin')->name('admin.')-
     Route::resource('/categories', 'CategoryController');
     Route::resource('/languages', 'LanguageController');
     Route::resource('/faqs', 'FaqController');
+    Route::resource('/report-titles', 'ReportTitleController');
 });
 
 

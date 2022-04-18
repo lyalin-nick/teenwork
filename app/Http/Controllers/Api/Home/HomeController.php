@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 class HomeController extends BaseController
 {
     /**
+     * Получение списка задач для главного экрана
+     *
      * @param string $flag
      * @param Request $request
      * @return JsonResponse
@@ -35,6 +37,8 @@ class HomeController extends BaseController
     }
 
     /**
+     * Получение задач для карты
+     *
      * @param string $flag
      * @param Request $request
      * @return JsonResponse
@@ -64,6 +68,8 @@ class HomeController extends BaseController
     }
 
     /**
+     * Получение кол-ва онлайн/оффлайн задач
+     *
      * @param Request $request
      * @param string|null $flag
      * @return JsonResponse
