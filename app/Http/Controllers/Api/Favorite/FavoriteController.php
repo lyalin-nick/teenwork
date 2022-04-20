@@ -38,7 +38,10 @@ class FavoriteController extends BaseController
 
         $favorites = $user->favorites()
             ->with(['user.profile', 'task'])
-            ->get();
+            ->paginate(20);
+
+        $curPage = $favorites->currentPage();
+        $lastPage = $favorites->lastPage();
 
         $tasks = [];
         foreach ($favorites as $favorite) {
@@ -54,10 +57,11 @@ class FavoriteController extends BaseController
                 'user_info' => $task->user_info,
                 'images_links' => $task->images_links,
                 'status' => $task->status_label,
+                'created_at' => $task->created_at,
             ];
         }
 
-        return $this->sendResponse($tasks, 'Success');
+        return $this->sendResponse(['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => $tasks], 'Success');
     }
 
     /**

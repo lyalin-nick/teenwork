@@ -14,13 +14,13 @@ class ReportTitle extends Model
 
     protected $fillable = ['name', 'flag'];
 
-    static function getFlagLabel($flag)
+    public static function getFlagLabel($flag)
     {
         $labels = self::getFlagLabels();
         return $labels[$flag];
     }
 
-    static function getFlagLabels()
+    public static function getFlagLabels()
     {
         return [
             self::USER_TITLES => 'user',
@@ -28,17 +28,14 @@ class ReportTitle extends Model
         ];
     }
 
-    static function getReportTitles()
+    public static function getReportTitles($flag)
     {
-        $user_titles = self::where('flag', '=', self::USER_TITLES)->select('id', 'name')->get()->toArray();
-        if (!$user_titles) {
-            $user_titles = ['id' => 0, 'name' => 'User Title'];
-        }
-        $tasks_titles = self::where('flag', '=', self::TASK_TITLES)->select('id', 'name')->get()->toArray();
-        if (!$tasks_titles) {
-            $tasks_titles = ['id' => 0, 'name' => 'Task Title'];
+        $titles = self::where('flag', '=', $flag)->select('id', 'name')->get()->toArray();
+
+        if (!$titles) {
+            $titles = [['id' => 0, 'name' => 'Title 1']];
         }
 
-        return ['user_titles' => $user_titles, 'tasks_titles' => $tasks_titles];
+        return $titles;
     }
 }

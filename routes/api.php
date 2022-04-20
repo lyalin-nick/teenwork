@@ -70,7 +70,8 @@ Route::prefix('/dictionary')->group(function () {
     Route::get('/faqs', [FaqController::class, 'index']);
     Route::get('/faqs/{id}', [FaqController::class, 'answer']);
 
-    Route::get('/report-titles', [ReportTitleController::class, 'index']);
+    Route::get('/report-titles/user', [ReportTitleController::class, 'userTitles']);
+    Route::get('/report-titles/task', [ReportTitleController::class, 'taskTitles']);
 
 });
 
@@ -95,12 +96,14 @@ Route::prefix('/task')->group(function () {
     Route::post('/{id}/report', [TaskController::class, 'report'])->middleware('auth:sanctum');
 });
 
-Route::prefix('/user')->group(function () {
-    Route::get('/{id}', [UserController::class, 'view']);
-    Route::post('/{id}/report', [UserController::class, 'report'])->middleware('auth:sanctum');
-});
+
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::prefix('/user')->group(function () {
+        Route::get('/{id}', [UserController::class, 'view']);
+        Route::post('/{id}/report', [UserController::class, 'report']);
+    });
 
     Route::prefix('/tasks')->group(function () {
         Route::get('/', [TaskController::class, 'tasks']);

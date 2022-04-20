@@ -7,9 +7,16 @@ use App\Models\ReportTitle;
 
 class ReportTitleController extends BaseController
 {
-    public function index()
+    public function userTitles()
     {
-        $data = ReportTitle::getReportTitles();
+        $data = ReportTitle::getReportTitles(ReportTitle::USER_TITLES);
+
+        return $this->sendResponse($data, 'Report Titles');
+    }
+
+    public function taskTitles()
+    {
+        $data = ReportTitle::getReportTitles(ReportTitle::TASK_TITLES);
 
         return $this->sendResponse($data, 'Report Titles');
     }

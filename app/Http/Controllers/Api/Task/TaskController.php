@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Task;
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Task;
 use App\Models\TaskReport;
+use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -33,7 +34,7 @@ class TaskController extends BaseController
      * @param Request $request
      * @return JsonResponse
      */
-    public function view($id, Request $request)
+    public function view($id)
     {
         $task = Task::where('id', '=', $id)->first();
 
@@ -41,6 +42,11 @@ class TaskController extends BaseController
             return $this->sendError('Task not found');
         }
         $task_info = $task->getFullInfo();
+
+        $user = Auth::guard('sanctum')->user();
+        if ($user) {
+            $task_info['favorite'] = $user->checkFavorite($id);
+        }
 
         $task->addViews();
 

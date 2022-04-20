@@ -425,6 +425,11 @@ class User extends Authenticatable
         return $this->hasMany(Favorite::class);
     }
 
+    public function checkFavorite($task_id)
+    {
+        return $this->favorites()->where('task_id', '=', $task_id)->exists();
+    }
+
     public function recountRating($review_rating)
     {
         $profile = $this->profile;
