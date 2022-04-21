@@ -20,6 +20,7 @@ class CreateCategoriesTable extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->tinyInteger('flag')->nullable();
+            $table->integer('pos')->default(0);
             $table->timestamps();
         });
     }

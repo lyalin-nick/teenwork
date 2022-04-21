@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $slug
  * @property string $icon_name
  * @property int $flag
+ * @property int $pos
  *
  * @property Task[] $tasks
  * @property Category $parent
@@ -32,7 +33,14 @@ class Category extends Model
         FLAG_ONLINE = 2,
         FLAG_OFFLINE_ONLINE = 3;
 
-    protected $fillable = ['name', 'category_id', 'icon_name', 'flag'];
+
+    const
+        ICON_1 = 'icon-1',
+        ICON_2 = 'icon-2',
+        ICON_3 = 'icon-3',
+        ICON_4 = 'icon-4';
+
+    protected $fillable = ['name', 'category_id', 'icon_name', 'flag', 'pos'];
 
 
     /**
@@ -76,7 +84,7 @@ class Category extends Model
     {
         $categories = [];
         $flag_constants = self::getFlagsConstants($flag);
-        $models = self::where('category_id', 0)
+        $models = self::where('category_id', '=',0)
             ->with(['children' => function ($query) use ($flag_constants) {
                 $query->whereIn('flag', $flag_constants);
             }])
@@ -119,6 +127,16 @@ class Category extends Model
         ];
 
         return $flags[$flag];
+    }
+
+    protected static function getIcons()
+    {
+        return [
+            self::ICON_1 => 'Category 1',
+            self::ICON_2 => 'Category 2',
+            self::ICON_3 => 'Category 3',
+            self::ICON_4 => 'Category 4',
+        ];
     }
 
     protected static function booted()
@@ -170,12 +188,11 @@ class Category extends Model
      */
     public static function getFlags(): array
     {
-        $flags = [
+        return [
             self::FLAG_OFFLINE => 'Offline',
             self::FLAG_ONLINE => 'Online',
             self::FLAG_OFFLINE_ONLINE => 'Offline and Online',
         ];
-        return $flags;
     }
 
     /**

@@ -50,17 +50,3 @@ Route::get('/phpinfo', function () {
     phpinfo();
 });
 Auth::routes();
-
-Route::namespace('App\Http\Controllers\Admin')->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', 'MainController@index')->name('index');
-
-    Route::resource('/categories', 'CategoryController');
-    Route::resource('/languages', 'LanguageController');
-    Route::resource('/faqs', 'FaqController');
-    Route::resource('/report-titles', 'ReportTitleController');
-});
-
-
-Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
-    \UniSharp\LaravelFilemanager\Lfm::routes();
-});

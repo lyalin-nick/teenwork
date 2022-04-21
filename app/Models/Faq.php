@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use SleepingOwl\Admin\Traits\OrderableModel;
 
 /**
  * @property int $id
@@ -19,7 +20,7 @@ use Illuminate\Support\Arr;
  */
 class Faq extends Model
 {
-    use HasFactory;
+    use HasFactory, OrderableModel;
 
     protected $fillable = [
         'question', 'answer'
@@ -57,5 +58,11 @@ class Faq extends Model
     {
         $this->views_number++;
         $this->save();
+    }
+
+
+    public function getOrderField()
+    {
+        return 'pos';
     }
 }

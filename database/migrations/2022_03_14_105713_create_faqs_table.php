@@ -19,7 +19,7 @@ class CreateFaqsTable extends Migration
             $table->string('question', 255);
             $table->binary('answer');
             $table->boolean('active')->default(true);
-            $table->integer('pos')->nullable();
+            $table->integer('pos')->default(0);
             $table->timestamps();
         });
     }
