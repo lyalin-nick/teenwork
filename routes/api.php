@@ -97,7 +97,6 @@ Route::prefix('/task')->group(function () {
 });
 
 
-
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('/user')->group(function () {
@@ -123,6 +122,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{id}/offer', [EmployerTaskController::class, 'offer']);
         });
 
+        Route::prefix('/favorite')->group(function () {
+            Route::get('/', [FavoriteController::class, 'view']);
+            Route::post('/{identify}', [FavoriteController::class, 'add']);
+            Route::delete('/{identify}', [FavoriteController::class, 'remove']);
+        });
+
     });
     //==================================================================================================================
 
@@ -139,14 +144,13 @@ Route::middleware('auth:sanctum')->group(function () {
             // Route::post('/{id}/offer', [PerformerTaskController::class, 'offer']);
         });
 
+        Route::prefix('/favorite')->group(function () {
+            Route::get('/', [FavoriteController::class, 'view']);
+            Route::post('/{identify}', [FavoriteController::class, 'add']);
+            Route::delete('/{identify}', [FavoriteController::class, 'remove']);
+        });
     });
     //==================================================================================================================
-
-    Route::prefix('/favorite')->middleware('performer')->group(function () {
-        Route::get('/', [FavoriteController::class, 'view']);
-        Route::post('/{taskId}', [FavoriteController::class, 'add']);
-        Route::delete('/{taskId}', [FavoriteController::class, 'remove']);
-    });
 
     //=============================== Методы для работы с модулем Профиль  =============================================
     Route::prefix('/profile')->group(function () {

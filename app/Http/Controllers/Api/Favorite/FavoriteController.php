@@ -9,25 +9,23 @@ use Illuminate\Http\Request;
 class FavoriteController extends BaseController
 {
     /**
-     * Добавить задачу в избранное
+     * Добавить в избранное
      *
-     * @param int $taskId
+     * @param int $identify
      * @param Request $request
      * @return JsonResponse
      */
-    public function add($taskId, Request $request)
+    public function add($identify, Request $request)
     {
         $user = $request->user();
 
-        $user->favorites()->where('task_id', '=', $taskId)->delete();
-
-        $user->favorites()->create(['task_id' => $taskId]);
+        $user->addFavorite($identify);
 
         return $this->sendResponse($user->getFavoritesId(), 'Success');
     }
 
     /**
-     * Все задачи в избранном
+     * Список избранного
      *
      * @param Request $request
      * @return JsonResponse
@@ -36,45 +34,23 @@ class FavoriteController extends BaseController
     {
         $user = $request->user();
 
-        $favorites = $user->favorites()
-            ->with(['user.profile', 'task'])
-            ->paginate(20);
+        $favorites = $user->getFavorites();
 
-        $curPage = $favorites->currentPage();
-        $lastPage = $favorites->lastPage();
-
-        $tasks = [];
-        foreach ($favorites as $favorite) {
-            $task = $favorite->task;
-            $tasks[] = [
-                'id' => $task->id,
-                'name' => $task->name,
-                'price' => $task->price,
-                'description' => $task->description,
-                'hot_work' => $task->hot_work,
-                'safe_deal' => $task->safe_deal,
-                'start_date' => $task->start_date,
-                'user_info' => $task->user_info,
-                'images_links' => $task->images_links,
-                'status' => $task->status_label,
-                'created_at' => $task->created_at,
-            ];
-        }
-
-        return $this->sendResponse(['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => $tasks], 'Success');
+        return $this->sendResponse($favorites, 'Success');
     }
 
     /**
-     * Удаление задачи из избранного
+     * Удаление из избранного
      *
-     * @param int $taskId
+     * @param int $identify
      * @param Request $request
      * @return JsonResponse
      */
-    public function remove($taskId, Request $request)
+    public function remove($identify, Request $request)
     {
         $user = $request->user();
-        $user->favorites()->where('task_id', '=', $taskId)->delete();
+
+        $user->removeFavorite($identify);
 
         return $this->sendResponse($user->getFavoritesId(), 'Success');
     }

@@ -276,6 +276,7 @@ class User extends Authenticatable
             'name' => $profile->full_name,
             'photo' => $profile->getProfilePreviewImageLink(),
             'rating' => $profile->rating,
+            'status' => $profile->status,
         ];
     }
 
@@ -347,16 +348,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Роль исполнитель
-     *
-     * @return bool
-     */
-    public function isPerformer(): bool
-    {
-        return $this->role === self::ROLE_PERFORMER || $this->role === null;
-    }
-
-    /**
      * Подтвержденный профиль
      *
      * @return bool
@@ -409,7 +400,7 @@ class User extends Authenticatable
             'email_notification' => $profile->email_notification,
             'invisible' => $profile->invisible,
             'created_at' => date('Y-m-d', strtotime($this->created_at)),
-            'favorites' => $this->getFavoritesId()
+            //'favorites' => $this->getFavoritesId()
         ];
 
         return $user_data;
@@ -417,17 +408,38 @@ class User extends Authenticatable
 
     public function getFavoritesId(): array
     {
-        return $this->favorites()->pluck('task_id')->toArray();
+        if ($this->isPerformer())
+            return $this->favoriteTasks()->pluck('task_id')->toArray();
+
+        return $this->favoritePerformers()->pluck('performer_id')->toArray();
     }
 
-    public function favorites()
+    /**
+     * Роль исполнитель
+     *
+     * @return bool
+     */
+    public function isPerformer(): bool
     {
-        return $this->hasMany(Favorite::class);
+        return $this->role === self::ROLE_PERFORMER || $this->role === null;
     }
 
-    public function checkFavorite($task_id)
+    public function favoriteTasks()
     {
-        return $this->favorites()->where('task_id', '=', $task_id)->exists();
+        return $this->hasMany(FavoriteTask::class);
+    }
+
+    public function favoritePerformers()
+    {
+        return $this->hasMany(FavoritePerformer::class);
+    }
+
+    public function checkFavorite($identifier)
+    {
+        if ($this->isPerformer())
+            return $this->favoriteTasks()->where('task_id', '=', $identifier)->exists();
+
+        return $this->favoritePerformers()->where('performer_id', '=', $identifier)->exists();
     }
 
     public function recountRating($review_rating)
@@ -471,6 +483,74 @@ class User extends Authenticatable
             'rating' => $review->rating,
             'text' => $review->text
         ];
+    }
+
+    public function getFavorites()
+    {
+        if ($this->isPerformer()) {
+            $favorites = $this->favoriteTasks()
+                ->with(['user.profile', 'task'])
+                ->paginate(20);
+
+            $curPage = $favorites->currentPage();
+            $lastPage = $favorites->lastPage();
+
+            $tasks = [];
+            foreach ($favorites as $favorite) {
+                $task = $favorite->task;
+                $tasks[] = [
+                    'id' => $task->id,
+                    'name' => $task->name,
+                    'price' => $task->price,
+                    'description' => $task->description,
+                    'hot_work' => $task->hot_work,
+                    'safe_deal' => $task->safe_deal,
+                    'start_date' => $task->start_date,
+                    'user_info' => $task->user_info,
+                    'images_links' => $task->images_links,
+                    'status' => $task->status_label,
+                    'created_at' => $task->created_at,
+                ];
+            }
+
+            return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => $tasks];
+        }
+
+        $favorites = $this->favoritePerformers()
+            ->with(['performer.profile'])
+            ->paginate(20);
+
+        $curPage = $favorites->currentPage();
+        $lastPage = $favorites->lastPage();
+
+        $performers = [];
+        foreach ($favorites as $favorite) {
+            $performer = $favorite->performer;
+            $performers[] = $performer->getShortInfo();
+        }
+
+        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'performers' => $performers];
+    }
+
+    public function addFavorite($identify)
+    {
+        if ($this->isPerformer()) {
+            $this->favoriteTasks()->where('task_id', '=', $identify)->delete();
+
+            $this->favoriteTasks()->create(['task_id' => $identify]);
+        }
+
+        $this->favoritePerformers()->where('performer_id', '=', $identify)->delete();
+
+        $this->favoritePerformers()->create(['performer_id' => $identify]);
+    }
+
+    public function removeFavorite($identify)
+    {
+        if ($this->isPerformer())
+            $this->favoriteTasks()->where('task_id', '=', $identify)->delete();
+
+        $this->favoritePerformers()->where('performer_id', '=', $identify)->delete();
     }
 
 }
