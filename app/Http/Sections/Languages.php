@@ -63,18 +63,20 @@ class Languages extends Section implements Initializable
                 })
                 ->setOrderable(function ($query, $direction) {
                     $query->orderBy('created_at', $direction);
-                })
+                }),
+            AdminColumn::order()
+                ->setLabel('Order')
+                ->setHtmlAttribute('class', 'text-center')
+                ->setWidth('100px'),
         ];
 
-        $display = AdminDisplay::datatables()
-            ->setName('firstdatatables')
-            ->setOrder([[0, 'asc']])
-            ->setDisplaySearch(true)
-            ->paginate(25)
+        $display = AdminDisplay::table()
             ->setColumns($columns)
             ->setHtmlAttribute('class', 'table-primary table-hover th-center');
 
-        $display->getColumnFilters()->setPlacement('card.heading');
+        $display->setApply(function ($query) {
+            $query->orderBy('pos', 'asc');
+        });
 
         return $display;
     }

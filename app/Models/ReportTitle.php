@@ -4,10 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use SleepingOwl\Admin\Traits\OrderableModel;
 
+/**
+ * @property string $name
+ * @property int $flag
+ * @property int $pos
+ */
 class ReportTitle extends Model
 {
-    use HasFactory;
+    use HasFactory, OrderableModel;
 
     const USER_TITLES = 1,
         TASK_TITLES = 2;
@@ -37,5 +43,10 @@ class ReportTitle extends Model
         }
 
         return $titles;
+    }
+
+    public function getOrderField()
+    {
+        return 'pos';
     }
 }

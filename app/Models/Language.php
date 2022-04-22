@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use SleepingOwl\Admin\Traits\OrderableModel;
 
 /**
  * @property string $name
+ * @property int $pos
  *
  * @property Task[] $tasks
  * @property Profile[] $profiles
@@ -16,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Language extends Model
 {
-    use HasFactory;
+    use HasFactory, OrderableModel;
 
     const ENGLISH_LANGUAGE = 1;
 
@@ -47,5 +49,10 @@ class Language extends Model
     public function profiles()
     {
         return $this->belongsToMany(Profile::class);
+    }
+
+    public function getOrderField()
+    {
+        return 'pos';
     }
 }

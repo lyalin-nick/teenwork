@@ -17,6 +17,7 @@ class CreateReportTitlesTable extends Migration
             $table->id();
             $table->string('name');
             $table->tinyInteger('flag');
+            $table->integer('pos')->default(0);
             $table->timestamps();
         });
     }

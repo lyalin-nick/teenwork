@@ -3,7 +3,6 @@
 namespace App\Http\Sections;
 
 use AdminColumn;
-use AdminColumnFilter;
 use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
@@ -14,7 +13,6 @@ use SleepingOwl\Admin\Contracts\Initializable;
 use SleepingOwl\Admin\Form\Buttons\Cancel;
 use SleepingOwl\Admin\Form\Buttons\Save;
 use SleepingOwl\Admin\Form\Buttons\SaveAndClose;
-use SleepingOwl\Admin\Form\Buttons\SaveAndCreate;
 use SleepingOwl\Admin\Section;
 
 /**
@@ -69,16 +67,19 @@ class ReportTitles extends Section implements Initializable
             })->setWidth('80px')->setOrderable(function ($query, $direction) {
                 $query->orderBy('flag', $direction);
             }),
+            AdminColumn::order()
+                ->setLabel('Order')
+                ->setHtmlAttribute('class', 'text-center')
+                ->setWidth('100px'),
         ];
 
-        $display = AdminDisplay::datatables()
-            ->setName('firstdatatables')
-            ->setOrder([[0, 'asc']])
-            ->setDisplaySearch(true)
-            ->paginate(25)
+        $display = AdminDisplay::table()
             ->setColumns($columns)
             ->setHtmlAttribute('class', 'table-primary table-hover th-center');
-        $display->getColumnFilters()->setPlacement('card.heading');
+
+        $display->setApply(function ($query) {
+            $query->orderBy('pos', 'asc');
+        });
 
         return $display;
     }
