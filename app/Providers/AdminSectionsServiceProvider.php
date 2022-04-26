@@ -22,7 +22,7 @@ class AdminSectionsServiceProvider extends ServiceProvider
         Faq::class => 'App\Http\Sections\Faqs',
         ReportTitle::class => 'App\Http\Sections\ReportTitles',
         AdminUser::class => 'App\Http\Sections\AdminUsers',
-        //User::class => 'App\Http\Sections\Users',
+        User::class => 'App\Http\Sections\Users',
     ];
 
     /**

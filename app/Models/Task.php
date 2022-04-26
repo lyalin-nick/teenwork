@@ -46,6 +46,20 @@ use Illuminate\Support\Facades\DB;
  * @property Category $category
  * @property TaskResponse[] $responses
  *
+ * @method Builder home($flag)
+ * @method Builder notExpired()
+ * @method Builder categoryFlag($flag)
+ * @method Builder categoriesIn($categories)
+ * @method Builder languagesIn($categories)
+ * @method Builder address($place_id)
+ * @method Builder startDays($days)
+ * @method Builder priceFrom($price)
+ * @method Builder flagSafeDeal($safe_deal)
+ * @method Builder flagHotWork($hot_work)
+ * @method Builder priceDesc()
+ * @method Builder ratingDesc()
+ * @method Builder nearby($ulat, $ulng)
+ *
  * @mixin Builder
  */
 class Task extends Model
@@ -121,70 +135,48 @@ class Task extends Model
      */
     public static function search($flag, $params): Builder
     {
-        $tasks = Task::query()
-            ->with('user')
-            ->with('images')
-            ->where('tasks.expired_at', '>', date('Y-m-d H:i:s'))
-            ->join('profiles as p', 'tasks.user_id', '=', 'p.user_id')
-            ->join('categories as c', 'tasks.category_id', '=', 'c.id')
-            ->whereIn('c.flag', Category::getFlagsConstants($flag))
-            ->select([
-                'tasks.id',
-                'tasks.user_id',
-                'tasks.name',
-                'tasks.price',
-                'tasks.description',
-                'tasks.place_id',
-                'tasks.hot_work',
-                'tasks.safe_deal',
-                'tasks.created_at',
-                'tasks.start_date',
-                'tasks.lat as lat',
-                'tasks.lng as lng',
-                'p.rating',
-                'c.icon_name as icon_name'
-            ]);
+        $tasks = Task::home($flag);
 
         if (isset($params['categories']))
-            $tasks->whereIn('tasks.category_id', $params['categories']);
+            $tasks->categoriesIn($params['categories']);
 
         if (isset($params['languages']))
-            $tasks->join('language_task as l', 'tasks.id', '=', 'l.task_id')
-                ->whereIn('l.language_id', $params['languages']);
+            $tasks->languagesIn($params['languages']);
 
         if (isset($params['place_id'])) {
-            $tasks->where('tasks.place_id', '=', $params['place_id']);
+            $tasks->address($params['place_id']);
         }
 
         if (isset($params['days'])) {
-            foreach ($params['days'] as $i => $day) {
-                $params['days'][$i] = date('Y-m-d', strtotime($day));
-            }
-            $tasks->whereIn('tasks.start_date', $params['days']);
+            $tasks->startDays($params['days']);
         }
+
         if (isset($params['price']))
-            $tasks->where('tasks.price', '>=', $params['price']);
+            $tasks->priceFrom($params['price']);
 
-        if (isset($params['safe_deal']))
-            $tasks->where('tasks.safe_deal', '=', filter_var($params['safe_deal'], FILTER_VALIDATE_BOOLEAN));
+        if (isset($params['safe_deal']) && filter_var($params['safe_deal'], FILTER_VALIDATE_BOOLEAN))
+            $tasks->flagSafeDeal($params['safe_deal']);
 
-        if (isset($params['hot_work']))
-            $tasks->where('tasks.hot_work', '=', filter_var($params['hot_work'], FILTER_VALIDATE_BOOLEAN));
+        if (isset($params['hot_work']) && filter_var($params['hot_work'], FILTER_VALIDATE_BOOLEAN))
+            $tasks->flagHotWork($params['hot_work']);
+
+        if (isset($params['answers']) && filter_var($params['answers'], FILTER_VALIDATE_BOOLEAN))
+            $tasks->notResponse($params['answers']);
 
 
         $params['sort'] = $params['sort'] ?? 'default';
         switch ($params['sort']) {
             case "price":
-                $tasks->orderBy('tasks.price', 'desc');
+                $tasks->priceDesc();
                 break;
             case "rating":
-                $tasks->orderBy('p.rating', 'desc');
+                $tasks->ratingDesc();
                 break;
             case "nearby":
-                if (isset($params['ulat']) && isset($params['ulng'])) {
-                    $tasks->addSelect(DB::raw("ACOS(SIN(PI()*lat/180.0)*SIN(PI()*{$params['ulat']}/180.0)+COS(PI()*lat/180.0)*COS(PI()*{$params['ulat']}/180.0)*COS(PI()*{$params['ulng']}/180.0-PI()*lng/180.0))*6371 AS distance")); // формула расчета расстояния от заданных координат
-                    $tasks->orderBy('distance');
-                }
+                if (isset($params['ulat']) && $params['ulng'])
+                    $tasks->nearby($params['ulat'], $params['ulng']);
+                else
+                    $tasks->nearby();
                 break;
             default:
                 $tasks->orderBy('start_date');
@@ -202,20 +194,14 @@ class Task extends Model
      */
     public static function countOnline()
     {
-        $tasks = Task::query()
-            ->where('tasks.expired_at', '>', date('Y-m-d H:i:s'))
-            ->join('categories as c', 'tasks.category_id', '=', 'c.id')
-            ->whereIn('c.flag', Category::getFlagsConstants('online'));
+        $tasks = Task::query()->notExpired()->categoryFlag('online');
 
         return $tasks->count();
     }
 
     public static function countOffline()
     {
-        $tasks = Task::query()
-            ->where('tasks.expired_at', '>', date('Y-m-d H:i:s'))
-            ->join('categories as c', 'tasks.category_id', '=', 'c.id')
-            ->whereIn('c.flag', Category::getFlagsConstants('offline'));
+        $tasks = Task::query()->notExpired()->categoryFlag('offline');
 
         return $tasks->count();
     }
@@ -257,6 +243,103 @@ class Task extends Model
                 foreach ($task->images as $image_model)
                     $image_model->delete();
         });
+    }
+
+    public function scopeHome(Builder $query, $flag)
+    {
+        $query->notExpired()
+            ->categoryFlag($flag)
+            ->with('user')
+            ->with('images')
+            ->select([
+                'tasks.id',
+                'tasks.user_id',
+                'tasks.name',
+                'tasks.price',
+                'tasks.description',
+                'tasks.place_id',
+                'tasks.hot_work',
+                'tasks.safe_deal',
+                'tasks.created_at',
+                'tasks.start_date',
+                'tasks.lat as lat',
+                'tasks.lng as lng',
+                'c.icon_name as icon_name'
+            ]);
+    }
+
+    public function scopeCategoriesIn(Builder $query, $categories)
+    {
+        $query->whereIn('tasks.category_id', $categories);
+    }
+
+    public function scopeLanguagesIn(Builder $query, $languages)
+    {
+        $query->join('language_task as l', 'tasks.id', '=', 'l.task_id')
+            ->whereIn('l.language_id', $languages);
+    }
+
+    public function scopeNotExpired(Builder $query)
+    {
+        $query->where('tasks.expired_at', '>', date('Y-m-d H:i:s'));
+    }
+
+    public function scopeCategoryFlag(Builder $query, $flag)
+    {
+        $query->join('categories as c', 'tasks.category_id', '=', 'c.id')
+            ->whereIn('c.flag', Category::getFlagsConstants($flag));
+    }
+
+    public function scopeAddress(Builder $query, $place_id)
+    {
+        $query->where('tasks.place_id', '=', $place_id);
+    }
+
+    public function scopeStartDays(Builder $query, $days)
+    {
+        foreach ($days as $i => $day) {
+            $params['days'][$i] = date('Y-m-d', strtotime($day));
+        }
+        $query->whereIn('tasks.start_date', $days);
+    }
+
+    public function scopePriceFrom(Builder $query, $price)
+    {
+        $query->where('tasks.price', '>=', $price);
+    }
+
+    public function scopeFlagSafeDeal(Builder $query, $safe_deal)
+    {
+        $query->where('tasks.safe_deal', '=', filter_var($safe_deal, FILTER_VALIDATE_BOOLEAN));
+    }
+
+    public function scopeFlagHotWork(Builder $query, $hot_work)
+    {
+        $query->where('tasks.hot_work', '=', filter_var($hot_work, FILTER_VALIDATE_BOOLEAN));
+    }
+
+
+    public function scopeNotResponse(Builder $query)
+    {
+        $query->whereDoesntHave('responses');
+    }
+
+    public function scopePriceDesc(Builder $query)
+    {
+        $query->orderBy('tasks.price', 'desc');
+    }
+
+    public function scopeRatingDesc(Builder $query)
+    {
+        $query->join('profiles as p', 'tasks.user_id', '=', 'p.user_id')
+            ->addSelect('p.rating')
+            ->orderBy('p.rating', 'desc');
+    }
+
+    public function scopeNearby(Builder $query, $ulat = '53.213672', $ulng = '45.061300')
+    {
+        $query->addSelect(DB::raw("ACOS(SIN(PI()*lat/180.0)*SIN(PI()*{$ulat}/180.0)+COS(PI()*lat/180.0)*COS(PI()*{$ulat}/180.0)*COS(PI()*{$ulng}/180.0-PI()*lng/180.0))*6371 AS distance")); // формула расчета расстояния от заданных координат
+        $query->orderBy('distance');
     }
 
     public function user()

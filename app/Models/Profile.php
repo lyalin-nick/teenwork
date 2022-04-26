@@ -38,6 +38,11 @@ class Profile extends Model
 {
     use HasFactory, ImageTrait;
 
+    const
+        STATUS_BEGINNER = 'beginner',
+        STATUS_PRO = 'professional',
+        STATUS_EXPERT = 'expert';
+
     protected $configImages = [
         '_mini' => [
             'width' => 128,
@@ -58,6 +63,16 @@ class Profile extends Model
     public static function createProfile($data)
     {
         return self::create($data);
+    }
+
+    public static function getStatuses(): array
+    {
+        return [
+            null => 'No status',
+            self::STATUS_BEGINNER => self::STATUS_BEGINNER,
+            self::STATUS_PRO => self::STATUS_PRO,
+            self::STATUS_EXPERT => self::STATUS_EXPERT,
+        ];
     }
 
     protected static function booted()

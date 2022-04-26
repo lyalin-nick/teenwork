@@ -3,10 +3,11 @@
 namespace App\Http\Sections;
 
 use AdminColumn;
-use AdminColumnFilter;
 use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
+use App\Models\Profile;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use SleepingOwl\Admin\Contracts\Display\DisplayInterface;
 use SleepingOwl\Admin\Contracts\Form\FormInterface;
@@ -14,7 +15,6 @@ use SleepingOwl\Admin\Contracts\Initializable;
 use SleepingOwl\Admin\Form\Buttons\Cancel;
 use SleepingOwl\Admin\Form\Buttons\Save;
 use SleepingOwl\Admin\Form\Buttons\SaveAndClose;
-use SleepingOwl\Admin\Form\Buttons\SaveAndCreate;
 use SleepingOwl\Admin\Section;
 
 /**
@@ -58,25 +58,23 @@ class Users extends Section implements Initializable
     {
         $columns = [
             AdminColumn::text('id', '#')->setWidth('50px')->setHtmlAttribute('class', 'text-center'),
-            AdminColumn::link('name', 'Name')
-                ->setSearchCallback(function($column, $query, $search){
-                    return $query
-                        ->orWhere('name', 'like', '%'.$search.'%');
-                })
-                ->setOrderable(function($query, $direction) {
-                    $query->orderBy('created_at', $direction);
+            AdminColumn::image('profile.profileImage.Preview', 'Avatar'),
+            AdminColumn::link('profile.FullName', 'Full Name')
+                ->setSearchable(false),
+            AdminColumn::text('phone', 'Phone')
+                ->setSearchCallback(function ($column, $query, $search) {
+                    return $query->orWhere('phone', 'like', '%' . $search . '%');
                 }),
-            AdminColumn::text('created_at', 'Created / updated', 'updated_at')
-                ->setWidth('160px')
-                ->setOrderable(function($query, $direction) {
-                    $query->orderBy('updated_at', $direction);
-                })
-                ->setSearchable(false)
-            ,
+            AdminColumn::text('role', 'Role')
+                ->setSearchable(false),
+
+            AdminColumn::text('created_at', 'Created')
+                ->setWidth('200px')
+                ->setSearchable(false),
         ];
 
         $display = AdminDisplay::datatables()
-            ->setName('firstdatatables')
+            ->setName('users')
             ->setOrder([[0, 'asc']])
             ->setDisplaySearch(true)
             ->paginate(25)
@@ -96,25 +94,89 @@ class Users extends Section implements Initializable
      */
     public function onEdit($id = null, $payload = [])
     {
-        $form = AdminForm::card()->addBody([
+        $userForm = AdminForm::card()->addBody([
             AdminFormElement::columns()->addColumn([
-                AdminFormElement::text('name', 'Name')
-                    ->required(),
-                AdminFormElement::text('email', 'Name')
-                    ->required()->addValidationRule('email')->unique(),
-                AdminFormElement::html('<hr>'),
-            ], 'col-xs-12 col-sm-6 col-md-4 col-lg-4')->addColumn([
-                AdminFormElement::password('password', 'Password')
-            ], 'col-xs-12 col-sm-6 col-md-8 col-lg-8'),
+                AdminFormElement::text('phone', 'Phone')->required()->unique(),
+                AdminFormElement::text('email', 'Email')->addValidationRule('email')->unique(),
+                AdminFormElement::select('role', 'Role',
+                    [
+                        User::ROLE_EMPLOYER => User::ROLE_EMPLOYER,
+                        User::ROLE_PERFORMER => User::ROLE_PERFORMER
+                    ]
+                )->required(),
+                AdminFormElement::select('status', 'Status',
+                    [
+                        User::STATUS_WAIT => User::STATUS_WAIT,
+                        User::STATUS_ACTIVE => User::STATUS_ACTIVE,
+                        User::STATUS_RESET => User::STATUS_RESET
+                    ]
+                )->required(),
+            ])
         ]);
 
-        $form->getButtons()->setButtons([
-            'save'  => new Save(),
-            'save_and_close'  => new SaveAndClose(),
-            'cancel'  => (new Cancel()),
+        $userForm->getButtons()->setButtons([
+            'save' => new Save(),
+            'save_and_close' => new SaveAndClose(),
+            'cancel' => (new Cancel()),
         ]);
 
-        return $form;
+        $tabs = AdminDisplay::tabbed();
+
+        $tabs->appendTab($userForm, 'User');
+        if (!is_null($id)) {
+
+            $profileForm = AdminForm::card()->addBody([
+                AdminFormElement::columns()->addColumn([
+                    AdminFormElement::text('profile.first_name', 'First Name'),
+                    AdminFormElement::text('profile.last_name', 'Last Name'),
+                    AdminFormElement::date('profile.date_of_birth', 'Date of birth')->setFormat('Y-m-d')->setPickerFormat('Y-m-d'),
+                    AdminFormElement::textarea('profile.about', 'About'),
+                    AdminFormElement::select('profile.status', 'Status', Profile::getStatuses()),
+//                AdminFormElement::selectajax('profile.address', 'Address')
+//                    ->setSearchUrl(route('api.helper.autocomplete'))
+//                    ->setAjaxParameters(['method' => 'GET'])
+//                    ->setDisplay('data.address'), TODO: ПОДУМАТЬ
+                    AdminFormElement::number('profile.number_performer_tasks', 'Number performer tasks')->setMin(0),
+                    AdminFormElement::number('profile.number_employer_tasks', 'Number employer tasks')->setMin(0),
+                    AdminFormElement::text('profile.rating', 'Rating'),
+                ])]);
+
+            $profileForm->getButtons()->setButtons([
+                'save' => new Save(),
+                'save_and_close' => new SaveAndClose(),
+                'cancel' => (new Cancel()),
+            ]);
+
+
+            $profilePhotoForm = AdminForm::card()->addBody([
+                AdminFormElement::columns()->addColumn([
+                    AdminFormElement::image('profile.profileImage.Photo', 'Image')
+                        ->setUploadPath(function (\Illuminate\Http\UploadedFile $file) {
+                            return "storage/tmp";
+                        })->setSaveCallback(function ($file, $path, $filename, $settings) use ($id) {
+                            $user = User::where('id', '=', $id)->first();
+                            $profile = $user->profile;
+                            if ($profile->uploadProfileImage($file)) {
+                                $profile->refresh();
+                                $image = $profile->profileImage;
+                                return ['path' => $image->getFullPath(), 'value' => $image->getLink()];
+                            }
+                            return ['path' => $path, 'value' => $path];
+                        })
+                ])]);
+
+            $profilePhotoForm->getButtons()->setButtons([
+                'save' => new Save(),
+                'save_and_close' => new SaveAndClose(),
+                'cancel' => (new Cancel()),
+            ]);
+
+
+            $tabs->appendTab($profileForm, 'Profile');
+
+            $tabs->appendTab($profilePhotoForm, 'Profile Photo');
+        }
+        return $tabs;
     }
 
     /**

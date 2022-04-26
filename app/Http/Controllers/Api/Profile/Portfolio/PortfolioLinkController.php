@@ -88,7 +88,7 @@ class PortfolioLinkController extends BaseController
 
         if ($link) {
             if ($link->delete()) {
-                return $this->sendResponse([], 'Deleted successful');
+                return $this->sendResponse($profile->getPortfolioLinksAsArray(), 'Deleted successful');
             }
 
             return $this->sendError('Deletion error');

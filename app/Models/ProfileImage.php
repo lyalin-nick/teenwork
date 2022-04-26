@@ -54,6 +54,24 @@ class ProfileImage extends Model
     }
 
     /**
+     * Получить ссылку на фото профиля
+     * @return string
+     */
+    public function getPhotoAttribute(): string
+    {
+        return $this->getImageLink();
+    }
+
+    /**
+     * Получить ссылку на фото профиля
+     * @return string
+     */
+    public function getPreviewAttribute(): string
+    {
+        return $this->getPreviewLink();
+    }
+
+    /**
      * Получить ссылку на превью фото профиля
      * @return string
      */
