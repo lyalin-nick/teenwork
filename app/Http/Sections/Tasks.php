@@ -3,10 +3,10 @@
 namespace App\Http\Sections;
 
 use AdminColumn;
-use AdminColumnFilter;
 use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use SleepingOwl\Admin\Contracts\Display\DisplayInterface;
 use SleepingOwl\Admin\Contracts\Form\FormInterface;
@@ -18,13 +18,13 @@ use SleepingOwl\Admin\Form\Buttons\SaveAndCreate;
 use SleepingOwl\Admin\Section;
 
 /**
- * Class AdminUsers
+ * Class Tasks
  *
- * @property \App\Models\User $model
+ * @property \App\Models\Task $model
  *
  * @see https://sleepingowladmin.ru/#/ru/model_configuration_section
  */
-class AdminUsers extends Section implements Initializable
+class Tasks extends Section implements Initializable
 {
     /**
      * @var bool
@@ -46,7 +46,7 @@ class AdminUsers extends Section implements Initializable
      */
     public function initialize()
     {
-        $this->addToNavigation()->setPriority(100)->setIcon('fa fa-user-circle');
+        $this->addToNavigation()->setPriority(100)->setIcon('fa fa-tasks');
     }
 
     /**
@@ -57,32 +57,36 @@ class AdminUsers extends Section implements Initializable
     public function onDisplay($payload = [])
     {
         $columns = [
-            AdminColumn::text('id', '#')->setWidth('50px')->setHtmlAttribute('class', 'text-center'),
+            AdminColumn::text('id', '#')->setHtmlAttribute('class', 'text-center'),
             AdminColumn::link('name', 'Name')
-                ->setSearchCallback(function($column, $query, $search){
-                    return $query->orWhere('name', 'like', '%'.$search.'%');
+                ->setSearchCallback(function ($column, $query, $search) {
+                    return $query->orWhere('name', 'like', '%' . $search . '%');
                 })
-                ->setOrderable(function($query, $direction) {
+                ->setOrderable(function ($query, $direction) {
                     $query->orderBy('created_at', $direction);
-                }) ,
-            AdminColumn::text('created_at', 'Created / updated', 'updated_at')
-                ->setWidth('160px')
-                ->setOrderable(function($query, $direction) {
+                }),
+            AdminColumn::text('user.profile.FullName', 'User'),
+            //->append(AdminColumn::filter('user_id')),
+            AdminColumn::text('expired_at', 'Expired')->setSearchable(false),
+            AdminColumn::text('created_at', 'Created')
+                ->setOrderable(function ($query, $direction) {
                     $query->orderBy('updated_at', $direction);
                 })
                 ->setSearchable(false)
             ,
         ];
 
-        $display = AdminDisplay::datatables()
-            ->setName('firstdatatables')
-            ->setOrder([[0, 'asc']])
-            ->setDisplaySearch(true)
-            ->paginate(25)
+
+        $display = AdminDisplay::datatablesAsync()
+            ->setName('tasks_table')
             ->setColumns($columns)
             ->setHtmlAttribute('class', 'table-primary table-hover th-center');
 
-        $display->getColumnFilters()->setPlacement('card.heading');
+        if (isset($payload['user_id'])) {
+            $display->setApply(function ($query) use ($payload) {
+                $query->where('user_id', '=', $payload['user_id']);
+            });
+        }
 
         return $display;
     }
@@ -98,19 +102,25 @@ class AdminUsers extends Section implements Initializable
         $form = AdminForm::card()->addBody([
             AdminFormElement::columns()->addColumn([
                 AdminFormElement::text('name', 'Name')
-                    ->required(),
-                AdminFormElement::text('email', 'Name')
-                    ->required()->addValidationRule('email')->unique(),
+                    ->required()
+                ,
                 AdminFormElement::html('<hr>'),
+                AdminFormElement::datetime('created_at')
+                    ->setVisible(true)
+                    ->setReadonly(false)
+                ,
+                AdminFormElement::html('last AdminFormElement without comma')
             ], 'col-xs-12 col-sm-6 col-md-4 col-lg-4')->addColumn([
-                AdminFormElement::password('password', 'Password')->hashWithBcrypt()
+                AdminFormElement::text('id', 'ID')->setReadonly(true),
+                AdminFormElement::html('last AdminFormElement without comma')
             ], 'col-xs-12 col-sm-6 col-md-8 col-lg-8'),
         ]);
 
         $form->getButtons()->setButtons([
-            'save'  => new Save(),
-            'save_and_close'  => new SaveAndClose(),
-            'cancel'  => (new Cancel()),
+            'save' => new Save(),
+            'save_and_close' => new SaveAndClose(),
+            'save_and_create' => new SaveAndCreate(),
+            'cancel' => (new Cancel()),
         ]);
 
         return $form;

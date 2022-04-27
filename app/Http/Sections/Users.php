@@ -6,7 +6,9 @@ use AdminColumn;
 use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
+use AdminSection;
 use App\Models\Profile;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use SleepingOwl\Admin\Contracts\Display\DisplayInterface;
@@ -46,7 +48,7 @@ class Users extends Section implements Initializable
      */
     public function initialize()
     {
-        $this->addToNavigation()->setPriority(100)->setIcon('fa fa-edit');
+        $this->addToNavigation()->setPriority(100)->setIcon('fa fa-users');
     }
 
     /**
@@ -171,10 +173,16 @@ class Users extends Section implements Initializable
                 'cancel' => (new Cancel()),
             ]);
 
+            $tasks = AdminSection::getModel(Task::class)->fireDisplay(['user_id' => $id]);
+            $tasks->setApply(function ($query) use ($id) {
+               $query->where('user_id', '=', $id);
+            });
 
             $tabs->appendTab($profileForm, 'Profile');
 
             $tabs->appendTab($profilePhotoForm, 'Profile Photo');
+
+            $tabs->appendTab($tasks, 'Tasks');
         }
         return $tabs;
     }

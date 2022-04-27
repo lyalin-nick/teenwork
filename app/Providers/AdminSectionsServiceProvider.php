@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Faq;
 use App\Models\Language;
 use App\Models\ReportTitle;
+use App\Models\Task;
 use App\Models\User;
 use SleepingOwl\Admin\Providers\AdminSectionsServiceProvider as ServiceProvider;
 
@@ -21,8 +22,9 @@ class AdminSectionsServiceProvider extends ServiceProvider
         Language::class => 'App\Http\Sections\Languages',
         Faq::class => 'App\Http\Sections\Faqs',
         ReportTitle::class => 'App\Http\Sections\ReportTitles',
-        AdminUser::class => 'App\Http\Sections\AdminUsers',
+        Task::class => 'App\Http\Sections\Tasks',
         User::class => 'App\Http\Sections\Users',
+        AdminUser::class => 'App\Http\Sections\AdminUsers',
     ];
 
     /**
@@ -33,7 +35,7 @@ class AdminSectionsServiceProvider extends ServiceProvider
      */
     public function boot(\SleepingOwl\Admin\Admin $admin)
     {
-    	//
+        //
 
         parent::boot($admin);
     }
