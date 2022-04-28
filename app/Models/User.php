@@ -157,14 +157,6 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasMany
-     */
-    public function myQuestions()
-    {
-        return $this->hasMany(MyQuestion::class);
-    }
-
-    /**
      * @param $identifier
      * @return mixed
      */
@@ -190,6 +182,14 @@ class User extends Authenticatable
         static::created(function ($user) {
             Profile::createProfile(['user_id' => $user->id]);
         });
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function myQuestions()
+    {
+        return $this->hasMany(MyQuestion::class);
     }
 
     public function verify(): void
@@ -288,25 +288,16 @@ class User extends Authenticatable
         ];
     }
 
-    public function getTaskList()
+    public function getTaskList($status = null)
     {
         $tasks = [];
 
         if ($this->isEmployer()) {
-            $tasks = $this->tasks()
-                ->with('images')
-                ->select([
-                    'tasks.id',
-                    'tasks.name',
-                    'tasks.price',
-                    'tasks.description',
-                    'tasks.status',
-                    'tasks.safe_deal',
-                ])
-                ->orderBy('status')
-                ->orderBy('id', 'desc')
-                ->limit(100)
-                ->get();
+            $tasks = $this->tasks()->taskList($status)
+                ->paginate(20);
+
+            $curPage = $tasks->currentPage();
+            $lastPage = $tasks->lastPage();
 
             $tasks = $tasks->each(function ($item, $key) {
                 $item->makeHidden(['images']);
@@ -314,25 +305,30 @@ class User extends Authenticatable
                 $item['status'] = $item->status_label;
             });
 
-        } else {
+        } else { //TODO: доделать список задач исполнителя
             $responses = $this->responses()->with(['task' => function ($query) {
                 $query->with('images');
-            }])->get();
+            }])->paginate(20);
+
+            $curPage = $responses->currentPage();
+            $lastPage = $responses->lastPage();
+
             $tasks = [];
             foreach ($responses as $response) {
+                $task = $response->task;
                 $tasks[] = [
-                    'id' => $response->task->id,
-                    'name' => $response->task->name,
-                    'price' => $response->task->price,
-                    'description' => $response->task->description,
-                    'status' => $response->task->status_label,
-                    'safe_deal' => $response->task->safe_deal,
-                    'images_links' => $response->task->images_links,
+                    'id' => $task->id,
+                    'name' => $task->name,
+                    'price' => $task->price,
+                    'description' => $task->description,
+                    'status' => $task->status_label,
+                    'safe_deal' => $task->safe_deal,
+                    'images_links' => $task->images_links,
                 ];
             }
         }
 
-        return $tasks;
+        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => $tasks];
     }
 
     /**
@@ -465,7 +461,7 @@ class User extends Authenticatable
 
     public function reviews()
     {
-        return $this->hasMany(Review::class, 'performer_id', 'id');
+        return $this->hasMany(Review::class, 'user_id', 'id');
     }
 
     public function getStars(): array
@@ -487,7 +483,7 @@ class User extends Authenticatable
         }
 
         return [
-            'user' => $review->getEmployerInfoAttribute(),
+            'user' => $review->reviewer_info,
             'rating' => $review->rating,
             'text' => $review->text
         ];

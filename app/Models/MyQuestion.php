@@ -26,7 +26,7 @@ class MyQuestion extends Model
     const
         STATUS_WAIT = 'wait',
         STATUS_PROCESS = 'process',
-        STATUS_CLOSE = 'close';
+        STATUS_CLOSE = 'complete';
 
     protected $fillable = ['user_id', 'subject', 'question', 'status'];
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Models\Review;
 use App\Models\User;
 use App\Models\UserReport;
 use Illuminate\Http\Request;
@@ -11,6 +12,13 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends BaseController
 {
+    /**
+     * Просмотр профиля пользователя
+     *
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function view($id, Request $request)
     {
         $user = User::where('id', '=', $id)->with('profile')->first();
@@ -41,6 +49,13 @@ class UserController extends BaseController
         return $this->sendError('User not found');
     }
 
+    /**
+     * Отправка жалобы на пользователя
+     *
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function report($id, Request $request)
     {
         $reporter = $request->user();
@@ -71,5 +86,17 @@ class UserController extends BaseController
         return $this->sendResponse(['report_id' => $report->id], 'Report was create', 201);
 
 
+    }
+
+    /**
+     * Просмотр отзывов о пользователе
+     *
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reviews($id)
+    {
+        $reviews_data = Review::search($id);
+        return $this->sendResponse($reviews_data, 'Reviews');
     }
 }

@@ -18,8 +18,9 @@ class ReviewController extends BaseController
      */
     public function index(Request $request)
     {
-        $reviews = Review::search($request);
-        return $this->sendResponse($reviews, 'Reviews');
+        $user = $request->user();
+        $reviews_data = Review::search($user->id, $request->dates ?? null);
+        return $this->sendResponse($reviews_data, 'Reviews');
     }
 
     /**

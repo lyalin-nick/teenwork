@@ -94,9 +94,8 @@ Route::prefix('/home')->group(function () {
 
 Route::prefix('/task')->group(function () {
     Route::get('/{id}', [TaskController::class, 'view']);
-    Route::middleware('auth:sanctum')->group(function (){
+    Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/report', [TaskController::class, 'report']);
-        //Route::post('/{id}/report', [TaskController::class, 'report']);
     });
 });
 
@@ -106,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('/user')->group(function () {
         Route::get('/{id}', [UserController::class, 'view']);
         Route::post('/{id}/report', [UserController::class, 'report']);
+        Route::get('/{id}/reviews', [UserController::class, 'reviews']);
     });
 
     Route::prefix('/tasks')->group(function () {
@@ -124,6 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{id}/recommended', [EmployerTaskController::class, 'recommended']);
             Route::get('/{id}/responses', [EmployerTaskController::class, 'responses']);
             Route::post('/{id}/offer', [EmployerTaskController::class, 'offer']);
+            Route::post('/{id}/review', [EmployerTaskController::class, 'review']);
         });
 
         Route::prefix('/favorite')->group(function () {
@@ -145,6 +146,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('/task')->group(function () {
             Route::post('/{id}/response', [PerformerTaskController::class, 'response']);
+            Route::post('/{id}/review', [PerformerTaskController::class, 'review']);
         });
 
         Route::prefix('/favorite')->group(function () {

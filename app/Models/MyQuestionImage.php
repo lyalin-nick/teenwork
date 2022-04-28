@@ -32,30 +32,12 @@ class MyQuestionImage extends Model
         'my_question_id', 'path', 'name', 'ext'
     ];
 
-    /**
-     * Создание одной модели фото портфолио и загрузка фото
-     * @param $image
-     * @param $profile_id
-     * @param $description
-     * @return bool
-     */
-    public static function new($image, $my_question_id): bool
-    {
-        $model = self::create([
-            'my_question_id' => $my_question_id
-        ]);
-
-        return is_string($image) ?
-            $model->save() && $model->copyImage($image, $my_question_id) :
-            $model->save() && $model->uploadImage($image, $my_question_id);
-
-    }
-
     public static function createModels(array $images, $my_question_id): bool
     {
         if ($images) {
             $models = [];
             foreach ($images as $image) {
+
                 $model = self::new($image, $my_question_id);
                 if ($model) {
                     $models[] = $model;
@@ -65,6 +47,27 @@ class MyQuestionImage extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Создание одной модели фото портфолио и загрузка фото
+     * @param $image
+     * @param $profile_id
+     * @param $description
+     * @return bool
+     */
+    public static function new($image, $my_question_id): bool
+    {
+        if (empty($image) || empty($my_question_id))
+            return false;
+
+        $model = self::create([
+            'my_question_id' => $my_question_id
+        ]);
+
+        return is_string($image) ?
+            $model->save() && $model->copyImage($image, $my_question_id) :
+            $model->save() && $model->uploadImage($image, $my_question_id);
     }
 
     protected static function booted()

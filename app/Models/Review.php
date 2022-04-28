@@ -10,17 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property int $task_id
- * @property int $employer_id
- * @property int $performer_id
+ * @property int $user_id
+ * @property int $reviewer_id
  * @property int $rating
  * @property string $text
  * @property string $date
  * @property string $updated_at
  * @property string $created_at
+ * @property array $reviewer_info
+ * @property array $task_info
  * @property Task $task
- * @property User $employer
- * @property User $performer
- *
+ * @property User $user
+ * @property User $reviewer
  * @mixin Builder
  */
 class Review extends Model
@@ -28,49 +29,55 @@ class Review extends Model
     use HasFactory;
 
     public $fillable = [
-        'task_id', 'employer_id', 'performer_id', 'rating', 'text'
+        'task_id', 'user_id', 'reviewer_id', 'rating', 'text'
     ];
 
-    public static function createReview($params)
+    public static function new($task_id, $user_id, $reviewer_id, $rating, $text)
     {
-        $review = self::create($params);
+        return self::create([
+            'task_id' => $task_id,
+            'user_id' => $user_id,
+            'reviewer_id' => $reviewer_id,
+            'rating' => $rating,
+            'text' => $text
+        ]);
     }
 
-    public static function search($request)
+    public static function search($user_id, $dates = null)
     {
-        $user = $request->user();
-        $params = $request->all();
-        $reviews = $user->reviews()->orderBy('created_at', 'desc');
+        $reviews = self::atUser($user_id)->orderBy('created_at', 'desc');
 
-        if (isset($params['dates'])) {
-            $reviews->whereIn('date', $params['dates']);
+        if ($dates) {
+            $reviews->whereIn('date', $dates);
         }
 
-        $reviews = $reviews->simplePaginate(20);
+        $reviews = $reviews->paginate(20);
+        $curPage = $reviews->currentPage();
+        $lastPage = $reviews->lastPage();
 
         $reviews = $reviews->each(function ($item) {
-            $item['employer_info'] = $item->employer_info;
+            $item['reviewer_info'] = $item->reviewer_info;
             $item['task_info'] = $item->task_info;
-            $item->makeHidden(['task_id', 'employer_id', 'performer_id', 'task', 'employer', 'performer', 'created_at', 'updated_at']);
+            $item->makeHidden(['task_id', 'user_id', 'reviewer_id', 'task', 'user', 'reviewer', 'created_at', 'updated_at']);
         });
 
-        return $reviews;
+        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'reviews' => $reviews];
     }
 
     protected static function booted()
     {
         static::creating(function (self $review) {
-            if (self::where(['task_id' => $review->task_id, 'employer_id' => $review->employer_id, 'performer_id' => $review->performer_id])->first()) {
+            if (self::where(['task_id' => $review->task_id, 'user_id' => $review->user_id, 'reviewer_id' => $review->reviewer_id])->first()) {
                 throw new Exception("Такой отзыв уже создан");
             }
             $review->date = date('Y-m-d');
         });
         static::created(function (self $review) {
-            $review->performer->recountRating($review->rating);
+            $review->user->recountRating($review->rating);
         });
 
         static::deleted(function (self $review) {
-            $review->performer->recountRating($review->rating);
+            $review->user->recountRating($review->rating);
         });
     }
 
@@ -79,25 +86,31 @@ class Review extends Model
         return $this->belongsTo(Task::class);
     }
 
-    public function employer()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'employer_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function performer()
+    public function reviewer()
     {
-        return $this->belongsTo(User::class, 'performer_id');
+        return $this->belongsTo(User::class, 'reviewer_id');
     }
 
-    public function getEmployerInfoAttribute()
+    public function getReviewerInfoAttribute()
     {
-        $employer = $this->employer;
+        $employer = $this->reviewer;
         return $employer->getShortInfo();
     }
 
     public function getTaskInfoAttribute()
     {
         $task = $this->task;
-        return $task->only('id', 'name');
+
+        return ($task) ? $task->only('id', 'name') : ['id' => null, 'name' => 'Task has been deleted'];
+    }
+
+    public function scopeAtUser(Builder $query, $user_id)
+    {
+        $query->where('user_id', '=', $user_id);
     }
 }

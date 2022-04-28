@@ -18,7 +18,7 @@ class CreateMyQuestionsTable extends Migration
             $table->bigInteger('user_id', false, true);
             $table->string('subject', 255);
             $table->text('question');
-            $table->string('status');
+            $table->enum('status', ['wait', 'process', 'complete'])->default('wait');
             $table->timestamps();
         });
     }

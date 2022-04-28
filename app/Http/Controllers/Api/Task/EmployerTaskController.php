@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Task;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Models\Review;
 use App\Models\Task;
 use App\Models\TaskImage;
 use App\Models\TaskOffer;
@@ -293,4 +294,43 @@ class EmployerTaskController extends BaseController
         return $this->sendError('Error creating', [], 501);
     }
 
+
+    /**
+     * Отправка отзыва на исполнителей
+     *
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function review($id, Request $request)
+    {
+        $reviewer = $request->user();
+        $task = Task::where('id', '=', $id)->first();
+
+        if (!$task) {
+            return $this->sendError('Task not found');
+        }
+
+        if ($task->user_id == !$reviewer->id) {
+            return $this->sendError('You`re an idiot?');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'users' => 'required|array',
+            'users.*' => 'integer',
+            'rating' => 'required|integer',
+            'text' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
+
+        foreach ($request->users as $user_id)
+            $review = Review::new($id, $user_id, $reviewer->id, $request->rating, $request->text);
+
+        $users_without_review = []; //TODO: доделать проверку существования отзывов на всех исполнителей данной задачи
+
+        return $this->sendResponse($users_without_review, 'Create successful', 201);
+    }
 }

@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $hot_work
  * @property int $account_verified
  * @property int $views_number
- * @property integer $status
+ * @property string $status
  * @property string $created_at
  * @property string $updated_at
  * @property string $expired_at
@@ -67,11 +67,11 @@ class Task extends Model
     use HasFactory;
 
     const
-        STATUS_WAIT = 1,
-        STATUS_PROGRESS = 2,
-        STATUS_FAIL = 3,
-        STATUS_EXPIRE = 4,
-        STATUS_COMPLETE = 5;
+        STATUS_WAIT = 'wait',
+        STATUS_PROGRESS = 'progress',
+        STATUS_FAIL = 'fail',
+        STATUS_EXPIRE = 'expire',
+        STATUS_COMPLETE = 'complete';
 
     protected $fillable = [
         'user_id', 'category_id', 'name',
@@ -183,9 +183,9 @@ class Task extends Model
                 break;
             default:
                 $tasks->orderBy('start_date');
-                $tasks->orderBy('hot_work', 'desc');
                 break;
         }
+        $tasks->orderBy('hot_work', 'desc');
 
         return $tasks;
     }
@@ -269,6 +269,23 @@ class Task extends Model
                 'tasks.lng as lng',
                 'c.icon_name as icon_name'
             ]);
+    }
+
+    public function scopeTaskList(Builder $query, $status = null)
+    {
+        $query->with('images')
+            ->select([
+                'tasks.id',
+                'tasks.name',
+                'tasks.price',
+                'tasks.description',
+                'tasks.status',
+                'tasks.safe_deal',
+            ])
+            ->orderBy('created_at', 'desc');
+        if ($status) {
+            $query->where('status', '=', $status);
+        }
     }
 
     public function scopeCategoriesIn(Builder $query, $categories)

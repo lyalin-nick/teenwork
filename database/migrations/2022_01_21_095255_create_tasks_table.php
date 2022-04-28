@@ -33,7 +33,7 @@ class CreateTasksTable extends Migration
             $table->boolean('safe_deal')->default(false);
             $table->boolean('hot_work')->default(false);
             $table->boolean('account_verified')->default(false);
-            $table->tinyInteger('status')->default(1);
+            $table->enum('status', ['wait', 'progress', 'fail', 'expire', 'complete'])->default('wait');
             $table->integer('views_number')->default(0);
             $table->dateTime('expired_at')->nullable();
             $table->timestamps();

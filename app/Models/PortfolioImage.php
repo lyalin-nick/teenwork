@@ -66,13 +66,22 @@ class PortfolioImage extends Model
      */
     public static function new($image, $profile_id, $description): bool
     {
+        if (empty($image) || empty($profile_id))
+            return false;
+
         $model = self::create([
             'profile_id' => $profile_id,
             'description' => $description
         ]);
 
         return is_string($image) ? $model->save() && $model->copyImage($image, $profile_id) : $model->save() && $model->uploadImage($image, $profile_id);
+    }
 
+    protected static function booted()
+    {
+        static::deleted(function (self $portfolio_image) {
+            $portfolio_image->checkExistImageAndDelete();
+        });
     }
 
     /**
@@ -83,13 +92,6 @@ class PortfolioImage extends Model
     public function updateImage($image): bool
     {
         return is_string($image) ? $this->copyImage($image, $this->profile_id) : $this->uploadImage($image, $this->profile_id);
-    }
-
-    protected static function booted()
-    {
-        static::deleted(function (self $portfolio_image) {
-            $portfolio_image->checkExistImageAndDelete();
-        });
     }
 
     public function profile()
@@ -104,15 +106,6 @@ class PortfolioImage extends Model
     public function getLink(): string
     {
         return $this->getImageLink();
-    }
-
-    /**
-     * Получение ссылки на превью фото
-     * @return string
-     */
-    public function getPreviewLink(): string
-    {
-        return $this->getImageLink('_mini');
     }
 
     /**
@@ -131,5 +124,14 @@ class PortfolioImage extends Model
     public function getPreviewAttribute(): string
     {
         return $this->getPreviewLink();
+    }
+
+    /**
+     * Получение ссылки на превью фото
+     * @return string
+     */
+    public function getPreviewLink(): string
+    {
+        return $this->getImageLink('_mini');
     }
 }

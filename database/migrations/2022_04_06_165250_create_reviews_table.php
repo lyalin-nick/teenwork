@@ -16,8 +16,8 @@ class CreateReviewsTable extends Migration
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('task_id', false, true);
-            $table->bigInteger('employer_id', false, true);
-            $table->bigInteger('performer_id', false, true);
+            $table->bigInteger('user_id', false, true);
+            $table->bigInteger('reviewer_id', false, true);
             $table->smallInteger('rating', false, true)->default(0);
             $table->text('text');
             $table->date('date')->nullable();
