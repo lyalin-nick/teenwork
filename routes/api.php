@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Favorite\FavoriteController;
 use App\Http\Controllers\Api\Helper\GoogleMapController;
 use App\Http\Controllers\Api\Helper\UploadController;
 use App\Http\Controllers\Api\Home\HomeController;
+use App\Http\Controllers\Api\Profile\MyQuestionController;
 use App\Http\Controllers\Api\Profile\PerformerProfileController;
 use App\Http\Controllers\Api\Profile\Portfolio\PortfolioImageController;
 use App\Http\Controllers\Api\Profile\Portfolio\PortfolioLinkController;
@@ -93,7 +94,10 @@ Route::prefix('/home')->group(function () {
 
 Route::prefix('/task')->group(function () {
     Route::get('/{id}', [TaskController::class, 'view']);
-    Route::post('/{id}/report', [TaskController::class, 'report'])->middleware('auth:sanctum');
+    Route::middleware('auth:sanctum')->group(function (){
+        Route::post('/{id}/report', [TaskController::class, 'report']);
+        //Route::post('/{id}/report', [TaskController::class, 'report']);
+    });
 });
 
 
@@ -141,7 +145,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('/task')->group(function () {
             Route::post('/{id}/response', [PerformerTaskController::class, 'response']);
-            // Route::post('/{id}/offer', [PerformerTaskController::class, 'offer']);
         });
 
         Route::prefix('/favorite')->group(function () {
@@ -167,6 +170,16 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/email-notification', [SettingController::class, 'emailNotification']);
             Route::put('/invisible', [SettingController::class, 'invisible']);
         });
+
+        Route::prefix('/my-questions')->group(function () {
+            Route::get('/', [MyQuestionController::class, 'index']);
+            Route::post('/store', [MyQuestionController::class, 'store']);
+        });
+
+        Route::prefix('/reviews')->group(function () {
+            Route::get('/', [ReviewController::class, 'index']);
+            Route::get('/count', [ReviewController::class, 'count']);
+        });
         //==============================================================================================================
 
 
@@ -191,10 +204,6 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/{id}', [PortfolioLinkController::class, 'delete']);
                 });
 
-            });
-            Route::prefix('/reviews')->group(function () {
-                Route::get('/', [ReviewController::class, 'index']);
-                Route::get('/count', [ReviewController::class, 'count']);
             });
         });
         //==============================================================================================================

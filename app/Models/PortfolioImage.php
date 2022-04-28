@@ -46,19 +46,9 @@ class PortfolioImage extends Model
         if ($images) {
             $models = [];
             foreach ($images as $image_arr) {
-                $model = self::create([
-                    'profile_id' => $profile_id,
-                    'description' => $image_arr['description']
-                ]);
-
-                if (is_string($image_arr['image'])) {
-                    if ($model->save() && $model->copyImage($image_arr['image'], $profile_id)) {
-                        $models[] = $model;
-                    }
-                } else {
-                    if ($model->save() && $model->uploadImage($image_arr['image'], $profile_id)) {
-                        $models[] = $model;
-                    }
+                $model = self::new($image_arr['image'], $profile_id, $image_arr['description']);
+                if ($model) {
+                    $models[] = $model;
                 }
             }
             return count($images) === count($models);
@@ -74,7 +64,7 @@ class PortfolioImage extends Model
      * @param $description
      * @return bool
      */
-    public static function createModel($image, $profile_id, $description): bool
+    public static function new($image, $profile_id, $description): bool
     {
         $model = self::create([
             'profile_id' => $profile_id,
@@ -83,6 +73,16 @@ class PortfolioImage extends Model
 
         return is_string($image) ? $model->save() && $model->copyImage($image, $profile_id) : $model->save() && $model->uploadImage($image, $profile_id);
 
+    }
+
+    /**
+     *
+     * @param $image
+     * @return bool
+     */
+    public function updateImage($image): bool
+    {
+        return is_string($image) ? $this->copyImage($image, $this->profile_id) : $this->uploadImage($image, $this->profile_id);
     }
 
     protected static function booted()
@@ -113,5 +113,23 @@ class PortfolioImage extends Model
     public function getPreviewLink(): string
     {
         return $this->getImageLink('_mini');
+    }
+
+    /**
+     * Получить ссылку на фото профиля
+     * @return string
+     */
+    public function getPhotoAttribute(): string
+    {
+        return $this->getImageLink();
+    }
+
+    /**
+     * Получить ссылку на фото профиля
+     * @return string
+     */
+    public function getPreviewAttribute(): string
+    {
+        return $this->getPreviewLink();
     }
 }

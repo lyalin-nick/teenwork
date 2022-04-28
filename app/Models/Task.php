@@ -167,7 +167,10 @@ class Task extends Model
         $params['sort'] = $params['sort'] ?? 'default';
         switch ($params['sort']) {
             case "price":
-                $tasks->priceDesc();
+                $tasks->priceOrder();
+                break;
+            case "-price":
+                $tasks->priceOrder('asc');
                 break;
             case "rating":
                 $tasks->ratingDesc();
@@ -324,9 +327,9 @@ class Task extends Model
         $query->whereDoesntHave('responses');
     }
 
-    public function scopePriceDesc(Builder $query)
+    public function scopePriceOrder(Builder $query, $direction = 'desc')
     {
-        $query->orderBy('tasks.price', 'desc');
+        $query->orderBy('tasks.price', $direction);
     }
 
     public function scopeRatingDesc(Builder $query)

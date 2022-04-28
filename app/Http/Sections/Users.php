@@ -7,6 +7,7 @@ use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
 use AdminSection;
+use App\Models\PortfolioImage;
 use App\Models\Profile;
 use App\Models\Task;
 use App\Models\User;
@@ -127,6 +128,9 @@ class Users extends Section implements Initializable
         $tabs->appendTab($userForm, 'User');
         if (!is_null($id)) {
 
+            $user = User::where('id', '=', $id)->first();
+            $profile = $user->profile;
+
             $profileForm = AdminForm::card()->addBody([
                 AdminFormElement::columns()->addColumn([
                     AdminFormElement::text('profile.first_name', 'First Name'),
@@ -155,9 +159,8 @@ class Users extends Section implements Initializable
                     AdminFormElement::image('profile.profileImage.Photo', 'Image')
                         ->setUploadPath(function (\Illuminate\Http\UploadedFile $file) {
                             return "storage/tmp";
-                        })->setSaveCallback(function ($file, $path, $filename, $settings) use ($id) {
-                            $user = User::where('id', '=', $id)->first();
-                            $profile = $user->profile;
+                        })
+                        ->setSaveCallback(function ($file, $path, $filename, $settings) use ($profile) {
                             if ($profile->uploadProfileImage($file)) {
                                 $profile->refresh();
                                 $image = $profile->profileImage;
@@ -165,7 +168,8 @@ class Users extends Section implements Initializable
                             }
                             return ['path' => $path, 'value' => $path];
                         })
-                ])]);
+                ])
+            ]);
 
             $profilePhotoForm->getButtons()->setButtons([
                 'save' => new Save(),
@@ -174,13 +178,14 @@ class Users extends Section implements Initializable
             ]);
 
             $tasks = AdminSection::getModel(Task::class)->fireDisplay(['user_id' => $id]);
-            $tasks->setApply(function ($query) use ($id) {
-               $query->where('user_id', '=', $id);
-            });
+
+            $portfolio_photos = AdminSection::getModel(PortfolioImage::class)->fireDisplay(['profile_id' => $profile->id]);
 
             $tabs->appendTab($profileForm, 'Profile');
 
             $tabs->appendTab($profilePhotoForm, 'Profile Photo');
+
+            $tabs->appendTab($portfolio_photos, 'Portfolio Images');
 
             $tabs->appendTab($tasks, 'Tasks');
         }

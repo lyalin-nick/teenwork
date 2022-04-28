@@ -157,6 +157,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany
+     */
+    public function myQuestions()
+    {
+        return $this->hasMany(MyQuestion::class);
+    }
+
+    /**
      * @param $identifier
      * @return mixed
      */

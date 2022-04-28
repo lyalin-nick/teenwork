@@ -31,7 +31,7 @@ class PortfolioImageController extends BaseController
         $user = $request->user();
         $profile = $user->profile;
 
-        $result = PortfolioImage::createModel($request->image, $profile->id, $request->description);
+        $result = PortfolioImage::new($request->image, $profile->id, $request->description);
 
         if (!$result) {
             Log::error("Portfolio photo error");
