@@ -36,6 +36,7 @@ class CreateTasksTable extends Migration
             $table->enum('status', ['wait', 'progress', 'fail', 'expire', 'complete'])->default('wait');
             $table->integer('views_number')->default(0);
             $table->dateTime('expired_at')->nullable();
+            $table->fulltext(['name','description'], 'search');
             $table->timestamps();
         });
     }

@@ -59,6 +59,7 @@ use Illuminate\Support\Facades\DB;
  * @method Builder priceDesc()
  * @method Builder ratingDesc()
  * @method Builder nearby($ulat, $ulng)
+ * @method Builder hasPhrase($searchPhrase)
  *
  * @mixin Builder
  */
@@ -136,6 +137,9 @@ class Task extends Model
     public static function search($flag, $params): Builder
     {
         $tasks = Task::home($flag);
+
+        if (isset($params['search']))
+            $tasks->hasPhrase($params['search']);
 
         if (isset($params['categories']))
             $tasks->categoriesIn($params['categories']);
@@ -251,9 +255,6 @@ class Task extends Model
     public function scopeHome(Builder $query, $flag)
     {
         $query->notExpired()
-            ->categoryFlag($flag)
-            ->with('user')
-            ->with('images')
             ->select([
                 'tasks.id',
                 'tasks.user_id',
@@ -267,8 +268,10 @@ class Task extends Model
                 'tasks.start_date',
                 'tasks.lat as lat',
                 'tasks.lng as lng',
-                'c.icon_name as icon_name'
-            ]);
+            ])
+            ->categoryFlag($flag)
+            ->with('user')
+            ->with('images');
     }
 
     public function scopeTaskList(Builder $query, $status = null)
@@ -286,6 +289,22 @@ class Task extends Model
         if ($status) {
             $query->where('status', '=', $status);
         }
+    }
+
+    public function scopeHasPhrase(Builder $query, $searchPhrase)
+    {
+        $searchPhrase = self::getModifyPhrase($searchPhrase);
+        $query->whereRaw("MATCH(`tasks`.`name`, `tasks`.`description`) AGAINST('{$searchPhrase}' IN BOOLEAN MODE)", $searchPhrase);
+    }
+
+    private static function getModifyPhrase($searchPhrase)
+    {
+        $query = mb_strtolower($searchPhrase, 'UTF-8');
+        $arr = explode(" ", $query);
+        foreach ($arr as $i => $word) {
+            $arr[$i] = $word . "*";
+        }
+        return implode(" ", $arr);
     }
 
     public function scopeCategoriesIn(Builder $query, $categories)
@@ -307,7 +326,8 @@ class Task extends Model
     public function scopeCategoryFlag(Builder $query, $flag)
     {
         $query->join('categories as c', 'tasks.category_id', '=', 'c.id')
-            ->whereIn('c.flag', Category::getFlagsConstants($flag));
+            ->whereIn('c.flag', Category::getFlagsConstants($flag))
+            ->addSelect('c.icon_name as icon_name');
     }
 
     public function scopeAddress(Builder $query, $place_id)
