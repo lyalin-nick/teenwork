@@ -4,10 +4,10 @@ namespace App\Http\Sections;
 
 use AdminColumn;
 use AdminColumnEditable;
-use AdminColumnFilter;
 use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
+use App\Models\Faq;
 use Illuminate\Database\Eloquent\Model;
 use SleepingOwl\Admin\Contracts\Display\DisplayInterface;
 use SleepingOwl\Admin\Contracts\Form\FormInterface;
@@ -15,13 +15,12 @@ use SleepingOwl\Admin\Contracts\Initializable;
 use SleepingOwl\Admin\Form\Buttons\Cancel;
 use SleepingOwl\Admin\Form\Buttons\Save;
 use SleepingOwl\Admin\Form\Buttons\SaveAndClose;
-use SleepingOwl\Admin\Form\Buttons\SaveAndCreate;
 use SleepingOwl\Admin\Section;
 
 /**
  * Class Faqs
  *
- * @property \App\Models\Faq $model
+ * @property Faq $model
  *
  * @see https://sleepingowladmin.ru/#/ru/model_configuration_section
  */
@@ -96,6 +95,14 @@ class Faqs extends Section implements Initializable
     }
 
     /**
+     * @return FormInterface
+     */
+    public function onCreate($payload = [])
+    {
+        return $this->onEdit(null, $payload);
+    }
+
+    /**
      * @param int|null $id
      * @param array $payload
      *
@@ -107,26 +114,17 @@ class Faqs extends Section implements Initializable
             AdminFormElement::columns()->addColumn(
                 [
                     AdminFormElement::text('question', 'Question')->required(),
-                    AdminFormElement::ckeditor('answer', 'Answer')->required(),
+                    AdminFormElement::textarea('answer', 'Answer')->required(),
                 ])
         ]);
 
         $form->getButtons()->setButtons([
             'save' => new Save(),
             'save_and_close' => new SaveAndClose(),
-            'save_and_create' => new SaveAndCreate(),
             'cancel' => (new Cancel()),
         ]);
 
         return $form;
-    }
-
-    /**
-     * @return FormInterface
-     */
-    public function onCreate($payload = [])
-    {
-        return $this->onEdit(null, $payload);
     }
 
     /**

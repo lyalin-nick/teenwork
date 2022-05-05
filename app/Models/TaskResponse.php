@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
  * @property int $task_id
  * @property int $user_id
+ * @property int $chat_id
  * @property string $text
  *
  * @property Task $task
@@ -48,5 +50,18 @@ class TaskResponse extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+
+    public function scopeRatingOrder(Builder $query)
+    {
+        $query->addSelect(DB::raw('(SELECT rating FROM profiles WHERE `profiles`.`user_id`=`task_responses`.`user_id`) as rating'));
+        $query->orderBy('rating', 'desc');
+    }
+
+    public function scopeNearby(Builder $query, $ulat = '53.213672', $ulng = '45.061300')
+    {
+        $query->addSelect(DB::raw("ACOS(SIN(PI()*(SELECT `profiles`.`lat` FROM `profiles` WHERE `profiles`.`user_id`=`task_responses`.`user_id`)/180.0)*SIN(PI()*{$ulat}/180.0)+COS(PI()*(SELECT `profiles`.`lat` FROM `profiles` WHERE `profiles`.`user_id`=`task_responses`.`user_id`)/180.0)*COS(PI()*{$ulat}/180.0)*COS(PI()*{$ulng}/180.0-PI()*(SELECT `profiles`.`lng` FROM `profiles` WHERE `profiles`.`user_id`=`task_responses`.`user_id`)/180.0))*6371 AS distance")); // формула расчета расстояния от заданных координат
+        $query->orderBy('distance');
     }
 }

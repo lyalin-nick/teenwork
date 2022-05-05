@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\Profile\RoleController;
 use App\Http\Controllers\Api\Profile\SettingController;
 use App\Http\Controllers\Api\Task\EmployerTaskController;
 use App\Http\Controllers\Api\Task\PerformerTaskController;
+use App\Http\Controllers\Api\Task\RecommendedController;
+use App\Http\Controllers\Api\Task\ResponsesController;
 use App\Http\Controllers\Api\Task\TaskController;
 use App\Http\Controllers\Api\User\UserController;
 use Illuminate\Support\Facades\Route;
@@ -121,8 +123,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/{id}', [EmployerTaskController::class, 'update']);
             Route::delete('/{id}', [EmployerTaskController::class, 'delete']);
 
-            Route::get('/{id}/recommended', [EmployerTaskController::class, 'recommended']);
-            Route::get('/{id}/responses', [EmployerTaskController::class, 'responses']);
+            Route::get('/{id}/recommended', [RecommendedController::class, 'recommended']);
+            Route::get('/{id}/responses', [ResponsesController::class, 'responses']);
             Route::post('/{id}/offer', [EmployerTaskController::class, 'offer']);
             Route::post('/{id}/review', [EmployerTaskController::class, 'review']);
         });

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property integer $user_id
@@ -20,6 +21,7 @@ use Illuminate\Support\Arr;
  * @property integer $number_performer_tasks
  * @property integer $number_employer_tasks
  * @property float $rating
+ * @property string $status
  * @property integer $number_review
  * @property boolean $push_notification
  * @property boolean $email_notification
@@ -468,5 +470,36 @@ class Profile extends Model
     {
         $this->number_review += 1;
         $this->save();
+    }
+
+    /**
+     * Смотрим есть ли категория задачи у профиля
+     *
+     * @param Builder $query
+     * @param $category_id\
+     */
+    public function scopeCategoryMatches(Builder $query, $category_id)
+    {
+        $query->addSelect(DB::raw("(SELECT COUNT(*) FROM `category_profile` WHERE `profiles`.`id`=`category_profile`.`profile_id` AND `category_profile`.`category_id`={$category_id}) AS `category_matches`"));
+//        $query->orderBy('category_matches', 'desc');
+    }
+
+    /**
+     * Считаем сколько языков совпадает
+     *
+     * @param Builder $query
+     * @param array $languages
+     */
+    public function scopeLanguagesMatches(Builder $query, $languages = [Language::ENGLISH_LANGUAGE])
+    {
+        $languages_arr = implode(',', $languages);
+        $query->addSelect(DB::raw("(SELECT COUNT(*) FROM `language_profile` WHERE `profiles`.`id`=`language_profile`.`profile_id` AND `language_profile`.`language_id` IN ({$languages_arr})) AS languages_matches"));
+//        $query->orderBy('languages_matches', 'desc');
+    }
+
+    public function scopeNearby(Builder $query, $ulat = '53.213672', $ulng = '45.061300')
+    {
+        $query->addSelect(DB::raw("ACOS(SIN(PI()*lat/180.0)*SIN(PI()*{$ulat}/180.0)+COS(PI()*lat/180.0)*COS(PI()*{$ulat}/180.0)*COS(PI()*{$ulng}/180.0-PI()*lng/180.0))*6371 AS distance")); // формула расчета расстояния от заданных координат
+        $query->orderBy('distance');
     }
 }

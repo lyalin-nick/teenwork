@@ -24,7 +24,7 @@ class TaskController extends BaseController
 
         $tasks = $user->getTaskList();
 
-        return $this->sendResponse($tasks, 'Tasks not found');
+        return $this->sendResponse($tasks, 'Tasks');
     }
 
     /**

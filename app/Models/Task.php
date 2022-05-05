@@ -294,7 +294,7 @@ class Task extends Model
     public function scopeHasPhrase(Builder $query, $searchPhrase)
     {
         $searchPhrase = self::getModifyPhrase($searchPhrase);
-        $query->whereRaw("MATCH(`tasks`.`name`, `tasks`.`description`) AGAINST('{$searchPhrase}' IN BOOLEAN MODE)", $searchPhrase);
+        $query->whereRaw(DB::raw("MATCH(`tasks`.`name`, `tasks`.`description`) AGAINST('{$searchPhrase}' IN BOOLEAN MODE)"));
     }
 
     private static function getModifyPhrase($searchPhrase)
@@ -468,14 +468,26 @@ class Task extends Model
     }
 
     /**
-     * Аксессор поля start_date
-     *
      * @param $value
      * @return string
      */
-    public function getResponsesInfoAttribute(): array
+    public function getResponsesInfo($params = null): array
     {
-        $responses = $this->responses()->with('user')->get();
+        $responses = $this->responses()
+            ->select('*')
+            ->with('user');
+        if (isset($params['sort'])) {
+            switch ($params['sort']) {
+                case 'rating':
+                    $responses->ratingOrder();
+                    break;
+                case 'nearby':
+                    $responses->nearby($this->lat, $this->lng);
+                    break;
+            }
+        }
+        $responses = $responses->get();
+
         if ($responses) {
             $responses = $responses->filter(function ($item, $key) {
                 $item['user_info'] = $item->user->getShortInfo();
@@ -701,32 +713,50 @@ class Task extends Model
         return $this->hasOne(TaskVideo::class);
     }
 
-    public function getRecommendedPerformers()
+    public function getRecommendedPerformers($params = [])
     {
         $task_languages = $this->getLanguagesAsArray();
         $category_id = $this->category_id;
-        $profiles = Profile::query()
-            ->where(function ($query) use ($task_languages, $category_id) {
-                $query->whereHas('languages', function ($lang_query) use ($task_languages) {
-                    $lang_query->whereIn('id', $task_languages);
-                })->orWhereHas('categories', function ($cat_query) use ($category_id) {
-                    $cat_query->where('id', $category_id);
-                });
-            })
+        $profiles = Profile::query()->select('profiles.*')
+            ->where('user_id', '!=', $this->user_id)
             ->whereHas('user', function ($query) {
                 $query->where('role', '=', User::ROLE_PERFORMER);
             })
-            ->with('user')
-            ->limit(50)
-            ->get();
+            ->whereHas('languages', function ($lang_query) use ($task_languages) {
+                $lang_query->whereIn('id', $task_languages);
+            })
+            ->whereHas('categories', function ($cat_query) use ($category_id) {
+                $cat_query->where('id', $category_id);
+            })
+            ->with('user');
+//            ->categoryMatches($category_id)
+//            ->languagesMatches($task_languages);
+
+        if (isset($params['sort']))
+            switch ($params['sort']) {
+                case 'rating':
+                    $profiles->orderBy('profiles.rating', 'desc');
+                    break;
+                case 'nearby':
+                    $profiles->nearby($this->lat, $this->lng);
+                    break;
+                default:
+                    $profiles->nearby($this->lat, $this->lng);
+                    break;
+            }
+//        $profiles->orderBy('category_matches', 'desc')->orderBy('languages_matches', 'desc');
+        $profiles = $profiles->paginate(20);
+
+        $curPage = $profiles->currentPage();
+        $lastPage = $profiles->lastPage();
+        $profiles = $profiles->items();
 
         $users = [];
-
         foreach ($profiles as $profile) {
             $users[] = $profile->user->getShortInfo();
         }
 
-        return $users;
+        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'users' => $users];
     }
 
     /**

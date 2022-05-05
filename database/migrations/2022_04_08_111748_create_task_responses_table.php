@@ -15,8 +15,9 @@ class CreateTaskResponsesTable extends Migration
     {
         Schema::create('task_responses', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('task_id');
-            $table->bigInteger('user_id');
+            $table->bigInteger('task_id', false, true);
+            $table->bigInteger('user_id', false, true);
+            $table->bigInteger('chat_id', false, true);
             $table->text('text');
             $table->boolean('is_new')->default(true);
             $table->timestamps();

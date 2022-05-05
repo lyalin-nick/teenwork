@@ -225,42 +225,6 @@ class EmployerTaskController extends BaseController
     }
 
     /**
-     * Получение рекомендуемых пользователей (Заказчик)
-     *
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function recommended(int $id, Request $request): JsonResponse
-    {
-        $user = $request->user();
-        $task = $user->tasks()->where('id', $id)->first();
-        if ($task) {
-            return $this->sendResponse($task->getRecommendedPerformers(), 'Users');
-        }
-
-        return $this->sendError('Users not found');
-    }
-
-    /**
-     * Получение откликов на задачу (Заказчик)
-     *
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function responses(int $id, Request $request): JsonResponse
-    {
-        $user = $request->user();
-        $task = $user->tasks()->where('id', $id)->first();
-        if ($task) {
-            return $this->sendResponse($task->responses_info, 'Responses');
-        }
-
-        return $this->sendError('Task not found');
-    }
-
-    /**
      * Отправка офера исполнителю (Заказчик)
      * TODO:недоделан
      *

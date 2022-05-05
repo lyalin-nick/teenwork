@@ -24,6 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property Carbon $reset_token_expire
  * @property string $role
  * @property string $status
+ * @property Profile $profile
  * @property Task[] $tasks
  * @property Review[] $reviews
  * @property Favorite[] $favorites
@@ -285,6 +286,7 @@ class User extends Authenticatable
             'photo' => $profile->getProfilePreviewImageLink(),
             'rating' => $profile->rating,
             'status' => $profile->status,
+            'number_reviews' => $profile->number_review,
         ];
     }
 
