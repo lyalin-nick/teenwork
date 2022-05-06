@@ -390,7 +390,7 @@ class Profile extends Model
 
     public function portfolioImages()
     {
-        return $this->hasMany(PortfolioImage::class);
+        return $this->hasMany(PortfolioImage::class, 'profile_id', 'id');
     }
 
     /**

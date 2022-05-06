@@ -4,19 +4,18 @@ namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Api\BaseController;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SettingController extends BaseController
 {
     /**
      * PUSH-уведомления
      *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function pushNotification(Request $request)
+    public function pushNotification(): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
         $profile->push_notification = !$profile->push_notification;
         if ($profile->save()) {
@@ -30,12 +29,11 @@ class SettingController extends BaseController
     /**
      * Email-уведомления
      *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function emailNotification(Request $request)
+    public function emailNotification(): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
         $profile->email_notification = !$profile->email_notification;
         if ($profile->save()) {
@@ -48,12 +46,11 @@ class SettingController extends BaseController
     /**
      * Мод невидимка
      *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function invisible(Request $request)
+    public function invisible(): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
         $profile->invisible = !$profile->invisible;
         if ($profile->save()) {

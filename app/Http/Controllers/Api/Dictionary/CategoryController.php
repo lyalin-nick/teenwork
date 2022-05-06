@@ -13,7 +13,7 @@ class CategoryController extends BaseController
      *
      * @return JsonResponse
      */
-    public function index()
+    public function index(): JsonResponse
     {
         $data = Category::getAllCategoriesAsArray();
 
@@ -26,7 +26,7 @@ class CategoryController extends BaseController
      * @param string $flag
      * @return JsonResponse
      */
-    public function grouped($flag)
+    public function grouped(string $flag): JsonResponse
     {
         $data = Category::getAllCategoriesAsArrayByFlag($flag);
 

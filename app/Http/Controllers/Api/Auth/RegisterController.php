@@ -3,35 +3,25 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\Auth\Register\ConfirmRegisterRequest;
+use App\Http\Requests\Api\Auth\Register\RegisterRequest;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends BaseController
 {
     /**
      * Регистрация по телефону
+     * TODO: на продакшн привести в боевой вид
      *
-     * @param Request $request
+     * @param RegisterRequest $request
      * @return JsonResponse
      */
-    public function phone(Request $request)
+    public function phone(RegisterRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'phone' => 'required|string|max:255|unique:users',
-            'password' => ['required', 'confirmed', Password::min(6)->numbers()],
-            'password_confirmation' => ['required'],
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
         $verify_code = '000000';//(string)random_int(100000, 999999);
 
         $user = User::register($request->phone, $request->password, $verify_code);
@@ -52,21 +42,11 @@ class RegisterController extends BaseController
     /**
      * Подтверждение телефона
      *
-     * @param Request $request
+     * @param ConfirmRegisterRequest $request
      * @return JsonResponse
      */
-    public function confirm(Request $request)
+    public function confirm(ConfirmRegisterRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'phone' => 'required|string|max:255',
-            'code' => 'required|string|min:6|max:6',
-            'device_name' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
         $user = User::findByPhone($request->phone);
 
         if (!$user) {

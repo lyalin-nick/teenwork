@@ -3,29 +3,21 @@
 namespace App\Http\Controllers\Api\Helper;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\Helper\Google\AutocompleteRequest;
+use App\Http\Requests\Api\Helper\Google\PlaceIdRequest;
 use App\Models\Helpers\GoogleMap;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class GoogleMapController extends BaseController
 {
     /**
      * Получение списка на автоподставление
      *
-     * @param Request $request
+     * @param AutocompleteRequest $request
      * @return JsonResponse
      */
-    public function autocomplete(Request $request)
+    public function autocomplete(AutocompleteRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'address' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
         $autocomplete_results = GoogleMap::getAutocomplete($request->address);
 
         if (empty($autocomplete_results))
@@ -37,20 +29,11 @@ class GoogleMapController extends BaseController
     /**
      * Получение place_id по координатам
      *
-     * @param Request $request
+     * @param PlaceIdRequest $request
      * @return JsonResponse
      */
-    public function placeId(Request $request)
+    public function placeId(PlaceIdRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'latitude' => 'required|string',
-            'longitude' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
         $autocomplete_results = GoogleMap::getPlaceId($request->latitude, $request->longitude);
 
         if ($autocomplete_results === null)

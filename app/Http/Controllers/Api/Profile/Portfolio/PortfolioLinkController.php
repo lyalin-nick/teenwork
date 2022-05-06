@@ -3,30 +3,22 @@
 namespace App\Http\Controllers\Api\Profile\Portfolio;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\Portfolio\PortfolioLinkRequest;
 use App\Models\PortfolioLink;
+use Auth;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class PortfolioLinkController extends BaseController
 {
     /**
      * Создание новой ссылки
      *
-     * @param Request $request
+     * @param PortfolioLinkRequest $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(PortfolioLinkRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'link' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
 
         $model = PortfolioLink::create(['profile_id' => $profile->id, 'link' => $request->link]);
@@ -42,20 +34,12 @@ class PortfolioLinkController extends BaseController
      * Обновление уже созданной ссылки
      *
      * @param int $id
-     * @param Request $request
+     * @param PortfolioLinkRequest $request
      * @return JsonResponse
      */
-    public function edit($id, Request $request): JsonResponse
+    public function edit(PortfolioLinkRequest $request, int $id): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'link' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
 
         $link = $profile->portfolioLinks()->where('id', '=', $id)->first();
@@ -75,13 +59,12 @@ class PortfolioLinkController extends BaseController
     /**
      * Удаление ссылки
      *
-     * @param $id
-     * @param Request $request
+     * @param int $id
      * @return JsonResponse
      */
-    public function delete($id, Request $request): JsonResponse
+    public function delete(int $id): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
 
         $link = $profile->portfolioLinks()->where('id', '=', $id)->first();

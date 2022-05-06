@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\Task;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\Task\ReportRequest;
 use App\Models\Task;
 use App\Models\TaskReport;
 use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class TaskController extends BaseController
 {
@@ -20,7 +20,7 @@ class TaskController extends BaseController
      */
     public function tasks(Request $request)
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         $tasks = $user->getTaskList();
 
@@ -56,31 +56,21 @@ class TaskController extends BaseController
     /**
      * Отправка репорта
      *
-     * @param int $id
-     * @param Request $request
+     * @param $id
+     * @param ReportRequest $request
      * @return JsonResponse
      */
-    public function report($id, Request $request)
+    public function report(ReportRequest $request, $id)
     {
-        $reporter = $request->user();
+        $reporter = Auth::user();
         $task = Task::where('id', '=', $id)->first();
 
         if (!$task) {
             return $this->sendError('User not found');
         }
 
-        if ($task->user_id == !$reporter->id) {
+        if ($task->user_id !== $reporter->id) {
             return $this->sendError('You`re an idiot?');
-        }
-
-        $validator = Validator::make($request->all(), [
-            'title_id' => 'required|integer',
-            'title' => 'string',
-            'text' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
         }
 
         $report = TaskReport::new($task->id, $reporter->id, $request->title_id, $request->title, $request->text);

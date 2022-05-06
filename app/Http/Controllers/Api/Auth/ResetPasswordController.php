@@ -3,26 +3,25 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\Auth\ResetPassword\CodeConfirmRequest;
+use App\Http\Requests\Api\Auth\ResetPassword\PhoneRequest;
+use App\Http\Requests\Api\Auth\ResetPassword\ResetPasswordRequest;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rules\Password;
 
 class ResetPasswordController extends BaseController
 {
-    public function phone(Request $request)
+    /**
+     * Отправка кода на телефон для сброса пароля
+     *
+     * @param PhoneRequest $request
+     * @return JsonResponse
+     */
+    public function phone(PhoneRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'phone' => 'required|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
         $user = User::findByPhone($request->phone);
 
         if (!$user) {
@@ -41,17 +40,14 @@ class ResetPasswordController extends BaseController
         return $this->sendResponse(['expires_in' => User::SECONDS_TO_EXPIRE], 'Code send successfully.', 201);
     }
 
-    public function confirm(Request $request)
+    /**
+     * Подтверждение кода
+     *
+     * @param CodeConfirmRequest $request
+     * @return JsonResponse
+     */
+    public function confirm(CodeConfirmRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'phone' => 'required|string|max:255',
-            'code' => 'required|string|min:6|max:6',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
         $user = User::findByPhone($request->phone);
 
         if (!$user) {
@@ -71,18 +67,14 @@ class ResetPasswordController extends BaseController
         return $this->sendResponse([], 'Confirm success', 201);
     }
 
-    public function password(Request $request)
+    /**
+     * Сброс пароля
+     *
+     * @param ResetPasswordRequest $request
+     * @return JsonResponse
+     */
+    public function password(ResetPasswordRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'phone' => 'required|string|max:255',
-            'password' => ['required', 'confirmed', Password::min(6)->numbers()],
-            'password_confirmation' => ['required']
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
         $user = User::findResetByPhone($request->phone);
 
         if (!$user) {

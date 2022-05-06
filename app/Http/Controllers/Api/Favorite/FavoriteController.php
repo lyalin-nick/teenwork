@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Favorite;
 
 use App\Http\Controllers\Api\BaseController;
+use Auth;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class FavoriteController extends BaseController
 {
@@ -12,12 +12,11 @@ class FavoriteController extends BaseController
      * Добавить в избранное
      *
      * @param int $identify
-     * @param Request $request
      * @return JsonResponse
      */
-    public function add($identify, Request $request)
+    public function add(int $identify): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         $user->addFavorite($identify);
 
@@ -27,12 +26,11 @@ class FavoriteController extends BaseController
     /**
      * Список избранного
      *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function view(Request $request)
+    public function view(): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         $favorites = $user->getFavorites();
 
@@ -43,12 +41,11 @@ class FavoriteController extends BaseController
      * Удаление из избранного
      *
      * @param int $identify
-     * @param Request $request
      * @return JsonResponse
      */
-    public function remove($identify, Request $request)
+    public function remove(int $identify): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         $user->removeFavorite($identify);
 

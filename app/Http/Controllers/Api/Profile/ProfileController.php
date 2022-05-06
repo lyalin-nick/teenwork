@@ -3,7 +3,12 @@
 namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Models\Profile;
+use App\Http\Requests\Api\Helper\UploadFile\ImageRequest;
+use App\Http\Requests\Api\Helper\UploadFile\VideoRequest;
+use App\Http\Requests\Api\Profile\AddressRequest;
+use App\Http\Requests\Api\Profile\CategoriesRequest;
+use App\Http\Requests\Api\Profile\ProfileBaseInfoRequest;
+use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,12 +18,11 @@ class ProfileController extends BaseController
     /**
      * Получение информации о пользователе
      *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         return $this->sendResponse($user->getFullData(), 'Success');
     }
@@ -26,30 +30,16 @@ class ProfileController extends BaseController
     /**
      * Обновление персональных данных
      *
-     * @param Request $request
+     * @param ProfileBaseInfoRequest $request
      * @return JsonResponse
      */
-    public function baseInfo(Request $request)
+    public function baseInfo(ProfileBaseInfoRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'date_of_birth' => 'required|string|max:255',
-            'about' => 'string',
-            "languages" => "array",
-            "languages.*" => "integer",
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
-        if (!$profile) {
-            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
-        }
+//        if (!$profile) {
+//            $profile = Profile::createProfile(['user_id' => Auth::user()->id]);
+//        }
         $profile->update($request->only('first_name', 'last_name', 'date_of_birth', 'about'));
         $profile->linkToLanguages($request->get('languages'));
 
@@ -59,25 +49,17 @@ class ProfileController extends BaseController
     /**
      * Обновление фото профиля
      *
-     * @param Request $request
+     * @param ImageRequest $request
      * @return JsonResponse
      */
-    public function image(Request $request)
+    public function image(ImageRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,png,jpg',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
 
-        if (!$profile) {
-            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
-        }
+//        if (!$profile) {
+//            $profile = Profile::createProfile(['user_id' => Auth::user()->id]);
+//        }
 
         if ($profile->uploadProfileImage($request->image)) {
             $user->refresh();
@@ -90,25 +72,17 @@ class ProfileController extends BaseController
     /**
      * Обновление видео профиля
      *
-     * @param Request $request
-     * @return
+     * @param VideoRequest $request
+     * @return JsonResponse
      */
-    public function video(Request $request)
+    public function video(VideoRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'video' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
 
-        if (!$profile) {
-            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
-        }
+//        if (!$profile) {
+//            $profile = Profile::createProfile(['user_id' => Auth::user()->id]);
+//        }
 
         if ($profile->uploadProfileVideo($request->video)) {
             $user->refresh();
@@ -121,12 +95,11 @@ class ProfileController extends BaseController
     /**
      * Получение данных портфолио (Только для исполнителя)
      *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function portfolio(Request $request)
+    public function portfolio(): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
 
         return $this->sendResponse($profile->getPortfolio(), 'Portfolio info');
@@ -135,25 +108,16 @@ class ProfileController extends BaseController
     /**
      * Обновление категорий (Только для исполнителя)
      *
-     * @param Request $request
+     * @param CategoriesRequest $request
      * @return JsonResponse
      */
-    public function categories(Request $request)
+    public function categories(CategoriesRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'categories' => 'required|array',
-            'categories.*' => 'integer',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
-        if (!$profile) {
-            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
-        }
+//        if (!$profile) {
+//            $profile = Profile::createProfile(['user_id' => Auth::user()->id]);
+//        }
         if (!$profile->updateCategories($request->categories)) {
             return $this->sendError('Error updating');
         }
@@ -164,25 +128,16 @@ class ProfileController extends BaseController
     /**
      * Обновление адреса (Только для исполнителя)
      *
-     * @param Request $request
-     * @return JsonResponse/
+     * @param AddressRequest $request
+     * @return JsonResponse
      */
-    public function address(Request $request)
+    public function address(AddressRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'address' => 'required|string',
-            'place_id' => 'string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
-        if (!$profile) {
-            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
-        }
+//        if (!$profile) {
+//            $profile = Profile::createProfile(['user_id' => Auth::user()->id]);
+//        }
 
         if ($profile->setLocation($request->get('address'), $request->get('place_id'))) {
             return $this->sendResponse(['user' => $user->getFullData()], 'Profile update successful');
@@ -200,7 +155,7 @@ class ProfileController extends BaseController
      * @param Request $request
      * @return JsonResponse
      */
-    public function about(Request $request)
+    public function about(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'about' => 'required|string'
@@ -210,11 +165,11 @@ class ProfileController extends BaseController
             return $this->sendError('Validation Error.', $validator->errors());
         }
 
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
-        if (!$profile) {
-            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
-        }
+//        if (!$profile) {
+//            $profile = Profile::createProfile(['user_id' => Auth::user()->id]);
+//        }
         $profile->update($request->only('about'));
 
         return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');

@@ -3,7 +3,6 @@
 namespace App\Http\Sections;
 
 use AdminColumn;
-use AdminColumnFilter;
 use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
@@ -46,7 +45,7 @@ class PortfolioLinks extends Section implements Initializable
      */
     public function initialize()
     {
-        $this->addToNavigation()->setPriority(100)->setIcon('fa fa-lightbulb-o');
+        $this->addToNavigation()->setPriority(100)->setIcon('fa fa-link');
     }
 
     /**
@@ -58,27 +57,24 @@ class PortfolioLinks extends Section implements Initializable
     {
         $columns = [
             AdminColumn::link('link', 'Link')
-                ->setSearchCallback(function($column, $query, $search){
-                    return $query->orWhere('link', 'like', '%'.$search.'%');
+                ->setSearchCallback(function ($column, $query, $search) {
+                    return $query->orWhere('link', 'like', '%' . $search . '%');
                 })
-                ->setOrderable(function($query, $direction) {
+                ->setOrderable(function ($query, $direction) {
                     $query->orderBy('link', $direction);
                 }),
-            AdminColumn::text('created_at', 'Created / updated', 'updated_at')
-                ->setWidth('160px')
-                ->setOrderable(function($query, $direction) {
-                    $query->orderBy('updated_at', $direction);
-                })
-                ->setSearchable(false),
+            AdminColumn::text('profile.FullName', 'User')->setSearchable(false)
         ];
 
-        $display = AdminDisplay::datatables()
-            ->setName('portfoliolinks')
-            ->paginate(25)
+        $display = AdminDisplay::table()
             ->setColumns($columns)
-            ->setHtmlAttribute('class', 'table-primary table-hover th-center')
-        ;
+            ->setHtmlAttribute('class', 'table-primary table-hover th-center');
 
+        if (isset($payload['profile_id'])) {
+            $display->setApply(function ($query) use ($payload) {
+                $query->where('profile_id', '=', $payload['profile_id']);
+            });
+        }
         return $display;
     }
 
@@ -108,10 +104,10 @@ class PortfolioLinks extends Section implements Initializable
         ]);
 
         $form->getButtons()->setButtons([
-            'save'  => new Save(),
-            'save_and_close'  => new SaveAndClose(),
-            'save_and_create'  => new SaveAndCreate(),
-            'cancel'  => (new Cancel()),
+            'save' => new Save(),
+            'save_and_close' => new SaveAndClose(),
+            'save_and_create' => new SaveAndCreate(),
+            'cancel' => (new Cancel()),
         ]);
 
         return $form;

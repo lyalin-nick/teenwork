@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api\Task;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\Task\EmployerReviewRequest;
+use App\Http\Requests\Api\Task\NewOfferRequest;
+use App\Http\Requests\Api\Task\NewTaskRequest;
+use App\Http\Requests\Api\Task\UpdateTaskRequest;
 use App\Models\Review;
 use App\Models\Task;
 use App\Models\TaskImage;
@@ -10,11 +14,9 @@ use App\Models\TaskOffer;
 use App\Models\TaskVideo;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 
 class EmployerTaskController extends BaseController
 {
@@ -22,39 +24,11 @@ class EmployerTaskController extends BaseController
     /**
      * Создание задачи (Заказчик)
      *
-     * @param Request $request
+     * @param NewTaskRequest $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(NewTaskRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'required|integer',
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'result' => 'required|string',
-            'images' => 'array|max:10',
-            'images.*' => 'string',
-            'video' => 'nullable|string',
-            'address' => 'required|string|max:255',
-            'place_id' => 'required|string',
-            'dates' => 'required|array',
-            'dates.*' => "string",
-            'start_time' => 'required|string',
-            'amount_of_workers' => 'required|integer',
-            'minimum_age' => 'required|integer',
-            'languages' => 'array',
-            'languages.*' => 'integer',
-            'price' => 'required|integer',
-            'payment_type' => 'required|string',
-            'safe_deal' => 'required|boolean',
-            'hot_work' => 'required|boolean',
-            'account_verified' => 'required|boolean'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors(), Response::HTTP_BAD_REQUEST);
-        }
-
         $dates = Arr::sort($request->dates);
 
         $response_task = null;
@@ -64,7 +38,7 @@ class EmployerTaskController extends BaseController
                 'minimum_age', 'price', 'payment_type', 'safe_deal', 'hot_work', 'account_verified');
 
             $task_attributes['start_date'] = $date;
-            $user = $request->user();
+            $user = Auth::user();
             $user->checkEmptyRole(User::ROLE_EMPLOYER);
             $task_attributes['user_id'] = $user->id;
 
@@ -91,14 +65,13 @@ class EmployerTaskController extends BaseController
     /**
      * Получение данных о задаче для редактирования (Заказчик)
      *
-     * @param int $id
-     * @param Request $request
+     * @param $id
      * @return JsonResponse
      */
-    public function edit(int $id, Request $request): JsonResponse
+    public function edit($id): JsonResponse
     {
-        $user = $request->user();
-        $task = $user->tasks()->where('id', $id)->first();
+        $user = \Auth::user();
+        $task = $user->tasks()->where('id', '=', $id)->first();
 
         if ($task) {
             $task_arr = [
@@ -135,44 +108,16 @@ class EmployerTaskController extends BaseController
     /**
      * Обновление существующей задачи (Заказчик)
      *
-     * @param int $id
-     * @param Request $request
+     * @param $id
+     * @param UpdateTaskRequest $request
      * @return JsonResponse
      */
-    public function update(int $id, Request $request): JsonResponse
+    public function update(UpdateTaskRequest $request, $id): JsonResponse
     {
-        $user = $request->user();
+        $user = \Auth::user();
         $task = $user->tasks()->where('id', $id)->first();
 
         if ($task) {
-            $validator = Validator::make($request->all(), [
-                'category_id' => 'required|integer',
-                'name' => 'required|string|max:255',
-                'description' => 'required|string',
-                'result' => 'required|string',
-                'images' => 'array|max:10',
-                'images.*' => 'string',
-                'video' => 'nullable|string',
-                'address' => 'nullable|string|max:255',
-                'place_id' => 'nullable|string',
-                'start_date' => 'required|string',
-                'start_time' => 'required|string',
-                'amount_of_workers' => 'required|integer',
-                'minimum_age' => 'required|integer',
-                'languages' => 'array',
-                'languages.*' => 'integer',
-                'price' => 'required|integer',
-                'payment_type' => 'required|string',
-                'safe_deal' => 'required|boolean',
-                'hot_work' => 'required|boolean',
-                'account_verified' => 'required|boolean'
-            ]);
-
-            if ($validator->fails()) {
-                return $this->sendError('Validation Error.', $validator->errors(), Response::HTTP_BAD_REQUEST);
-            }
-
-
             if ($task->update($request->all())) {
 
                 $task->linkToLanguages($request->get('languages'));
@@ -209,13 +154,12 @@ class EmployerTaskController extends BaseController
     /**
      * Удаление задачи (Заказчик)
      *
-     * @param int $id
-     * @param Request $request
+     * @param $id
      * @return JsonResponse
      */
-    public function delete(int $id, Request $request): JsonResponse
+    public function delete($id): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
         $task = $user->tasks()->where('id', $id)->first();
         if ($task) {
             return ($task->delete()) ? $this->sendResponse([], 'Task delete', 201) : $this->sendError('Task deleting error', [], 500);
@@ -228,26 +172,17 @@ class EmployerTaskController extends BaseController
      * Отправка офера исполнителю (Заказчик)
      * TODO:недоделан
      *
-     * @param int $id
-     * @param Request $request
+     * @param $id
+     * @param NewOfferRequest $request
      * @return JsonResponse
      */
-    public function offer($id, Request $request): JsonResponse
+    public function offer(NewOfferRequest $request, $id): JsonResponse
     {
         if (!Task::where('id', '=', $id)->first()) {
             return $this->sendError("Task #{$id} not found");
         }
 
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
-            'text' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
+        $user = Auth::user();
 
         $offer = TaskOffer::new($id, $user->id, $request->get('text'));
 
@@ -262,32 +197,21 @@ class EmployerTaskController extends BaseController
     /**
      * Отправка отзыва на исполнителей
      *
-     * @param int $id
-     * @param Request $request
+     * @param $id
+     * @param EmployerReviewRequest $request
      * @return JsonResponse
      */
-    public function review($id, Request $request)
+    public function review(EmployerReviewRequest $request, $id)
     {
-        $reviewer = $request->user();
+        $reviewer = Auth::user();
         $task = Task::where('id', '=', $id)->first();
 
         if (!$task) {
             return $this->sendError('Task not found');
         }
 
-        if ($task->user_id == !$reviewer->id) {
+        if ($task->user_id !== $reviewer->id) {
             return $this->sendError('You`re an idiot?');
-        }
-
-        $validator = Validator::make($request->all(), [
-            'users' => 'required|array',
-            'users.*' => 'integer',
-            'rating' => 'required|integer',
-            'text' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
         }
 
         foreach ($request->users as $user_id)

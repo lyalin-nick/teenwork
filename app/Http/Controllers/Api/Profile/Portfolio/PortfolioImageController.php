@@ -3,32 +3,23 @@
 namespace App\Http\Controllers\Api\Profile\Portfolio;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\Portfolio\UploadImageRequest;
 use App\Models\PortfolioImage;
+use Auth;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 class PortfolioImageController extends BaseController
 {
     /**
      * Загрузка и создание новых фото
      *
-     * @param Request $request
+     * @param UploadImageRequest $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(UploadImageRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,png,jpg',
-            'description' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
 
         $result = PortfolioImage::new($request->image, $profile->id, $request->description);
@@ -46,15 +37,14 @@ class PortfolioImageController extends BaseController
      * Удаление фото
      *
      * @param $id
-     * @param Request $request
      * @return JsonResponse
      */
-    public function delete($id, Request $request): JsonResponse
+    public function delete($id): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
         $profile = $user->profile;
 
-        $photo = $profile->portfolioImages()->where('id', $id)->first();
+        $photo = $profile->portfolioImages()->where('id', '=', $id)->first();
 
         if ($photo) {
             if ($photo->delete()) {

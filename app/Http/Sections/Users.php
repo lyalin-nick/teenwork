@@ -8,6 +8,7 @@ use AdminForm;
 use AdminFormElement;
 use AdminSection;
 use App\Models\PortfolioImage;
+use App\Models\PortfolioLink;
 use App\Models\Profile;
 use App\Models\Task;
 use App\Models\User;
@@ -49,6 +50,13 @@ class Users extends Section implements Initializable
      */
     public function initialize()
     {
+//        $page = \AdminNavigation::getPages()->findById('userdata');
+
+//        $page->addPage(
+//            $this->makePage(300)->setIcon('fa fa-users')
+//        );
+$this->
+        dd($this->addToNavigation());
         $this->addToNavigation()->setPriority(100)->setIcon('fa fa-users');
     }
 
@@ -180,12 +188,14 @@ class Users extends Section implements Initializable
             $tasks = AdminSection::getModel(Task::class)->fireDisplay(['user_id' => $id]);
 
             $portfolio_photos = AdminSection::getModel(PortfolioImage::class)->fireDisplay(['profile_id' => $profile->id]);
+            $portfolio_links = AdminSection::getModel(PortfolioLink::class)->fireDisplay(['profile_id' => $profile->id]);
 
             $tabs->appendTab($profileForm, 'Profile');
 
             $tabs->appendTab($profilePhotoForm, 'Profile Photo');
 
             $tabs->appendTab($portfolio_photos, 'Portfolio Images');
+            $tabs->appendTab($portfolio_links, 'Portfolio Links');
 
             $tabs->appendTab($tasks, 'Tasks');
         }

@@ -42,7 +42,7 @@ class PortfolioImages extends Section implements Initializable
      */
     public function initialize()
     {
-        $this->addToNavigation()->setPriority(100)->setIcon('fa fa-lightbulb-o');
+        $this->addToNavigation()->setPriority(100)->setIcon('fa fa-camera');
     }
 
     /**
@@ -54,11 +54,7 @@ class PortfolioImages extends Section implements Initializable
     {
         $columns = [
             AdminColumn::image('preview', 'Photo')->setSearchable(false),
-            AdminColumn::text('created_at', 'Created / updated', 'updated_at')
-                ->setWidth('160px')->setOrderable(function ($query, $direction) {
-                    $query->orderBy('updated_at', $direction);
-                })
-                ->setSearchable(false),
+            AdminColumn::text('profile.FullName', 'User')->setSearchable(false),
         ];
 
         $display = AdminDisplay::table()
@@ -69,7 +65,7 @@ class PortfolioImages extends Section implements Initializable
         if (isset($payload['profile_id'])) {
             $display->setApply(function ($query) use ($payload) {
                 $query->where('profile_id', '=', $payload['profile_id']);
-            })->setParameter('profile_id', $payload['profile_id']);
+            });
         }
         return $display;
     }

@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\User\ReportRequest;
 use App\Models\Review;
 use App\Models\User;
 use App\Models\UserReport;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Auth;
+use Illuminate\Http\JsonResponse;
 
 
 class UserController extends BaseController
@@ -16,10 +17,9 @@ class UserController extends BaseController
      * Просмотр профиля пользователя
      *
      * @param $id
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function view($id, Request $request)
+    public function view($id): JsonResponse
     {
         $user = User::where('id', '=', $id)->with('profile')->first();
         if ($user) {
@@ -53,30 +53,20 @@ class UserController extends BaseController
      * Отправка жалобы на пользователя
      *
      * @param $id
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param ReportRequest $request
+     * @return JsonResponse
      */
-    public function report($id, Request $request)
+    public function report(ReportRequest $request, $id): JsonResponse
     {
-        $reporter = $request->user();
+        $reporter = Auth::user();
         $user = User::where('id', '=', $id)->first();
 
         if (!$user) {
             return $this->sendError('User not found');
         }
 
-        if ($user->id == !$reporter->id) {
+        if ($user->id !== $reporter->id) {
             return $this->sendError('You`re an idiot?');
-        }
-
-        $validator = Validator::make($request->all(), [
-            'title_id' => 'required|integer',
-            'title' => 'string',
-            'text' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
         }
 
         $report = UserReport::new($reporter->id, $user->id, $request->title_id, $request->title, $request->text);
@@ -92,9 +82,9 @@ class UserController extends BaseController
      * Просмотр отзывов о пользователе
      *
      * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function reviews($id)
+    public function reviews($id): JsonResponse
     {
         $reviews_data = Review::search($id);
         return $this->sendResponse($reviews_data, 'Reviews');

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Models\Review;
 use App\Models\Task;
 use App\Models\TaskResponse;
+use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -19,22 +20,14 @@ class PerformerTaskController extends BaseController
      * @param Request $request
      * @return JsonResponse
      */
-    public function response($id, Request $request)
+    public function response($id, Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'text' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
         $task = Task::where('id', '=', $id)->first();
         if (!$task) {
             return $this->sendError('Task not found');
         }
 
-        $user = $request->user();
+        $user = Auth::user();
         if ($task->user_id === $user->id) {
             return $this->sendError('Its your task.');
         }
@@ -64,7 +57,7 @@ class PerformerTaskController extends BaseController
      */
     public function review($id, Request $request)
     {
-        $reviewer = $request->user();
+        $reviewer = Auth::user();
         $task = Task::where('id', '=', $id)->first();
 
         if (!$task) {

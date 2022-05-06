@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\Auth\Login\LoginRequest;
+use App\Http\Requests\Api\Auth\Login\NetworkRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Laravel\Socialite\Facades\Socialite;
 
 class LoginController extends BaseController
@@ -18,18 +19,8 @@ class LoginController extends BaseController
      * @param Request $request
      * @return JsonResponse
      */
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'phone' => 'required|string|max:255',
-            'password' => 'required|string|min:6',
-            'device_name' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
         $user = User::findByPhone($request->phone);
 
         if (!$user) {
@@ -54,16 +45,8 @@ class LoginController extends BaseController
      * @param Request $request
      * @return JsonResponse
      */
-    public function network($provider, Request $request): JsonResponse
+    public function network(NetworkRequest $request, $provider): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'access_token' => 'required|string',
-            'device_name' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
         $socialite_user = Socialite::driver($provider)->userFromToken($request->access_token);
 
         if ($socialite_user) {

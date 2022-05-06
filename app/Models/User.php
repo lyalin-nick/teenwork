@@ -468,12 +468,19 @@ class User extends Authenticatable
 
     public function getStars(): array
     {
+        $reviews = Review::query()->select(
+            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 1) as star1"),
+            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 2) as star2"),
+            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 3) as star3"),
+            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 4) as star4"),
+            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 5) as star5"),
+        )->first();
         return [
-            5 => $this->reviews()->where('rating', '=', 5)->count(),
-            4 => $this->reviews()->where('rating', '=', 4)->count(),
-            3 => $this->reviews()->where('rating', '=', 3)->count(),
-            2 => $this->reviews()->where('rating', '=', 2)->count(),
-            1 => $this->reviews()->where('rating', '=', 1)->count(),
+            5 => $reviews->star5,
+            4 => $reviews->star4,
+            3 => $reviews->star3,
+            2 => $reviews->star2,
+            1 => $reviews->star1,
         ];
     }
 

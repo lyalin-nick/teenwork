@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\MyQuestion\QuestionRequest;
 use App\Models\MyQuestion;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Validator;
+use Auth;
 
 class MyQuestionController extends BaseController
 {
-    public function index(Request $request)
+    public function index()
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         $my_questions_paginator = MyQuestion::questionList($user->id)
             ->paginate(20);
@@ -25,20 +24,9 @@ class MyQuestionController extends BaseController
         return $this->sendResponse(['currentPage' => $curPage, 'lastPage' => $lastPage, 'my_questions' => $my_questions], 'MyQuestion list');
     }
 
-    public function store(Request $request)
+    public function store(QuestionRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'subject' => 'required|string|max:255',
-            'question' => 'required|string',
-            'images' => 'nullable|array',
-            'images.*' => 'string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors(), Response::HTTP_BAD_REQUEST);
-        }
-
-        $user = $request->user();
+        $user = Auth::user();
 
         $new_my_question = MyQuestion::new($user->id, $request->subject, $request->question, $request->images);
 

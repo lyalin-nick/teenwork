@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\BaseController;
+use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,7 @@ class LogoutController extends BaseController
      */
     public function logout(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         $result = $user->currentAccessToken()->delete();
         if ($result) {

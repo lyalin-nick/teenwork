@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 
 class FaqController extends BaseController
 {
-
     /**
      * Получение списка вопросов FAQ
      *
@@ -31,7 +30,7 @@ class FaqController extends BaseController
      * @param int $id
      * @return JsonResponse
      */
-    public function answer($id): JsonResponse
+    public function answer(int $id): JsonResponse
     {
         $data = Faq::getAnswerById($id);
 
