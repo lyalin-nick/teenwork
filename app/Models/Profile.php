@@ -41,7 +41,6 @@ class Profile extends Model
     use HasFactory, ImageTrait;
 
     const
-        STATUS_BEGINNER = 'beginner',
         STATUS_PRO = 'professional',
         STATUS_EXPERT = 'expert';
 
@@ -71,7 +70,6 @@ class Profile extends Model
     {
         return [
             null => 'No status',
-            self::STATUS_BEGINNER => self::STATUS_BEGINNER,
             self::STATUS_PRO => self::STATUS_PRO,
             self::STATUS_EXPERT => self::STATUS_EXPERT,
         ];

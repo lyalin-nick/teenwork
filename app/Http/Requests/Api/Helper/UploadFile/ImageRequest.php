@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Helper\UploadFile;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use Auth;
 
 class ImageRequest extends ApiFormRequest
 {
@@ -13,7 +14,7 @@ class ImageRequest extends ApiFormRequest
      */
     public function authorize()
     {
-        return false;
+        return Auth::check();
     }
 
     /**

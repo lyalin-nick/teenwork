@@ -38,6 +38,7 @@ class User extends Authenticatable
 
     public const STATUS_WAIT = 'wait';
     public const STATUS_ACTIVE = 'active';
+    public const STATUS_BANNED = 'banned';
     public const STATUS_RESET = 'reset';
 
     public const ROLE_PERFORMER = 'performer';
@@ -454,9 +455,22 @@ class User extends Authenticatable
         $rating_sum = $this->reviews()->sum('rating');
         $reviews_sum = $this->reviews()->count();
         if ($rating_sum > 0 && $reviews_sum > 0) {
-            $profile->rating = (float)$rating_sum / $reviews_sum;
+            $profile->rating = round((float)$rating_sum / $reviews_sum, 1);
         } else {
-            $profile->rating = (float)$review_rating;
+            $profile->rating = round((float)$review_rating, 1);
+        }
+        $profile->save();
+        $this->refreshStatus();
+    }
+
+    private function refreshStatus()
+    {
+        $profile = $this->profile;
+        if ($profile->number_performer_tasks >= 20 && $profile->rating >= 4.0) {
+            $profile->status = Profile::STATUS_PRO;
+        }
+        if ($profile->number_performer_tasks >= 25 && $profile->rating >= 4.5) {
+            $profile->status = Profile::STATUS_EXPERT;
         }
         $profile->save();
     }
