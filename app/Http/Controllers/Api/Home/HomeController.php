@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Home;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Resources\Task\PreviewResource;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,14 +27,11 @@ class HomeController extends BaseController
         $curPage = $tasks->currentPage();
         $lastPage = $tasks->lastPage();
 
-        $tasks = $tasks->each(function ($item, $key) {
-            $item->makeHidden(['user', 'user_id', 'rating', 'images']);
-            $item['user_info'] = $item->user_info;
-            $item['images_links'] = $item->images_links;
-            $item['status'] = $item->status_label;
-        });
-
-        return $this->sendResponse(['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => $tasks->toArray()], 'Success', 201);
+        return $this->sendResponse([
+            'currentPage' => $curPage,
+            'lastPage' => $lastPage,
+            'tasks' => PreviewResource::collection($tasks->items())
+        ], 'Success', 201);
     }
 
     /**
@@ -57,14 +55,11 @@ class HomeController extends BaseController
         $curPage = 1;//$tasks->currentPage();
         $lastPage = 1;//$tasks->lastPage();
 
-        $tasks = $tasks->each(function ($item, $key) {
-            $item->makeHidden(['user', 'user_id', 'rating', 'images']);
-            $item['user_info'] = $item->user_info;
-            $item['images_links'] = $item->images_links;
-            $item['status'] = $item->status_label;
-        });
-
-        return $this->sendResponse(['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => $tasks->toArray()], 'Success', 201);
+        return $this->sendResponse([
+            'currentPage' => $curPage,
+            'lastPage' => $lastPage,
+            'tasks' => PreviewResource::collection($tasks->items())
+        ], 'Success', 201);
     }
 
     /**

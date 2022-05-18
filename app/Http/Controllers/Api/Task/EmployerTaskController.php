@@ -7,6 +7,8 @@ use App\Http\Requests\Api\Task\EmployerReviewRequest;
 use App\Http\Requests\Api\Task\NewOfferRequest;
 use App\Http\Requests\Api\Task\NewTaskRequest;
 use App\Http\Requests\Api\Task\UpdateTaskRequest;
+use App\Http\Resources\Task\UpdateResource;
+use App\Http\Resources\Task\ViewResource;
 use App\Models\Review;
 use App\Models\Task;
 use App\Models\TaskImage;
@@ -55,7 +57,7 @@ class EmployerTaskController extends BaseController
                 Storage::disk('public')->delete($request->video);
             }
 
-            return $this->sendResponse(['task' => $response_task->getFullInfo(), 'employers' => $response_task->getRecommendedPerformers()], 'Task create');
+            return $this->sendResponse(['task' => new ViewResource($response_task), 'employers' => $response_task->getRecommendedPerformers()], 'Task create');
         }
 
         return $this->sendError('Task doesnt created', [], 500);
@@ -74,32 +76,7 @@ class EmployerTaskController extends BaseController
         $task = $user->tasks()->where('id', '=', $id)->first();
 
         if ($task) {
-            $task_arr = [
-                'id' => $task->id,
-                'category_id' => $task->category_id,
-                'name' => $task->name,
-                'description' => $task->description,
-                'result' => $task->result,
-                'address' => $task->address,
-                'place_id' => $task->place_id,
-                'start_date' => $task->start_date,
-                'start_time' => $task->start_time,
-                'amount_of_workers' => $task->amount_of_workers,
-                'minimum_age' => $task->minimum_age,
-                'price' => $task->price,
-                'payment_type' => $task->payment_type,
-                'safe_deal' => $task->safe_deal,
-                'hot_work' => $task->hot_work,
-                'account_verified' => $task->account_verified,
-                'languages' => $task->getLanguagesAsArray(),
-                'images' => $task->getImagesAsArray(),
-                'video' => ($task->video && $task->video->hasVideo()) ? [
-                    'link' => $task->video->getLink(),
-                    'path' => $task->video->getFullPath()
-                ] : null
-            ];
-
-            return $this->sendResponse($task_arr, 'Task info', 201);
+            return $this->sendResponse(new UpdateResource($task), 'Task info', 201);
         }
 
         return $this->sendError('Task not found');
@@ -142,7 +119,7 @@ class EmployerTaskController extends BaseController
 
                 $task->refresh();
 
-                return $this->sendResponse(['task' => $task->getFullInfo(), 'employers' => $task->getRecommendedPerformers()], 'Task create');
+                return $this->sendResponse(['task' => new ViewResource($task), 'employers' => $task->getRecommendedPerformers()], 'Task create');
             }
             return $this->sendError('Task update error', [], 502);
 

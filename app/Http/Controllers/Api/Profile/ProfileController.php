@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Helper\UploadFile\VideoRequest;
 use App\Http\Requests\Api\Profile\AddressRequest;
 use App\Http\Requests\Api\Profile\CategoriesRequest;
 use App\Http\Requests\Api\Profile\ProfileBaseInfoRequest;
+use App\Http\Resources\User\UserResource;
 use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class ProfileController extends BaseController
     {
         $user = Auth::user();
 
-        return $this->sendResponse($user->getFullData(), 'Success');
+        return $this->sendResponse(new UserResource($user), 'Success');
     }
 
     /**
@@ -43,7 +44,7 @@ class ProfileController extends BaseController
         $profile->update($request->only('first_name', 'last_name', 'date_of_birth', 'about'));
         $profile->linkToLanguages($request->get('languages'));
 
-        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
+        return $this->sendResponse(['user' => new UserResource($user)], 'Profile update');
     }
 
     /**
@@ -63,7 +64,7 @@ class ProfileController extends BaseController
 
         if ($profile->uploadProfileImage($request->image)) {
             $user->refresh();
-            return $this->sendResponse(['user' => $user->getFullData()], 'Image upload successful');
+            return $this->sendResponse(['user' => new UserResource($user)], 'Image upload successful');
         }
 
         return $this->sendError('Error uploading image');
@@ -80,13 +81,9 @@ class ProfileController extends BaseController
         $user = Auth::user();
         $profile = $user->profile;
 
-//        if (!$profile) {
-//            $profile = Profile::createProfile(['user_id' => Auth::user()->id]);
-//        }
-
         if ($profile->uploadProfileVideo($request->video)) {
             $user->refresh();
-            return $this->sendResponse(['user' => $user->getFullData()], 'Video upload successful');
+            return $this->sendResponse(['user' => new UserResource($user)], 'Video upload successful');
         }
 
         return $this->sendError('Error uploading video');
@@ -115,14 +112,12 @@ class ProfileController extends BaseController
     {
         $user = Auth::user();
         $profile = $user->profile;
-//        if (!$profile) {
-//            $profile = Profile::createProfile(['user_id' => Auth::user()->id]);
-//        }
+
         if (!$profile->updateCategories($request->categories)) {
             return $this->sendError('Error updating');
         }
 
-        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
+        return $this->sendResponse(['user' => new UserResource($user)], 'Profile update');
     }
 
     /**
@@ -140,7 +135,7 @@ class ProfileController extends BaseController
 //        }
 
         if ($profile->setLocation($request->get('address'), $request->get('place_id'))) {
-            return $this->sendResponse(['user' => $user->getFullData()], 'Profile update successful');
+            return $this->sendResponse(['user' => new UserResource($user)], 'Profile update successful');
         }
         return $this->sendError('Profile update error', [], 501);
     }
@@ -172,6 +167,6 @@ class ProfileController extends BaseController
 //        }
         $profile->update($request->only('about'));
 
-        return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
+        return $this->sendResponse(['user' => new UserResource($user)], 'Profile update');
     }
 }

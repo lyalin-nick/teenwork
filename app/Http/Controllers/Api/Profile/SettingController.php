@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Resources\User\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,7 +21,7 @@ class SettingController extends BaseController
         $profile->push_notification = !$profile->push_notification;
         if ($profile->save()) {
             $user->refresh();
-            return $this->sendResponse(['user' => $user->getFullData()], 'Setting change success');
+            return $this->sendResponse(['user' => new UserResource($user)], 'Setting change success');
         }
 
         return $this->sendError('Error! Setting don`t update!');
@@ -38,7 +39,7 @@ class SettingController extends BaseController
         $profile->email_notification = !$profile->email_notification;
         if ($profile->save()) {
             $user->refresh();
-            return $this->sendResponse(['user' => $user->getFullData()], 'Setting change success');
+            return $this->sendResponse(['user' => new UserResource($user)], 'Setting change success');
         }
         return $this->sendError('Error! Setting don`t update!');
     }
@@ -55,7 +56,7 @@ class SettingController extends BaseController
         $profile->invisible = !$profile->invisible;
         if ($profile->save()) {
             $user->refresh();
-            return $this->sendResponse(['user' => $user->getFullData()], 'Setting change success');
+            return $this->sendResponse(['user' => new UserResource($user)], 'Setting change success');
         }
         return $this->sendError('Error! Setting don`t update!');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Resources\User\ShortInfoResource;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -99,7 +100,7 @@ class Review extends Model
     public function getReviewerInfoAttribute()
     {
         $employer = $this->reviewer;
-        return $employer->getShortInfo();
+        return new ShortInfoResource($employer);
     }
 
     public function getTaskInfoAttribute()

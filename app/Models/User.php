@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Http\Resources\Task\PreviewResource;
+use App\Http\Resources\User\ShortInfoResource;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -273,24 +275,6 @@ class User extends Authenticatable
         return $this->email;
     }
 
-    /**
-     *
-     * @param $value
-     * @return bool
-     */
-    public function getShortInfo(): array
-    {
-        $profile = $this->profile;
-        return [
-            'id' => $this->id,
-            'name' => $profile->full_name,
-            'photo' => $profile->getProfilePreviewImageLink(),
-            'rating' => $profile->rating,
-            'status' => $profile->status,
-            'number_reviews' => $profile->number_review,
-        ];
-    }
-
     public function getTaskList($status = null)
     {
         $tasks = [];
@@ -374,43 +358,9 @@ class User extends Authenticatable
         return $this->status === self::STATUS_ACTIVE;
     }
 
-    /**
-     * Получить данные о пользователе
-     *
-     * @return array
-     */
-    public function getFullData(): array
+    public function isBanned(): bool
     {
-        $profile = $this->profile;
-
-        $user_data = [
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'role' => $this->role,
-            'first_name' => $profile->first_name,
-            'last_name' => $profile->last_name,
-            'date_of_birth' => $profile->date_of_birth,
-            'about' => $profile->about,
-            'status' => $profile->status,
-            'photo_preview' => $profile->getProfilePreviewImageLink(),
-            'photo' => $profile->getProfileImageLink(),
-            'video' => $profile->getProfileVideoLink(),
-            'address' => $profile->address,
-            'address_id' => $profile->place_id,
-            'languages' => $profile->getLanguagesIds(),
-            'categories' => $profile->getCategoriesIds(),
-            'number_performer_tasks' => $profile->number_performer_tasks,
-            'number_employer_tasks' => $profile->number_employer_tasks,
-            'rating' => $profile->rating,
-            'number_review' => $profile->number_review,
-            'push_notification' => $profile->push_notification,
-            'email_notification' => $profile->email_notification,
-            'invisible' => $profile->invisible,
-            'created_at' => date('Y-m-d', strtotime($this->created_at)),
-            //'favorites' => $this->getFavoritesId()
-        ];
-
-        return $user_data;
+        return $this->status === self::STATUS_BANNED;
     }
 
     public function getFavoritesId(): array
@@ -524,23 +474,10 @@ class User extends Authenticatable
 
             $tasks = [];
             foreach ($favorites as $favorite) {
-                $task = $favorite->task;
-                $tasks[] = [
-                    'id' => $task->id,
-                    'name' => $task->name,
-                    'price' => $task->price,
-                    'description' => $task->description,
-                    'hot_work' => $task->hot_work,
-                    'safe_deal' => $task->safe_deal,
-                    'start_date' => $task->start_date,
-                    'user_info' => $task->user_info,
-                    'images_links' => $task->images_links,
-                    'status' => $task->status_label,
-                    'created_at' => $task->created_at,
-                ];
+                $tasks[] = $favorite->task;
             }
 
-            return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => $tasks];
+            return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => PreviewResource::collection($tasks)];
         }
 
         $favorites = $this->favoritePerformers()
@@ -552,11 +489,10 @@ class User extends Authenticatable
 
         $performers = [];
         foreach ($favorites as $favorite) {
-            $performer = $favorite->performer;
-            $performers[] = $performer->getShortInfo();
+            $performers[] = $favorite->performer;
         }
 
-        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'performers' => $performers];
+        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'performers' => ShortInfoResource::collection($performers)];
     }
 
     public function addFavorite($identify)

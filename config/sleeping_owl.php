@@ -255,10 +255,10 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'datetimeFormat' => 'd-m-Y H:i',
-    'dateFormat'     => 'd-m-Y',
+    'datetimeFormat' => 'Y-m-d H:i',
+    'dateFormat'     => 'Y-m-d',
     'timeFormat'     => 'H:i',
-    'timezone'       => 'UTC',
+    'timezone'       => 'Europe/Moscow',
 
     /*
     |--------------------------------------------------------------------------

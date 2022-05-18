@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Resources\User\ShortInfoResource;
 use App\Models\Helpers\GoogleMap;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -414,13 +415,11 @@ class Task extends Model
     }
 
     /**
-     * Мутатор на поле user_data
-     *
-     * @param $value
+     * @return ShortInfoResource
      */
-    public function getUserInfoAttribute(): array
+    public function getUserInfoAttribute(): ShortInfoResource
     {
-        return $this->user->getShortInfo();
+        return new ShortInfoResource($this->user);
     }
 
     /**
@@ -490,7 +489,7 @@ class Task extends Model
 
         if ($responses) {
             $responses = $responses->filter(function ($item, $key) {
-                $item['user_info'] = $item->user->getShortInfo();
+                $item['user_info'] = new ShortInfoResource($item->user);
                 $item->makeHidden('task_id', 'user_id', 'created_at', 'updated_at', 'user');
                 return $item->user->isPerformer();
             });
@@ -503,6 +502,11 @@ class Task extends Model
     {
         return $this->hasMany(TaskResponse::class);
     }
+
+//    public function report()
+//    {
+//        return $this->belongsTo(TaskReport::class, 'task_id', 'id');
+//    }
 
     /**
      * Аксессор поля views_number
@@ -557,42 +561,6 @@ class Task extends Model
         return ($this->video) ? $this->video->getLink() : null;
     }
 
-    /**
-     * Получение полной информации о задаче
-     *
-     * @return array
-     */
-    public function getFullInfo(): array
-    {
-        $task = [
-            'id' => $this->id,
-            'user' => $this->user_info,
-            'category' => $this->category->getFullPathName(),
-            'name' => $this->name,
-            'description' => $this->description,
-            'result' => $this->result,
-            'languages' => $this->getLanguagesAsString(),
-            'accepted_offers' => [],
-            'address' => $this->address,
-            'place_id' => $this->place_id,
-            'images' => $this->images_links,
-            'video' => $this->video_link,
-            'start_date' => $this->start_date,
-            'start_time' => $this->start_time,
-            'amount_of_workers' => $this->amount_of_workers,
-            'minimum_age' => $this->minimum_age,
-            'price' => $this->price,
-            'payment_type' => $this->payment_type,
-            'safe_deal' => $this->safe_deal,
-            'hot_work' => $this->hot_work,
-            'account_verified' => $this->account_verified,
-            'status' => $this->status_label,
-            'created_at' => date('Y-m-d H:i:s', strtotime($this->created_at)),
-            'views_number' => $this->views_number
-        ];
-
-        return $task;
-    }
 
     /**
      * Получение выбранных к задаче предпочитаемых языков в виде строки
@@ -753,7 +721,7 @@ class Task extends Model
 
         $users = [];
         foreach ($profiles as $profile) {
-            $users[] = $profile->user->getShortInfo();
+            $users[] = new ShortInfoResource($profile->user);
         }
 
         return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'users' => $users];

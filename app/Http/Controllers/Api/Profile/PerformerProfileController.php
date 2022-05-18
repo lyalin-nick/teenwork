@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\Profile\ProfileUpdateRequest;
+use App\Http\Resources\User\UserResource;
 use App\Models\User;
 use Auth;
 use Illuminate\Http\JsonResponse;
@@ -32,7 +33,7 @@ class PerformerProfileController extends BaseController
         );
 
         if ($updated) {
-            return $this->sendResponse(['user' => $user->getFullData()], 'Profile update');
+            return $this->sendResponse(['user' => new UserResource($user)], 'Profile update');
         }
 
         return $this->sendError('Profile doesnt updated', [], 500);

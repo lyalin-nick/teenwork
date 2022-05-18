@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Task;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\Task\ReportRequest;
+use App\Http\Resources\Task\ViewResource;
 use App\Models\Task;
 use App\Models\TaskReport;
 use Auth;
@@ -41,16 +42,10 @@ class TaskController extends BaseController
         if (!$task) {
             return $this->sendError('Task not found');
         }
-        $task_info = $task->getFullInfo();
-
-        $user = Auth::guard('sanctum')->user();
-        if ($user) {
-            $task_info['favorite'] = $user->checkFavorite($id);
-        }
 
         $task->addViews();
 
-        return $this->sendResponse($task_info, 'Task was found');
+        return $this->sendResponse(new ViewResource($task), 'Task was found');
     }
 
     /**
