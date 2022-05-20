@@ -27,7 +27,7 @@ class LoginRequest extends ApiFormRequest
     {
         return [
             'phone' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'string', Password::min(8)->numbers()->mixedCase()],
+            'password' => ['required', 'string'],
             'device_name' => ['required', 'string']
         ];
     }

@@ -17,10 +17,10 @@ class UserController extends BaseController
     /**
      * Просмотр профиля пользователя
      *
-     * @param $id
+     * @param int $id
      * @return JsonResponse
      */
-    public function view($id): JsonResponse
+    public function view(int $id): JsonResponse
     {
         $user = User::where('id', '=', $id)->with('profile')->first();
         if ($user) {
@@ -33,11 +33,11 @@ class UserController extends BaseController
     /**
      * Отправка жалобы на пользователя
      *
-     * @param $id
+     * @param int $id
      * @param ReportRequest $request
      * @return JsonResponse
      */
-    public function report(ReportRequest $request, $id): JsonResponse
+    public function report(ReportRequest $request, int $id): JsonResponse
     {
         $reporter = Auth::user();
         $user = User::where('id', '=', $id)->first();
@@ -69,5 +69,21 @@ class UserController extends BaseController
     {
         $reviews_data = Review::search($id);
         return $this->sendResponse($reviews_data, 'Reviews');
+    }
+
+    /**
+     * Просмотр отзывов о пользователе
+     *
+     * @param $id
+     * @return JsonResponse
+     */
+    public function reviewsCount($id): JsonResponse
+    {
+        $user = User::where('id', $id)->first();
+        if (!$user) {
+            return $this->sendError('User not found', 404);
+        }
+
+        return $this->sendResponse($user->getStars(), 'Reviews');
     }
 }

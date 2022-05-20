@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $reporter_id
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $title_id
  * @property string $title
  * @property string $text
+ * @property ReportTitle $reportTitle
  * @property Task $task
  * @property User $reporter
  */
@@ -41,12 +43,17 @@ class TaskReport extends Model
         ]);
     }
 
-    public function task()
+    public function reportTitle()
+    {
+        return $this->hasOne(ReportTitle::class, 'id', 'title_id');
+    }
+
+    public function task(): HasOne
     {
         return $this->hasOne(Task::class, 'id', 'task_id');
     }
 
-    public function reporter()
+    public function reporter(): HasOne
     {
         return $this->hasOne(User::class, 'id', 'reporter_id');
     }

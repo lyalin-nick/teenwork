@@ -51,9 +51,9 @@ class PortfolioImageController extends BaseController
                 return $this->sendResponse([], 'Delete successful');
             }
 
-            return $this->sendError('Deletion error');
+            return $this->sendError('Deletion error', [], 501);
         }
 
-        return $this->sendError('Photo not found');
+        return $this->sendError('Photo not found', [], 501);
     }
 }

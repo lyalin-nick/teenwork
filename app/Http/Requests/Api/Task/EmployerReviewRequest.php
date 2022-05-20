@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Task;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use Auth;
 
 class EmployerReviewRequest extends ApiFormRequest
 {
@@ -13,7 +14,7 @@ class EmployerReviewRequest extends ApiFormRequest
      */
     public function authorize()
     {
-        return \Auth::check();
+        return Auth::check();
     }
 
     /**

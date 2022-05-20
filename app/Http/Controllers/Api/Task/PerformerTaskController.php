@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Task;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Requests\Api\Task\ResponseRequest;
+use App\Http\Requests\Api\Task\ReviewRequest;
 use App\Models\Review;
 use App\Models\Task;
 use App\Models\TaskResponse;
@@ -17,10 +19,10 @@ class PerformerTaskController extends BaseController
      * Отправка отклика (Исполнитель)
      *
      * @param int $id
-     * @param Request $request
+     * @param ResponseRequest $request
      * @return JsonResponse
      */
-    public function response($id, Request $request): JsonResponse
+    public function response(int $id, ResponseRequest $request): JsonResponse
     {
         $task = Task::where('id', '=', $id)->first();
         if (!$task) {
@@ -32,15 +34,7 @@ class PerformerTaskController extends BaseController
             return $this->sendError('Its your task.');
         }
 
-        $validator = Validator::make($request->all(), [
-            'text' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-
-        $new_response = TaskResponse::new($id, $user->id, $request->get('text'));
+        $new_response = TaskResponse::new($id, $user->id, $request->text);
         if ($new_response) {
             return $this->sendResponse([], 'Response create', 201);
         }
@@ -52,10 +46,10 @@ class PerformerTaskController extends BaseController
      * Отправка отзыва на заказчика
      *
      * @param int $id
-     * @param Request $request
+     * @param ReviewRequest $request
      * @return JsonResponse
      */
-    public function review($id, Request $request)
+    public function review(int $id, ReviewRequest $request): JsonResponse
     {
         $reviewer = Auth::user();
         $task = Task::where('id', '=', $id)->first();
@@ -66,15 +60,6 @@ class PerformerTaskController extends BaseController
 
         if ($task->user_id == !$reviewer->id) {
             return $this->sendError('You`re an idiot?');
-        }
-
-        $validator = Validator::make($request->all(), [
-            'rating' => 'required|integer',
-            'text' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
         }
 
         $review = Review::new($id, $task->user_id, $reviewer->id, $request->rating, $request->text);

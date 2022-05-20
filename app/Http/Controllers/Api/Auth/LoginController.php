@@ -16,7 +16,7 @@ class LoginController extends BaseController
     /**
      * Логинизация
      *
-     * @param Request $request
+     * @param LoginRequest $request
      * @return JsonResponse
      */
     public function login(LoginRequest $request): JsonResponse
@@ -42,7 +42,7 @@ class LoginController extends BaseController
      * Авторизация через соцсети
      *
      * @param $provider
-     * @param Request $request
+     * @param NetworkRequest $request
      * @return JsonResponse
      */
     public function network(NetworkRequest $request, $provider): JsonResponse

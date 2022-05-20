@@ -1,24 +1,25 @@
 <?php
 
-namespace App\Models\Helpers;
+namespace App\Services\Google;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
 
-class GoogleMap
+class GoogleMapService
 {
-    /**
-     * @param $input
-     * @return array
-     */
-    public static function getAutocomplete($input): array
-    {
-        $key = config('services.google_api.key');
+    private $key;
 
+    public function __construct()
+    {
+        $this->key = config('services.google_api.key');
+    }
+
+    public function autocomplete($input): array
+    {
         $client = new Client();
 
-        $link = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input={$input}&types=address&key={$key}";
+        $link = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input={$input}&types=address&key={$this->key}";
 
         $autocomplete = [];
         try {
@@ -38,20 +39,11 @@ class GoogleMap
         return $autocomplete;
     }
 
-    /**
-     * Получить placeId места из ГуглКарт по координатам
-     *
-     * @param $latitude
-     * @param $longitude
-     * @return string|null
-     */
-    public static function getPlaceId($latitude, $longitude)
+    public function placeId($latitude, $longitude)
     {
-        $key = config('services.google_api.key');
-
         $client = new Client();
 
-        $link = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$latitude},{$longitude}&key={$key}";
+        $link = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$latitude},{$longitude}&key={$this->key}";
         try {
             $response = $client->request('GET', $link);
             $data = $response->getBody();
@@ -65,20 +57,11 @@ class GoogleMap
         return null;
     }
 
-    /**
-     * Not used
-     *
-     * @param $place_id
-     * @return array|null
-     * @throws GuzzleException
-     */
-    public static function getCoordinates($place_id)
+    public function coords($place_id)
     {
-        $key = config('services.google_api.key');
-
         $client = new Client();
 
-        $link = "https://maps.googleapis.com/maps/api/place/details/json?place_id={$place_id}&key={$key}";
+        $link = "https://maps.googleapis.com/maps/api/place/details/json?place_id={$place_id}&key={$this->key}";
 
         try {
             $response = $client->request('GET', $link);

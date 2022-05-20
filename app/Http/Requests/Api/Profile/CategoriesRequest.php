@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Profile;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use Auth;
 
 class CategoriesRequest extends ApiFormRequest
 {
@@ -13,7 +14,7 @@ class CategoriesRequest extends ApiFormRequest
      */
     public function authorize()
     {
-        return \Auth::check();
+        return Auth::check();
     }
 
     /**

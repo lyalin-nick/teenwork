@@ -3,20 +3,25 @@
 namespace App\Http\Resources\Task;
 
 use App\Models\Task;
+use Auth;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use JsonSerializable;
 
 class ViewResource extends JsonResource
 {
     public static $wrap = false;
+
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @param Request $request
+     * @return array|Arrayable|JsonSerializable
      */
     public function toArray($request)
     {
-        $user = \Auth::guard('sanctum')->user();
+        $user = Auth::guard('sanctum')->user();
         /* @var Task $this */
         return [
             'id' => $this->id,

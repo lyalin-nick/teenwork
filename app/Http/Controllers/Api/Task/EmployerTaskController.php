@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Task;
 
+use App\Actions\Task\TaskStoreAction;
+use App\Actions\Task\TaskUpdateAction;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\Task\EmployerReviewRequest;
 use App\Http\Requests\Api\Task\NewOfferRequest;
@@ -11,12 +13,8 @@ use App\Http\Resources\Task\UpdateResource;
 use App\Http\Resources\Task\ViewResource;
 use App\Models\Review;
 use App\Models\Task;
-use App\Models\TaskImage;
 use App\Models\TaskOffer;
-use App\Models\TaskVideo;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,50 +25,33 @@ class EmployerTaskController extends BaseController
      * Создание задачи (Заказчик)
      *
      * @param NewTaskRequest $request
+     * @param TaskStoreAction $storeAction
      * @return JsonResponse
      */
-    public function store(NewTaskRequest $request): JsonResponse
+    public function store(NewTaskRequest $request, TaskStoreAction $storeAction): JsonResponse
     {
-        $dates = Arr::sort($request->dates);
+        $task_with_first_date = $storeAction($request);
 
-        $response_task = null;
-        foreach ($dates as $date) {
-
-            $task_attributes = $request->only('category_id', 'name', 'description', 'result', 'address', 'place_id', 'start_time', 'amount_of_workers',
-                'minimum_age', 'price', 'payment_type', 'safe_deal', 'hot_work', 'account_verified');
-
-            $task_attributes['start_date'] = $date;
-            $user = Auth::user();
-            $user->checkEmptyRole(User::ROLE_EMPLOYER);
-            $task_attributes['user_id'] = $user->id;
-
-            $task = Task::new($task_attributes, $request->get('languages'), $request->images, $request->video);
-
-            if (!$response_task && $task) {
-                $response_task = $task;
-            }
-        }
-        if ($response_task) {
+        if ($task_with_first_date) {
             if ($request->images)
                 Storage::disk('public')->delete($request->images);
             if ($request->video) {
                 Storage::disk('public')->delete($request->video);
             }
 
-            return $this->sendResponse(['task' => new ViewResource($response_task), 'employers' => $response_task->getRecommendedPerformers()], 'Task create');
+            return $this->sendResponse(['task' => new ViewResource($task_with_first_date)], 'Task create');
         }
 
         return $this->sendError('Task doesnt created', [], 500);
-
     }
 
     /**
      * Получение данных о задаче для редактирования (Заказчик)
      *
-     * @param $id
+     * @param int $id
      * @return JsonResponse
      */
-    public function edit($id): JsonResponse
+    public function edit(int $id): JsonResponse
     {
         $user = \Auth::user();
         $task = $user->tasks()->where('id', '=', $id)->first();
@@ -85,44 +66,23 @@ class EmployerTaskController extends BaseController
     /**
      * Обновление существующей задачи (Заказчик)
      *
-     * @param $id
      * @param UpdateTaskRequest $request
+     * @param int $id
+     * @param TaskUpdateAction $updateAction
      * @return JsonResponse
      */
-    public function update(UpdateTaskRequest $request, $id): JsonResponse
+    public function update(UpdateTaskRequest $request, int $id, TaskUpdateAction $updateAction): JsonResponse
     {
         $user = \Auth::user();
         $task = $user->tasks()->where('id', $id)->first();
 
         if ($task) {
-            if ($task->update($request->all())) {
-
-                $task->linkToLanguages($request->get('languages'));
-
-                if ($request->images) {
-                    TaskImage::updateModels($request->images, $task->id);
-                } else {
-                    $task->cleanImages();
-                }
-
-                if ($request->video) {
-                    TaskVideo::updateModel($request->video, $task->id);
-                } else {
-                    $task->cleanVideo();
-                }
-
-                if ($request->images)
-                    Storage::disk('public')->delete($request->images);
-                if ($request->video) {
-                    Storage::disk('public')->delete($request->video);
-                }
-
-                $task->refresh();
-
-                return $this->sendResponse(['task' => new ViewResource($task), 'employers' => $task->getRecommendedPerformers()], 'Task create');
+            $updated_task = $updateAction($task, $request);
+            if ($updated_task) {
+                return $this->sendResponse(['task' => new ViewResource($updated_task)], 'Task create');
             }
-            return $this->sendError('Task update error', [], 502);
 
+            return $this->sendError('Task update error', [], 502);
         }
 
         return $this->sendError('Task not found');
@@ -149,11 +109,11 @@ class EmployerTaskController extends BaseController
      * Отправка офера исполнителю (Заказчик)
      * TODO:недоделан
      *
-     * @param $id
      * @param NewOfferRequest $request
+     * @param int $id
      * @return JsonResponse
      */
-    public function offer(NewOfferRequest $request, $id): JsonResponse
+    public function offer(NewOfferRequest $request, int $id): JsonResponse
     {
         if (!Task::where('id', '=', $id)->first()) {
             return $this->sendError("Task #{$id} not found");
@@ -178,7 +138,7 @@ class EmployerTaskController extends BaseController
      * @param EmployerReviewRequest $request
      * @return JsonResponse
      */
-    public function review(EmployerReviewRequest $request, $id)
+    public function review(EmployerReviewRequest $request, $id): JsonResponse
     {
         $reviewer = Auth::user();
         $task = Task::where('id', '=', $id)->first();

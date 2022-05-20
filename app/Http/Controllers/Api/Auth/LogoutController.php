@@ -5,17 +5,14 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Api\BaseController;
 use Auth;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class LogoutController extends BaseController
 {
     /**
      * Выход
-     *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function logout(Request $request): JsonResponse
+    public function logout(): JsonResponse
     {
         $user = Auth::user();
 

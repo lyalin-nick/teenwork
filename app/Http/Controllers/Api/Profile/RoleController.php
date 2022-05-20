@@ -30,7 +30,7 @@ class RoleController extends BaseController
      *
      * @return JsonResponse
      */
-    public function rolePerformer()
+    public function rolePerformer(): JsonResponse
     {
         $user = Auth::user();
         $user->role = User::ROLE_PERFORMER;

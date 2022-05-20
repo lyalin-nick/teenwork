@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Profile;
 
+use App\Actions\Profile\ProfileUpdateAction;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\Profile\ProfileUpdateRequest;
 use App\Http\Resources\User\UserResource;
@@ -15,19 +16,16 @@ class PerformerProfileController extends BaseController
      * Первоначальное заполнение профиля
      *
      * @param ProfileUpdateRequest $request
+     * @param ProfileUpdateAction $updateAction
      * @return JsonResponse
      */
-    public function update(ProfileUpdateRequest $request)
+    public function update(ProfileUpdateRequest $request, ProfileUpdateAction $updateAction):JsonResponse
     {
         $user = Auth::user();
         $user->checkEmptyRole(User::ROLE_PERFORMER);
         $profile = $user->profile;
-//        if (!$profile) {
-//            $profile = Profile::createProfile(['user_id' => $request->user()->id]);
-//        }
 
-        $updated = $profile->performerProfile(
-            $request->only('first_name', 'last_name', 'date_of_birth', 'about', 'address', 'place_id'),
+        $updated = $updateAction($profile, $request->only('first_name', 'last_name', 'date_of_birth', 'about', 'address', 'place_id'),
             $request->get('languages'), $request->categories, $request->image, $request->video,
             $request->portfolio_images, $request->portfolio_links
         );

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Actions\User\RegisterAction;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\Auth\Register\ConfirmRegisterRequest;
 use App\Http\Requests\Api\Auth\Register\RegisterRequest;
@@ -20,21 +21,15 @@ class RegisterController extends BaseController
      * @param RegisterRequest $request
      * @return JsonResponse
      */
-    public function phone(RegisterRequest $request): JsonResponse
+    public function phone(RegisterRequest $request, RegisterAction $register): JsonResponse
     {
         $verify_code = '000000';//(string)random_int(100000, 999999);
 
-        $user = User::register($request->phone, $request->password, $verify_code);
+        $user = $register($request->phone, $request->password, $verify_code);// User::register($request->phone, $request->password, $verify_code);
 
         if (!$user) {
             return $this->sendError('Error creating user.', [], 501);
         }
-
-//        try {
-//            $user->notify(new SmsCode($verify_code));
-//        } catch (\Exception $e) {
-//            return $this->sendError('Failed to send message. ' . $e->getMessage() . '. ' . $e->getLine());
-//        }
 
         return $this->sendResponse(['expires_in' => User::SECONDS_TO_EXPIRE], 'Code send successfully.');
     }

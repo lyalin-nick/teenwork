@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Api\Favorite;
 
+use App\Actions\Favorite\AddFavoriteAction;
+use App\Actions\Favorite\DeleteFavoriteAction;
+use App\Actions\Favorite\ListFavoriteAction;
 use App\Http\Controllers\Api\BaseController;
 use Auth;
 use Illuminate\Http\JsonResponse;
@@ -14,13 +17,15 @@ class FavoriteController extends BaseController
      * @param int $identify
      * @return JsonResponse
      */
-    public function add(int $identify): JsonResponse
+    public function add(int $identify, AddFavoriteAction $addFavoriteAction): JsonResponse
     {
         $user = Auth::user();
 
-        $user->addFavorite($identify);
+        $added = $addFavoriteAction($user, $identify);
 
-        return $this->sendResponse($user->getFavoritesId(), 'Success');
+        return ($added) ?
+            $this->sendResponse($user->getFavoritesId(), 'Success') :
+            $this->sendError('Error! Item didnt added', 501);
     }
 
     /**
@@ -28,13 +33,11 @@ class FavoriteController extends BaseController
      *
      * @return JsonResponse
      */
-    public function view(): JsonResponse
+    public function view(ListFavoriteAction $listFavoriteAction): JsonResponse
     {
         $user = Auth::user();
 
-        $favorites = $user->getFavorites();
-
-        return $this->sendResponse($favorites, 'Success');
+        return $this->sendResponse($listFavoriteAction($user), 'Success');
     }
 
     /**
@@ -43,11 +46,11 @@ class FavoriteController extends BaseController
      * @param int $identify
      * @return JsonResponse
      */
-    public function remove(int $identify): JsonResponse
+    public function remove(int $identify, DeleteFavoriteAction $deleteFavoriteAction): JsonResponse
     {
         $user = Auth::user();
 
-        $user->removeFavorite($identify);
+        $deleteFavoriteAction($user, $identify);
 
         return $this->sendResponse($user->getFavoritesId(), 'Success');
     }

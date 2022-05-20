@@ -9,17 +9,15 @@ use App\Models\Task;
 use App\Models\TaskReport;
 use Auth;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class TaskController extends BaseController
 {
     /**
      * Получение списка собственных задач (авторизованный)
      *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function tasks(Request $request)
+    public function tasks(): JsonResponse
     {
         $user = Auth::user();
 
@@ -32,10 +30,9 @@ class TaskController extends BaseController
      * Данные для показа одной задачи
      *
      * @param int $id
-     * @param Request $request
      * @return JsonResponse
      */
-    public function view($id)
+    public function view(int $id): JsonResponse
     {
         $task = Task::where('id', '=', $id)->first();
 
@@ -51,11 +48,11 @@ class TaskController extends BaseController
     /**
      * Отправка репорта
      *
-     * @param $id
+     * @param int $id
      * @param ReportRequest $request
      * @return JsonResponse
      */
-    public function report(ReportRequest $request, $id)
+    public function report(ReportRequest $request, int $id): JsonResponse
     {
         $reporter = Auth::user();
         $task = Task::where('id', '=', $id)->first();
@@ -73,7 +70,5 @@ class TaskController extends BaseController
             return $this->sendError('Error report creating', [], 502);
         }
         return $this->sendResponse(['report_id' => $report->id], 'Report was create', 201);
-
-
     }
 }

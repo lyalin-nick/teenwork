@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Resources\Review\ViewResource;
 use App\Http\Resources\User\ShortInfoResource;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -55,14 +56,8 @@ class Review extends Model
         $reviews = $reviews->paginate(20);
         $curPage = $reviews->currentPage();
         $lastPage = $reviews->lastPage();
-
-        $reviews = $reviews->each(function ($item) {
-            $item['reviewer_info'] = $item->reviewer_info;
-            $item['task_info'] = $item->task_info;
-            $item->makeHidden(['task_id', 'user_id', 'reviewer_id', 'task', 'user', 'reviewer', 'created_at', 'updated_at']);
-        });
-
-        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'reviews' => $reviews];
+        
+        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'reviews' => ViewResource::collection($reviews->items())];
     }
 
     protected static function booted()

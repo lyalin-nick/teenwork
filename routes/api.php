@@ -108,6 +108,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [UserController::class, 'view']);
         Route::post('/{id}/report', [UserController::class, 'report']);
         Route::get('/{id}/reviews', [UserController::class, 'reviews']);
+        Route::get('/{id}/reviews/count', [UserController::class, 'reviewsCount']);
     });
 
     Route::prefix('/tasks')->group(function () {

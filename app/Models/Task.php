@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Http\Resources\User\ShortInfoResource;
-use App\Models\Helpers\GoogleMap;
+use App\Services\Google\GoogleMapService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -128,74 +128,6 @@ class Task extends Model
     }
 
     /**
-     * Поиск активных задач
-     *
-     * @param string $flag
-     * @param array $params
-     * @param false $getAll
-     * @return Builder
-     */
-    public static function search($flag, $params): Builder
-    {
-        $tasks = Task::home($flag);
-
-        if (isset($params['search']))
-            $tasks->hasPhrase($params['search']);
-
-        if (isset($params['categories']))
-            $tasks->categoriesIn($params['categories']);
-
-        if (isset($params['languages']))
-            $tasks->languagesIn($params['languages']);
-
-        if (isset($params['place_id'])) {
-            $tasks->address($params['place_id']);
-        }
-
-        if (isset($params['days'])) {
-            $tasks->startDays($params['days']);
-        }
-
-        if (isset($params['price']))
-            $tasks->priceFrom($params['price']);
-
-        if (isset($params['safe_deal']) && filter_var($params['safe_deal'], FILTER_VALIDATE_BOOLEAN))
-            $tasks->flagSafeDeal($params['safe_deal']);
-
-        if (isset($params['hot_work']) && filter_var($params['hot_work'], FILTER_VALIDATE_BOOLEAN))
-            $tasks->flagHotWork($params['hot_work']);
-
-        if (isset($params['answers']) && filter_var($params['answers'], FILTER_VALIDATE_BOOLEAN))
-            $tasks->notResponse($params['answers']);
-
-
-        $params['sort'] = $params['sort'] ?? 'default';
-        switch ($params['sort']) {
-            case "price":
-                $tasks->priceOrder();
-                break;
-            case "-price":
-                $tasks->priceOrder('asc');
-                break;
-            case "rating":
-                $tasks->ratingDesc();
-                break;
-            case "nearby":
-                if (isset($params['ulat']) && $params['ulng'])
-                    $tasks->nearby($params['ulat'], $params['ulng']);
-                else
-                    $tasks->nearby();
-                break;
-            default:
-                $tasks->orderBy('start_date');
-                break;
-        }
-        $tasks->orderBy('hot_work', 'desc');
-
-        return $tasks;
-    }
-
-    /**
      * Кол-во задач online/offline
      *
      * @return int
@@ -219,7 +151,8 @@ class Task extends Model
         static::creating(function ($task) {
             $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
 
-            $coords = GoogleMap::getCoordinates($task->place_id);
+            $service = new GoogleMapService();
+            $coords = $service->coords($task->place_id);//GoogleMap::getCoordinates($task->place_id);
             $coords = $coords ?: ['lat' => 53.213672, 'lng' => 45.061300];
             $task->lat = $coords['lat'];
             $task->lng = $coords['lng'];
@@ -228,7 +161,8 @@ class Task extends Model
             $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
 
             if ($task->isDirty('place_id')) {
-                $coords = GoogleMap::getCoordinates($task->place_id);
+                $service = new GoogleMapService();
+                $coords = $service->coords($task->place_id); //GoogleMap::getCoordinates($task->place_id);
                 $coords = $coords ?: ['lat' => 53.213672, 'lng' => 45.061300];
                 $task->lat = $coords['lat'];
                 $task->lng = $coords['lng'];
@@ -679,52 +613,6 @@ class Task extends Model
     public function video()
     {
         return $this->hasOne(TaskVideo::class);
-    }
-
-    public function getRecommendedPerformers($params = [])
-    {
-        $task_languages = $this->getLanguagesAsArray();
-        $category_id = $this->category_id;
-        $profiles = Profile::query()->select('profiles.*')
-            ->where('user_id', '!=', $this->user_id)
-            ->whereHas('user', function ($query) {
-                $query->where('role', '=', User::ROLE_PERFORMER);
-            })
-            ->whereHas('languages', function ($lang_query) use ($task_languages) {
-                $lang_query->whereIn('id', $task_languages);
-            })
-            ->whereHas('categories', function ($cat_query) use ($category_id) {
-                $cat_query->where('id', $category_id);
-            })
-            ->with('user');
-//            ->categoryMatches($category_id)
-//            ->languagesMatches($task_languages);
-
-        if (isset($params['sort']))
-            switch ($params['sort']) {
-                case 'rating':
-                    $profiles->orderBy('profiles.rating', 'desc');
-                    break;
-                case 'nearby':
-                    $profiles->nearby($this->lat, $this->lng);
-                    break;
-                default:
-                    $profiles->nearby($this->lat, $this->lng);
-                    break;
-            }
-//        $profiles->orderBy('category_matches', 'desc')->orderBy('languages_matches', 'desc');
-        $profiles = $profiles->paginate(20);
-
-        $curPage = $profiles->currentPage();
-        $lastPage = $profiles->lastPage();
-        $profiles = $profiles->items();
-
-        $users = [];
-        foreach ($profiles as $profile) {
-            $users[] = new ShortInfoResource($profile->user);
-        }
-
-        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'users' => $users];
     }
 
     /**

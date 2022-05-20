@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\MyQuestion;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use Auth;
 
 class QuestionRequest extends ApiFormRequest
 {
@@ -13,7 +14,7 @@ class QuestionRequest extends ApiFormRequest
      */
     public function authorize()
     {
-        return \Auth::check();
+        return Auth::check();
     }
 
     /**

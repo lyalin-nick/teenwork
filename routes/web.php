@@ -49,4 +49,5 @@ Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/phpinfo', function () {
     phpinfo();
 });
+Route::get('/refresh-expire', [HomeController::class, 'refreshExpire']);
 Auth::routes();

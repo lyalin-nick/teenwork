@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $task_id
  * @property int $user_id
  * @property int $chat_id
+ * @property int $is_new
  * @property string $text
  *
  * @property Task $task
@@ -24,7 +25,7 @@ class TaskResponse extends Model
     use HasFactory;
 
     protected $fillable = [
-        'task_id', 'user_id', 'text'
+        'task_id', 'user_id', 'text', 'is_new'
     ];
 
     /**

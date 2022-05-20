@@ -49,4 +49,9 @@ class ReportTitle extends Model
     {
         return 'pos';
     }
+
+    public function reports()
+    {
+        return $this->belongsTo(TaskReport::class);
+    }
 }

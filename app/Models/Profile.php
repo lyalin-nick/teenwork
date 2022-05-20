@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Helpers\GoogleMap;
 use App\Models\Traits\ImageTrait;
+use App\Services\Google\GoogleMapService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +11,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 /**
+ * @property integer $id
  * @property integer $user_id
  * @property string $first_name
  * @property string $last_name
@@ -79,7 +80,8 @@ class Profile extends Model
     {
         static::updating(function ($profile) {
             if ($profile->isDirty('place_id')) { // обновление координат, если был изменен адрес
-                $coords = GoogleMap::getCoordinates($profile->place_id);
+                $service = new GoogleMapService();
+                $coords = $service->coords($profile->place_id); //GoogleMap::getCoordinates($profile->place_id);
                 $coords = $coords ?: ['lat' => 53.213672, 'lng' => 45.061300];
                 $profile->lat = $coords['lat'];
                 $profile->lng = $coords['lng'];
@@ -109,47 +111,6 @@ class Profile extends Model
     public function categories()
     {
         return $this->belongsToMany(Category::class);
-    }
-
-    /**
-     * @param array|null $profile_data
-     * @param array|null $languages
-     * @param array|null $categories
-     * @param string|null $image
-     * @param string|null $video
-     * @param array|null $portfolio_images
-     * @param array|null $portfolio_links
-     * @return self $this
-     */
-    public function performerProfile($profile_data, $languages, $categories, $image, $video, $portfolio_images, $portfolio_links)
-    {
-        $this->update($profile_data);
-
-        if ($languages) {
-            $this->linkToLanguages($languages);
-        }
-
-        if ($categories) {
-            $this->updateCategories($categories);
-        }
-
-        if ($image) {
-            $this->uploadProfileImage($image);
-        }
-
-        if ($video) {
-            $this->uploadProfileVideo($video);
-        }
-
-        if ($portfolio_images) {
-            $result = PortfolioImage::createModels($portfolio_images, $this->id);
-        }
-
-        if ($portfolio_links) {
-            $result = PortfolioLink::createModels($portfolio_links, $this->id);
-        }
-
-        return $this;
     }
 
     /**

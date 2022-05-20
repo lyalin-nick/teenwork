@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Portfolio;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use Auth;
 
 class UploadImageRequest extends ApiFormRequest
 {
@@ -13,7 +14,7 @@ class UploadImageRequest extends ApiFormRequest
      */
     public function authorize()
     {
-        return \Auth::check();
+        return Auth::check();
     }
 
     /**

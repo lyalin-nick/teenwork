@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Actions\Notification\SendSmsWithCodeAction;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\Auth\ResetPassword\CodeConfirmRequest;
 use App\Http\Requests\Api\Auth\ResetPassword\PhoneRequest;
@@ -16,11 +17,12 @@ class ResetPasswordController extends BaseController
 {
     /**
      * Отправка кода на телефон для сброса пароля
+     * TODO: раскомментировать на продакшн
      *
      * @param PhoneRequest $request
      * @return JsonResponse
      */
-    public function phone(PhoneRequest $request): JsonResponse
+    public function phone(PhoneRequest $request, SendSmsWithCodeAction $sendSmsWithCodeAction): JsonResponse
     {
         $user = User::findByPhone($request->phone);
 
@@ -30,14 +32,12 @@ class ResetPasswordController extends BaseController
 
         $verify_code = '000000';//(string)random_int(100000, 999999);
 
-        try {
-            $user->setResetToken($verify_code);
-//            $user->notify(new SmsCode($verify_code));
-        } catch (Exception $e) {
-            return $this->sendError('Failed to send message. ' . $e->getMessage() . '. ' . $e->getLine());
-        }
+        $user->setResetToken($verify_code);
+        $sending = $sendSmsWithCodeAction($user, $verify_code);
 
-        return $this->sendResponse(['expires_in' => User::SECONDS_TO_EXPIRE], 'Code send successfully.', 201);
+        return ($sending) ?
+            $this->sendResponse(['expires_in' => User::SECONDS_TO_EXPIRE], 'Code send successfully.', 201)
+            : $this->sendError('Error! Message did not send', 501);
     }
 
     /**

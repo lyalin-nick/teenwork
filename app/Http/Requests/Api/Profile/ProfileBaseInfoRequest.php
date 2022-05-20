@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Profile;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use Auth;
 
 class ProfileBaseInfoRequest extends ApiFormRequest
 {
@@ -13,7 +14,7 @@ class ProfileBaseInfoRequest extends ApiFormRequest
      */
     public function authorize()
     {
-        return \Auth::check();
+        return Auth::check();
     }
 
     /**

@@ -6,10 +6,11 @@ use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\MyQuestion\QuestionRequest;
 use App\Models\MyQuestion;
 use Auth;
+use Illuminate\Http\JsonResponse;
 
 class MyQuestionController extends BaseController
 {
-    public function index()
+    public function index(): JsonResponse
     {
         $user = Auth::user();
 
@@ -24,7 +25,7 @@ class MyQuestionController extends BaseController
         return $this->sendResponse(['currentPage' => $curPage, 'lastPage' => $lastPage, 'my_questions' => $my_questions], 'MyQuestion list');
     }
 
-    public function store(QuestionRequest $request)
+    public function store(QuestionRequest $request): JsonResponse
     {
         $user = Auth::user();
 

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Http\Resources\Task\PreviewResource;
+use App\Http\Resources\Review\ViewResource;
 use App\Http\Resources\User\ShortInfoResource;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -91,7 +91,7 @@ class User extends Authenticatable
 
     /**
      * @param $identifier
-     * @return mixed
+     * @return User|\Illuminate\Database\Eloquent\Model|object|null
      */
     public static function findByPhone($identifier)
     {
@@ -448,72 +448,14 @@ class User extends Authenticatable
         ];
     }
 
-    public function getLastReview(): array
+    public function getLastReview()
     {
         $review = $this->reviews()->orderBy('id', 'DESC')->first();
         if (!$review) {
             return [];
         }
 
-        return [
-            'user' => $review->reviewer_info,
-            'rating' => $review->rating,
-            'text' => $review->text
-        ];
-    }
-
-    public function getFavorites()
-    {
-        if ($this->isPerformer()) {
-            $favorites = $this->favoriteTasks()
-                ->with(['user.profile', 'task'])
-                ->paginate(20);
-
-            $curPage = $favorites->currentPage();
-            $lastPage = $favorites->lastPage();
-
-            $tasks = [];
-            foreach ($favorites as $favorite) {
-                $tasks[] = $favorite->task;
-            }
-
-            return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => PreviewResource::collection($tasks)];
-        }
-
-        $favorites = $this->favoritePerformers()
-            ->with(['performer.profile'])
-            ->paginate(20);
-
-        $curPage = $favorites->currentPage();
-        $lastPage = $favorites->lastPage();
-
-        $performers = [];
-        foreach ($favorites as $favorite) {
-            $performers[] = $favorite->performer;
-        }
-
-        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'performers' => ShortInfoResource::collection($performers)];
-    }
-
-    public function addFavorite($identify)
-    {
-        if ($this->isPerformer()) {
-            $this->favoriteTasks()->where('task_id', '=', $identify)->delete();
-
-            $this->favoriteTasks()->create(['task_id' => $identify]);
-        }
-
-        $this->favoritePerformers()->where('performer_id', '=', $identify)->delete();
-
-        $this->favoritePerformers()->create(['performer_id' => $identify]);
-    }
-
-    public function removeFavorite($identify)
-    {
-        if ($this->isPerformer())
-            $this->favoriteTasks()->where('task_id', '=', $identify)->delete();
-
-        $this->favoritePerformers()->where('performer_id', '=', $identify)->delete();
+        return new ViewResource($review);
     }
 
 }
