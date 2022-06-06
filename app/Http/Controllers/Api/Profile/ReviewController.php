@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Models\Review;
 use Auth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ReviewController extends BaseController
 {
@@ -25,13 +26,14 @@ class ReviewController extends BaseController
     /**
      * Получение количества отзывов по оценкам
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function count(): JsonResponse
+    public function count(Request $request): JsonResponse
     {
         $user = Auth::user();
 
-        $count_by_rating = $user->getStars();
+        $count_by_rating = $user->getStars($request->all());
 
         return $this->sendResponse($count_by_rating, 'Portfolio info');
     }

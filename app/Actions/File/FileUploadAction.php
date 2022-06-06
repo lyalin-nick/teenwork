@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\Storage;
 class FileUploadAction
 {
 
-    public function __invoke($file): bool
+    /**
+     * @param $file
+     * @return false|string
+     */
+    public function __invoke($file)
     {
         return Storage::disk('public')->putFile('tmp', $file);
     }

@@ -430,22 +430,32 @@ class User extends Authenticatable
         return $this->hasMany(Review::class, 'user_id', 'id');
     }
 
-    public function getStars(): array
+    public function getStars($params = null): array
     {
-        $reviews = Review::query()->select(
-            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 1) as star1"),
-            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 2) as star2"),
-            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 3) as star3"),
-            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 4) as star4"),
-            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 5) as star5"),
-        )->first();
-        return [
-            5 => $reviews->star5,
-            4 => $reviews->star4,
-            3 => $reviews->star3,
-            2 => $reviews->star2,
-            1 => $reviews->star1,
-        ];
+        $reviews = $this->reviews()->get();
+        if (isset($params['dates'])){
+            $reviews = $this->reviews()->whereIn('date', $params['dates'])->get();
+        }
+       $stars = [5 => 0, 4 => 0, 3 => 0, 2=> 0, 1 => 0];
+        foreach ($reviews as $review) {
+            $stars[$review->rating]++;
+        }
+        return $stars;
+
+//        $reviews = Review::query()->select(
+//            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 1) as star1"),
+//            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 2) as star2"),
+//            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 3) as star3"),
+//            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 4) as star4"),
+//            \DB::raw("(SELECT COUNT(rating) FROM `reviews` WHERE `reviews`.`user_id`={$this->id} AND `reviews`.`rating` = 5) as star5"),
+//        )->first();
+//        return [
+//            5 => $reviews->star5,
+//            4 => $reviews->star4,
+//            3 => $reviews->star3,
+//            2 => $reviews->star2,
+//            1 => $reviews->star1,
+//        ];
     }
 
     public function getLastReview()

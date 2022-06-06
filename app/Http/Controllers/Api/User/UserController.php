@@ -9,6 +9,7 @@ use App\Models\Review;
 use App\Models\User;
 use App\Models\UserReport;
 use Auth;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 
@@ -77,13 +78,13 @@ class UserController extends BaseController
      * @param $id
      * @return JsonResponse
      */
-    public function reviewsCount($id): JsonResponse
+    public function reviewsCount($id, Request $request): JsonResponse
     {
         $user = User::where('id', $id)->first();
         if (!$user) {
             return $this->sendError('User not found', 404);
         }
 
-        return $this->sendResponse($user->getStars(), 'Reviews');
+        return $this->sendResponse($user->getStars($request->all()), 'Reviews');
     }
 }

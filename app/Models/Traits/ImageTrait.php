@@ -18,7 +18,7 @@ trait ImageTrait
      * @param $parent_id
      * @return bool
      */
-    public function copyImage($temp_path, $parent_id)
+    public function copyImage($temp_path, $parent_id): bool
     {
         $img_path = $this->createPath($parent_id);
 

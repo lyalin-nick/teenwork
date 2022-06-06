@@ -226,18 +226,29 @@ class Task extends Model
         }
     }
 
+    /**
+     * Выполняем поиск по названию или описанию задачи, либо по имени заказчика
+     *
+     * @param Builder $query
+     * @param $searchPhrase
+     * @return void
+     */
     public function scopeHasPhrase(Builder $query, $searchPhrase)
     {
-        $searchPhrase = self::getModifyPhrase($searchPhrase);
-        $query->whereRaw(DB::raw("MATCH(`tasks`.`name`, `tasks`.`description`) AGAINST('{$searchPhrase}' IN BOOLEAN MODE)"));
+        //$searchPhraseModify = self::getModifyPhrase($searchPhrase);
+
+        $query->join('profiles', 'tasks.user_id', '=', 'profiles.user_id')
+            ->addSelect(DB::raw("MATCH(`tasks`.`name`, `tasks`.`description`) AGAINST('{$searchPhrase}') as score"))
+            ->whereRaw(DB::raw("MATCH(`tasks`.`name`, `tasks`.`description`) AGAINST('{$searchPhrase}') OR CONCAT(`profiles`.`first_name`,' ',`profiles`.`last_name`) LIKE '%{$searchPhrase}%'"))
+            ->orderBy('score', 'desc');
+
     }
 
     private static function getModifyPhrase($searchPhrase)
     {
-        $query = mb_strtolower($searchPhrase, 'UTF-8');
-        $arr = explode(" ", $query);
+        $arr = explode(" ", $searchPhrase);
         foreach ($arr as $i => $word) {
-            $arr[$i] = $word . "*";
+            $arr[$i] = "+" . $word . "*";
         }
         return implode(" ", $arr);
     }

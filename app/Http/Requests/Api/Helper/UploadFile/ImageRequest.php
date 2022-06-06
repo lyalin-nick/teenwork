@@ -14,7 +14,7 @@ class ImageRequest extends ApiFormRequest
      */
     public function authorize()
     {
-        return Auth::check();
+        return true;
     }
 
     /**
