@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\Chat\ChatController;
 use App\Http\Controllers\Api\Dictionary\CategoryController;
 use App\Http\Controllers\Api\Dictionary\FaqController;
 use App\Http\Controllers\Api\Dictionary\LanguageController;
@@ -221,6 +222,12 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     //==================================================================================================================
 
+
+    Route::prefix('/chat')->group(function () {
+        Route::get('/', [ChatController::class, 'chatsList']);
+        Route::get('/{chatId}', [ChatController::class, 'fetchMessages']);
+        Route::post('/{chatId}', [ChatController::class, 'addMessage']);
+    });
 
     Route::post('/logout', [LogoutController::class, 'logout']);
 

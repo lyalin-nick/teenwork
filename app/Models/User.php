@@ -30,6 +30,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property Task[] $tasks
  * @property Review[] $reviews
  * @property Favorite[] $favorites
+ * @property Chat[] $chats
  *
  * @mixin HasApiTokens
  * @mixin Builder
@@ -468,4 +469,8 @@ class User extends Authenticatable
         return new ViewResource($review);
     }
 
+    public function chats()
+    {
+        return $this->belongsToMany(Chat::class);
+    }
 }

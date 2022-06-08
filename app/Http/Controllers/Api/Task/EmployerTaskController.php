@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Task;
 
+use App\Actions\Chat\ChatCreateAction;
 use App\Actions\Task\TaskStoreAction;
 use App\Actions\Task\TaskUpdateAction;
 use App\Http\Controllers\Api\BaseController;
@@ -14,6 +15,7 @@ use App\Http\Resources\Task\ViewResource;
 use App\Models\Review;
 use App\Models\Task;
 use App\Models\TaskOffer;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -107,26 +109,31 @@ class EmployerTaskController extends BaseController
 
     /**
      * Отправка офера исполнителю (Заказчик)
-     * TODO:недоделан
      *
      * @param NewOfferRequest $request
      * @param int $id
+     * @param ChatCreateAction $chatCreateAction
      * @return JsonResponse
      */
-    public function offer(NewOfferRequest $request, int $id): JsonResponse
+    public function offer(NewOfferRequest $request, int $id, ChatCreateAction $chatCreateAction): JsonResponse
     {
-        if (!Task::where('id', '=', $id)->first()) {
+        $task = Task::where('id', '=', $id)->first();
+        if (!$task) {
             return $this->sendError("Task #{$id} not found");
         }
 
-        $user = Auth::user();
+        $employer = Auth::user();
+        $performer = User::where('id', $request->get('user_id'))->first();
 
-        $offer = TaskOffer::new($id, $user->id, $request->get('text'));
+        if ($performer) {
+            $offer = TaskOffer::new($id, $request->get('user_id'), $request->get('text'));
 
-        if ($offer) {
-            return $this->sendResponse([], 'Offer create', 201);
+            if ($offer) {
+                $chat = $chatCreateAction($employer, $performer, $task, $offer->text);
+
+                return $this->sendResponse(['chat_id' => $chat->id], 'Offer create', 201);
+            }
         }
-
         return $this->sendError('Error creating', [], 501);
     }
 

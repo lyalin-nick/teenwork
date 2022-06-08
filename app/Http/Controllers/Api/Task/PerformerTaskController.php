@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Task;
 
+use App\Actions\Chat\ChatCreateAction;
+use App\Events\Task\ResponseCreated;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\Task\ResponseRequest;
 use App\Http\Requests\Api\Task\ReviewRequest;
@@ -10,8 +12,6 @@ use App\Models\Task;
 use App\Models\TaskResponse;
 use Auth;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class PerformerTaskController extends BaseController
 {
@@ -22,7 +22,7 @@ class PerformerTaskController extends BaseController
      * @param ResponseRequest $request
      * @return JsonResponse
      */
-    public function response(int $id, ResponseRequest $request): JsonResponse
+    public function response(int $id, ResponseRequest $request, ChatCreateAction $chatCreateAction): JsonResponse
     {
         $task = Task::where('id', '=', $id)->first();
         if (!$task) {
@@ -36,7 +36,10 @@ class PerformerTaskController extends BaseController
 
         $new_response = TaskResponse::new($id, $user->id, $request->text);
         if ($new_response) {
-            return $this->sendResponse([], 'Response create', 201);
+            $chat = $chatCreateAction($user, $task->user, $task, $new_response->text);
+
+            if ($chat)
+                return $this->sendResponse(['chat_id' => $chat->id], 'Response create', 201);
         }
 
         return $this->sendError('Error', [], 501);
