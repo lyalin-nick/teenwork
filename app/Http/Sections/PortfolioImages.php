@@ -42,7 +42,10 @@ class PortfolioImages extends Section implements Initializable
      */
     public function initialize()
     {
-        $this->addToNavigation()->setPriority(100)->setIcon('fa fa-camera');
+        $this
+            //->addToNavigation()
+            //->setPriority(100)
+            ->setIcon('fa fa-camera');
     }
 
     /**

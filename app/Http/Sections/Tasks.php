@@ -3,9 +3,12 @@
 namespace App\Http\Sections;
 
 use AdminColumn;
+use AdminColumnFilter;
 use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
+use App\Models\Category;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use SleepingOwl\Admin\Contracts\Display\DisplayInterface;
@@ -14,7 +17,6 @@ use SleepingOwl\Admin\Contracts\Initializable;
 use SleepingOwl\Admin\Form\Buttons\Cancel;
 use SleepingOwl\Admin\Form\Buttons\Save;
 use SleepingOwl\Admin\Form\Buttons\SaveAndClose;
-use SleepingOwl\Admin\Form\Buttons\SaveAndCreate;
 use SleepingOwl\Admin\Section;
 
 /**
@@ -57,7 +59,7 @@ class Tasks extends Section implements Initializable
     public function onDisplay($payload = [])
     {
         $columns = [
-            AdminColumn::text('id', '#')->setHtmlAttribute('class', 'text-center'),
+            AdminColumn::text('id', '#')->setHtmlAttribute('class', 'text-center')->setWidth(100),
             AdminColumn::link('name', 'Name')
                 ->setSearchCallback(function ($column, $query, $search) {
                     return $query->orWhere('name', 'like', '%' . $search . '%');
@@ -65,15 +67,11 @@ class Tasks extends Section implements Initializable
                 ->setOrderable(function ($query, $direction) {
                     $query->orderBy('created_at', $direction);
                 }),
-            AdminColumn::text('user.profile.FullName', 'User'),
-            //->append(AdminColumn::filter('user_id')),
-            AdminColumn::text('expired_at', 'Expired')->setSearchable(false),
-            AdminColumn::text('created_at', 'Created')
-                ->setOrderable(function ($query, $direction) {
-                    $query->orderBy('updated_at', $direction);
-                })
-                ->setSearchable(false)
-            ,
+//            AdminColumn::text('user.profile.first_name', 'User First Name'),
+            AdminColumn::text('user.profile.last_name', 'User Last Name', 'user.profile.first_name'),
+            AdminColumn::text('price', 'Price', 'payment_type'),
+            AdminColumn::text('status', 'Status'),
+            AdminColumn::text('start_date', 'Start Date/Time', 'start_time')->setSearchable(false),
         ];
 
 
@@ -81,6 +79,31 @@ class Tasks extends Section implements Initializable
             ->setName('tasks_table')
             ->setColumns($columns)
             ->setHtmlAttribute('class', 'table-primary table-hover th-center');
+
+        $display->setColumnFilters([
+
+            AdminColumnFilter::text()->setColumnName('id')
+                ->setPlaceholder('Number')->setOperator('contains'),
+            AdminColumnFilter::text()->setColumnName('name')
+                ->setPlaceholder('Task Name')->setOperator('contains'),
+//            AdminColumnFilter::text()->setColumnName('user.profile.last_name')
+//                ->setPlaceholder('Last Name')->setOperator('contains'),
+            AdminColumnFilter::range()->setFrom(
+                AdminColumnFilter::text()->setColumnName('user.profile.last_name')
+                ->setPlaceholder('Last Name')->setOperator('contains'),
+            )->setTo(
+                AdminColumnFilter::text()->setColumnName('user.profile.first_name')
+                    ->setPlaceholder('First Name')->setOperator('contains'),
+            ),
+            AdminColumnFilter::text()->setPlaceholder('Price')->setOperator('contains'),
+            AdminColumnFilter::select(Task::getStatusLabels())->setPlaceholder('Status')->multiple(),
+            AdminColumnFilter::range()->setFrom(
+                AdminColumnFilter::date()->setPlaceholder('Start date from')->setFormat('Y-m-d H:i:s')
+            )->setTo(
+                AdminColumnFilter::date()->setPlaceholder('Start Date to')->setFormat('Y-m-d H:i:s')
+            ),
+        ]);
+        $display->getColumnFilters()->setPlacement('card.heading');
 
         if (isset($payload['user_id'])) {
             $display->setApply(function ($query) use ($payload) {
@@ -101,25 +124,35 @@ class Tasks extends Section implements Initializable
     {
         $form = AdminForm::card()->addBody([
             AdminFormElement::columns()->addColumn([
-                AdminFormElement::text('name', 'Name')
-                    ->required()
-                ,
-                AdminFormElement::html('<hr>'),
+                AdminFormElement::text('user.profile.FullName', 'User name')->setReadonly(true),
+                AdminFormElement::select('category_id', 'Category')
+                    ->setModelForOptions(Category::class, 'name')
+                    ->setLoadOptionsQueryPreparer(function ($element, $query) {
+                        return $query->where('category_id', '!=', 0);
+                    })->required(),
+                AdminFormElement::text('name', 'Name')->required(),
+                AdminFormElement::textarea('description', 'Description'),
+                AdminFormElement::textarea('result', 'Result'),
+                AdminFormElement::date('start_date', 'Start Date'),
+                AdminFormElement::time('start_time', 'Start Time'),
+                AdminFormElement::number('amount_of_workers', 'Amount of Performer')->setMin(1)->setMax(50),
+                AdminFormElement::number('minimum_age', 'Age')->setMin(12)->setMax(40),
+                AdminFormElement::number('price', 'Price')->setMin(1),
+                AdminFormElement::text('payment_type', 'Payment Type'),
+                AdminFormElement::checkbox('safe_deal', 'Safe deal'),
+                AdminFormElement::checkbox('hot_work', 'Hot work'),
+                AdminFormElement::checkbox('account_verified', 'Account verified'),
+                AdminFormElement::select('status', 'Status', Task::getStatusLabels()),
+                AdminFormElement::text('views_number', 'Views')->setReadonly(true),
                 AdminFormElement::datetime('created_at')
                     ->setVisible(true)
-                    ->setReadonly(false)
-                ,
-                AdminFormElement::html('last AdminFormElement without comma')
-            ], 'col-xs-12 col-sm-6 col-md-4 col-lg-4')->addColumn([
-                AdminFormElement::text('id', 'ID')->setReadonly(true),
-                AdminFormElement::html('last AdminFormElement without comma')
-            ], 'col-xs-12 col-sm-6 col-md-8 col-lg-8'),
+                    ->setReadonly(false),
+            ])
         ]);
 
         $form->getButtons()->setButtons([
             'save' => new Save(),
             'save_and_close' => new SaveAndClose(),
-            'save_and_create' => new SaveAndCreate(),
             'cancel' => (new Cancel()),
         ]);
 

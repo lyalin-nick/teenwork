@@ -23,6 +23,10 @@ class HomeController extends Controller
      */
     public function index()
     {
+
+//        $task = \App\Models\Task::where('id', 253958)->get();
+//        \App\Events\TaskStatusUpdated::dispatch($task);
+
         return view('welcome');
     }
 

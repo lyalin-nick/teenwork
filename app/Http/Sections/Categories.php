@@ -2,11 +2,10 @@
 
 namespace App\Http\Sections;
 
-use AdminColumn;
-use AdminColumnFilter;
 use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
+use App\Models\Category;
 use Illuminate\Database\Eloquent\Model;
 use SleepingOwl\Admin\Contracts\Display\DisplayInterface;
 use SleepingOwl\Admin\Contracts\Form\FormInterface;
@@ -14,7 +13,6 @@ use SleepingOwl\Admin\Contracts\Initializable;
 use SleepingOwl\Admin\Form\Buttons\Cancel;
 use SleepingOwl\Admin\Form\Buttons\Save;
 use SleepingOwl\Admin\Form\Buttons\SaveAndClose;
-use SleepingOwl\Admin\Form\Buttons\SaveAndCreate;
 use SleepingOwl\Admin\Section;
 
 /**
@@ -69,16 +67,17 @@ class Categories extends Section implements Initializable
      *
      * @return FormInterface
      */
-    public function onEdit($id = null, $payload = [])
+    public function onEdit(int $id = null, array $payload = []): FormInterface
     {
+        $category = Category::where('id', '=', $id)->first();
         $form = AdminForm::card()->addBody([
             AdminFormElement::columns()->addColumn([
                 AdminFormElement::text('name', 'Name')->required(),
-                AdminFormElement::select('icon_name', 'Icon')
+                ($category->category_id == 0) ? AdminFormElement::select('icon_name', 'Icon')
                     ->setOptions(\App\Models\Category::getIcons())
-                    ->required(),
-                AdminFormElement::select('flag', 'Flag')
-                    ->setOptions(\App\Models\Category::getFlags())
+                    ->required() : null,
+                ($category->category_id != 0) ? AdminFormElement::select('flag', 'Flag')
+                    ->setOptions(\App\Models\Category::getFlags()) : null
             ])
         ]);
 

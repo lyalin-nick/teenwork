@@ -3,6 +3,7 @@
 namespace App\Http\Sections;
 
 use AdminColumn;
+use AdminColumnFilter;
 use AdminDisplay;
 use AdminForm;
 use AdminFormElement;
@@ -10,7 +11,6 @@ use AdminSection;
 use App\Models\PortfolioImage;
 use App\Models\PortfolioLink;
 use App\Models\Profile;
-use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use SleepingOwl\Admin\Contracts\Display\DisplayInterface;
@@ -51,12 +51,9 @@ class Users extends Section implements Initializable
     public function initialize()
     {
 //        $page = \AdminNavigation::getPages()->findById('userdata');
-
 //        $page->addPage(
 //            $this->makePage(300)->setIcon('fa fa-users')
 //        );
-$this->
-        dd($this->addToNavigation());
         $this->addToNavigation()->setPriority(100)->setIcon('fa fa-users');
     }
 
@@ -68,31 +65,41 @@ $this->
     public function onDisplay($payload = [])
     {
         $columns = [
-            AdminColumn::text('id', '#')->setWidth('50px')->setHtmlAttribute('class', 'text-center'),
+            AdminColumn::text('id', '#')
+                ->setHtmlAttribute('class', 'text-center'),
             AdminColumn::image('profile.profileImage.Preview', 'Avatar'),
-            AdminColumn::link('profile.FullName', 'Full Name')
-                ->setSearchable(false),
+            AdminColumn::link('profile.first_name', 'First Name'),
+            AdminColumn::link('profile.last_name', 'Last Name'),
             AdminColumn::text('phone', 'Phone')
                 ->setSearchCallback(function ($column, $query, $search) {
                     return $query->orWhere('phone', 'like', '%' . $search . '%');
                 }),
             AdminColumn::text('role', 'Role')
                 ->setSearchable(false),
+            AdminColumn::text('status', 'Status')
+                ->setSearchable(false),
 
             AdminColumn::text('created_at', 'Created')
-                ->setWidth('200px')
                 ->setSearchable(false),
         ];
 
-        $display = AdminDisplay::datatables()
-            ->setName('users')
-            ->setOrder([[0, 'asc']])
-            ->setDisplaySearch(true)
-            ->paginate(25)
+        $display = AdminDisplay::datatablesAsync()
             ->setColumns($columns)
-            ->setHtmlAttribute('class', 'table-primary table-hover th-center');
+            ->with('profile')
+            ->setHtmlAttribute('class', 'table-primary table-hover');
 
-        $display->getColumnFilters()->setPlacement('card.heading');
+        $display->setColumnFilters([
+            null,
+            null,
+            AdminColumnFilter::text()->setColumnName('profile.first_name')
+                ->setPlaceholder('First Name')->setOperator('contains'),
+            AdminColumnFilter::text()->setColumnName('profile.last_name')
+                ->setPlaceholder('Last Name')->setOperator('contains'),
+            AdminColumnFilter::text()->setPlaceholder('Phone')->setOperator('contains'),
+            AdminColumnFilter::select([User::ROLE_PERFORMER => User::ROLE_PERFORMER, User::ROLE_EMPLOYER => User::ROLE_EMPLOYER])->setPlaceholder('Role'),
+            AdminColumnFilter::select([User::STATUS_ACTIVE => User::STATUS_ACTIVE, User::STATUS_BANNED => User::STATUS_BANNED])->setPlaceholder('Status'),
+            null,
+        ])->setPlacement('table.header');
 
         return $display;
     }
@@ -107,7 +114,7 @@ $this->
     {
         $userForm = AdminForm::card()->addBody([
             AdminFormElement::columns()->addColumn([
-                AdminFormElement::text('phone', 'Phone')->required()->unique(),
+                AdminFormElement::text('phone', 'Phone')->setReadonly(true),
                 AdminFormElement::text('email', 'Email')->addValidationRule('email')->unique(),
                 AdminFormElement::select('role', 'Role',
                     [
@@ -117,9 +124,8 @@ $this->
                 )->required(),
                 AdminFormElement::select('status', 'Status',
                     [
-                        User::STATUS_WAIT => User::STATUS_WAIT,
                         User::STATUS_ACTIVE => User::STATUS_ACTIVE,
-                        User::STATUS_RESET => User::STATUS_RESET
+                        User::STATUS_BANNED => User::STATUS_BANNED
                     ]
                 )->required(),
             ])
@@ -143,13 +149,11 @@ $this->
                 AdminFormElement::columns()->addColumn([
                     AdminFormElement::text('profile.first_name', 'First Name'),
                     AdminFormElement::text('profile.last_name', 'Last Name'),
-                    AdminFormElement::date('profile.date_of_birth', 'Date of birth')->setFormat('Y-m-d')->setPickerFormat('Y-m-d'),
+                    AdminFormElement::date('profile.date_of_birth', 'Date of birth'),
                     AdminFormElement::textarea('profile.about', 'About'),
                     AdminFormElement::select('profile.status', 'Status', Profile::getStatuses()),
-//                AdminFormElement::selectajax('profile.address', 'Address')
-//                    ->setSearchUrl(route('api.helper.autocomplete'))
-//                    ->setAjaxParameters(['method' => 'GET'])
-//                    ->setDisplay('data.address'), TODO: ПОДУМАТЬ
+                    AdminFormElement::text('profile.address', 'Address'),
+
                     AdminFormElement::number('profile.number_performer_tasks', 'Number performer tasks')->setMin(0),
                     AdminFormElement::number('profile.number_employer_tasks', 'Number employer tasks')->setMin(0),
                     AdminFormElement::text('profile.rating', 'Rating'),
@@ -185,7 +189,7 @@ $this->
                 'cancel' => (new Cancel()),
             ]);
 
-            $tasks = AdminSection::getModel(Task::class)->fireDisplay(['user_id' => $id]);
+            //$tasks = AdminSection::getModel(Task::class)->fireDisplay(['user_id' => $id]);
 
             $portfolio_photos = AdminSection::getModel(PortfolioImage::class)->fireDisplay(['profile_id' => $profile->id]);
             $portfolio_links = AdminSection::getModel(PortfolioLink::class)->fireDisplay(['profile_id' => $profile->id]);
@@ -196,8 +200,6 @@ $this->
 
             $tabs->appendTab($portfolio_photos, 'Portfolio Images');
             $tabs->appendTab($portfolio_links, 'Portfolio Links');
-
-            $tabs->appendTab($tasks, 'Tasks');
         }
         return $tabs;
     }
