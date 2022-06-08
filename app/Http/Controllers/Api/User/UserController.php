@@ -9,8 +9,8 @@ use App\Models\Review;
 use App\Models\User;
 use App\Models\UserReport;
 use Auth;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 
 class UserController extends BaseController
@@ -18,10 +18,10 @@ class UserController extends BaseController
     /**
      * Просмотр профиля пользователя
      *
-     * @param int $id
+     * @param $id
      * @return JsonResponse
      */
-    public function view(int $id): JsonResponse
+    public function view($id): JsonResponse
     {
         $user = User::where('id', '=', $id)->with('profile')->first();
         if ($user) {
@@ -34,11 +34,11 @@ class UserController extends BaseController
     /**
      * Отправка жалобы на пользователя
      *
-     * @param int $id
+     * @param $id
      * @param ReportRequest $request
      * @return JsonResponse
      */
-    public function report(ReportRequest $request, int $id): JsonResponse
+    public function report($id, ReportRequest $request): JsonResponse
     {
         $reporter = Auth::user();
         $user = User::where('id', '=', $id)->first();

@@ -23,10 +23,10 @@ class CategoryController extends BaseController
     /**
      * Получение задач по флагу
      *
-     * @param string $flag
+     * @param $flag
      * @return JsonResponse
      */
-    public function grouped(string $flag): JsonResponse
+    public function grouped($flag): JsonResponse
     {
         $data = Category::getAllCategoriesAsArrayByFlag($flag);
 

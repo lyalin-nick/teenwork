@@ -48,49 +48,6 @@ class EmployerTaskController extends BaseController
     }
 
     /**
-     * Получение данных о задаче для редактирования (Заказчик)
-     *
-     * @param int $id
-     * @return JsonResponse
-     */
-    public function edit(int $id): JsonResponse
-    {
-        $user = \Auth::user();
-        $task = $user->tasks()->where('id', '=', $id)->first();
-
-        if ($task) {
-            return $this->sendResponse(new UpdateResource($task), 'Task info', 201);
-        }
-
-        return $this->sendError('Task not found');
-    }
-
-    /**
-     * Обновление существующей задачи (Заказчик)
-     *
-     * @param UpdateTaskRequest $request
-     * @param int $id
-     * @param TaskUpdateAction $updateAction
-     * @return JsonResponse
-     */
-    public function update(UpdateTaskRequest $request, int $id, TaskUpdateAction $updateAction): JsonResponse
-    {
-        $user = \Auth::user();
-        $task = $user->tasks()->where('id', $id)->first();
-
-        if ($task) {
-            $updated_task = $updateAction($task, $request);
-            if ($updated_task) {
-                return $this->sendResponse(['task' => new ViewResource($updated_task)], 'Task create');
-            }
-
-            return $this->sendError('Task update error', [], 502);
-        }
-
-        return $this->sendError('Task not found');
-    }
-
-    /**
      * Удаление задачи (Заказчик)
      *
      * @param $id
@@ -108,14 +65,57 @@ class EmployerTaskController extends BaseController
     }
 
     /**
-     * Отправка офера исполнителю (Заказчик)
+     * Получение данных о задаче для редактирования (Заказчик)
+     *
+     * @param $id
+     * @return JsonResponse
+     */
+    public function edit($id): JsonResponse
+    {
+        $user = \Auth::user();
+        $task = $user->tasks()->where('id', '=', $id)->first();
+
+        if ($task) {
+            return $this->sendResponse(new UpdateResource($task), 'Task info', 201);
+        }
+
+        return $this->sendError('Task not found');
+    }
+
+    /**
+     * Обновление существующей задачи (Заказчик)
+     *
+     * @param UpdateTaskRequest $request
+     * @param $id
+     * @param TaskUpdateAction $updateAction
+     * @return JsonResponse
+     */
+    public function update($id, UpdateTaskRequest $request, TaskUpdateAction $updateAction): JsonResponse
+    {
+        $user = \Auth::user();
+        $task = $user->tasks()->where('id', $id)->first();
+
+        if ($task) {
+            $updated_task = $updateAction($task, $request);
+            if ($updated_task) {
+                return $this->sendResponse(['task' => new ViewResource($updated_task)], 'Task create');
+            }
+
+            return $this->sendError('Task update error', [], 502);
+        }
+
+        return $this->sendError('Task not found');
+    }
+
+    /**
+     * Отправка оффера исполнителю (Заказчик)
      *
      * @param NewOfferRequest $request
-     * @param int $id
+     * @param $id
      * @param ChatCreateAction $chatCreateAction
      * @return JsonResponse
      */
-    public function offer(NewOfferRequest $request, int $id, ChatCreateAction $chatCreateAction): JsonResponse
+    public function offer($id, NewOfferRequest $request, ChatCreateAction $chatCreateAction): JsonResponse
     {
         $task = Task::where('id', '=', $id)->first();
         if (!$task) {

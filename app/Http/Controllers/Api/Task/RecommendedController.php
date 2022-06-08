@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Task;
 use App\Actions\Task\RecommendedSearchAction;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Resources\User\ShortInfoResource;
-use App\Models\Profile;
 use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,11 +15,11 @@ class RecommendedController extends BaseController
     /**
      * Получение рекомендуемых пользователей (Заказчик)
      *
-     * @param int $id
+     * @param $id
      * @param Request $request
      * @return JsonResponse
      */
-    public function recommended(int $id, Request $request, RecommendedSearchAction $searchAction): JsonResponse
+    public function recommended($id, Request $request, RecommendedSearchAction $searchAction): JsonResponse
     {
         $user = Auth::user();
         $task = $user->tasks()->where('id', '=', $id)->first();

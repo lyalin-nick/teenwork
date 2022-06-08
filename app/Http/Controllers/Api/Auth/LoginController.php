@@ -7,7 +7,6 @@ use App\Http\Requests\Api\Auth\Login\LoginRequest;
 use App\Http\Requests\Api\Auth\Login\NetworkRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 

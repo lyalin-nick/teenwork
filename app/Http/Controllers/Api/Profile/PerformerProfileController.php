@@ -19,7 +19,7 @@ class PerformerProfileController extends BaseController
      * @param ProfileUpdateAction $updateAction
      * @return JsonResponse
      */
-    public function update(ProfileUpdateRequest $request, ProfileUpdateAction $updateAction):JsonResponse
+    public function update(ProfileUpdateRequest $request, ProfileUpdateAction $updateAction): JsonResponse
     {
         $user = Auth::user();
         $user->checkEmptyRole(User::ROLE_PERFORMER);

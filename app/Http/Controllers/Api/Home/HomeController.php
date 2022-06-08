@@ -15,12 +15,12 @@ class HomeController extends BaseController
     /**
      * Получение списка задач для главного экрана
      *
-     * @param string $flag
+     * @param $flag
      * @param Request $request
      * @param TaskSearchAction $searchAction
      * @return JsonResponse
      */
-    public function index(string $flag, Request $request, TaskSearchAction $searchAction): JsonResponse
+    public function index($flag, Request $request, TaskSearchAction $searchAction): JsonResponse
     {
         $params = $request->all();
         $tasks = $searchAction($flag, $params);
@@ -39,12 +39,12 @@ class HomeController extends BaseController
     /**
      * Получение задач для карты
      *
-     * @param string $flag
+     * @param $flag
      * @param Request $request
      * @param TaskSearchAction $searchAction
      * @return JsonResponse
      */
-    public function map(string $flag, Request $request, TaskSearchAction $searchAction): JsonResponse
+    public function map($flag, Request $request, TaskSearchAction $searchAction): JsonResponse
     {
         $params = $request->all();
 

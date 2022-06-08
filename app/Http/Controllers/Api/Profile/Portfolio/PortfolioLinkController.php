@@ -33,11 +33,11 @@ class PortfolioLinkController extends BaseController
     /**
      * Обновление уже созданной ссылки
      *
-     * @param int $id
+     * @param $id
      * @param PortfolioLinkRequest $request
      * @return JsonResponse
      */
-    public function edit(PortfolioLinkRequest $request, int $id): JsonResponse
+    public function edit($id, PortfolioLinkRequest $request): JsonResponse
     {
         $user = Auth::user();
         $profile = $user->profile;

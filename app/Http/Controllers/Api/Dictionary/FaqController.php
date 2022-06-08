@@ -27,10 +27,10 @@ class FaqController extends BaseController
     /**
      * Просмотр ответа
      *
-     * @param int $id
+     * @param $id
      * @return JsonResponse
      */
-    public function answer(int $id): JsonResponse
+    public function answer($id): JsonResponse
     {
         $data = Faq::getAnswerById($id);
 

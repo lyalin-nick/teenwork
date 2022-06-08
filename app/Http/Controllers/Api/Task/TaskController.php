@@ -29,10 +29,10 @@ class TaskController extends BaseController
     /**
      * Данные для показа одной задачи
      *
-     * @param int $id
+     * @param $id
      * @return JsonResponse
      */
-    public function view(int $id): JsonResponse
+    public function view($id): JsonResponse
     {
         $task = Task::where('id', '=', $id)->first();
 
@@ -48,11 +48,11 @@ class TaskController extends BaseController
     /**
      * Отправка репорта
      *
-     * @param int $id
+     * @param $id
      * @param ReportRequest $request
      * @return JsonResponse
      */
-    public function report(ReportRequest $request, int $id): JsonResponse
+    public function report(ReportRequest $request, $id): JsonResponse
     {
         $reporter = Auth::user();
         $task = Task::where('id', '=', $id)->first();

@@ -13,12 +13,12 @@ class ResponsesController extends BaseController
     /**
      * Получение откликов на задачу (Заказчик)
      *
-     * @param int $id
+     * @param $id
      * @param Request $request
      * @param ResponsesSearchAction $searchAction
      * @return JsonResponse
      */
-    public function responses(int $id, Request $request, ResponsesSearchAction $searchAction): JsonResponse
+    public function responses($id, Request $request, ResponsesSearchAction $searchAction): JsonResponse
     {
         $user = Auth::user();
         $task = $user->tasks()->where('id', $id)->first();

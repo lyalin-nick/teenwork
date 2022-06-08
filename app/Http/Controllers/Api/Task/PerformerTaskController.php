@@ -18,11 +18,11 @@ class PerformerTaskController extends BaseController
     /**
      * Отправка отклика (Исполнитель)
      *
-     * @param int $id
+     * @param $id
      * @param ResponseRequest $request
      * @return JsonResponse
      */
-    public function response(int $id, ResponseRequest $request, ChatCreateAction $chatCreateAction): JsonResponse
+    public function response($id, ResponseRequest $request, ChatCreateAction $chatCreateAction): JsonResponse
     {
         $task = Task::where('id', '=', $id)->first();
         if (!$task) {
@@ -48,11 +48,11 @@ class PerformerTaskController extends BaseController
     /**
      * Отправка отзыва на заказчика
      *
-     * @param int $id
+     * @param $id
      * @param ReviewRequest $request
      * @return JsonResponse
      */
-    public function review(int $id, ReviewRequest $request): JsonResponse
+    public function review($id, ReviewRequest $request): JsonResponse
     {
         $reviewer = Auth::user();
         $task = Task::where('id', '=', $id)->first();

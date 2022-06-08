@@ -14,10 +14,10 @@ class FavoriteController extends BaseController
     /**
      * Добавить в избранное
      *
-     * @param int $identify
+     * @param $identify
      * @return JsonResponse
      */
-    public function add(int $identify, AddFavoriteAction $addFavoriteAction): JsonResponse
+    public function add($identify, AddFavoriteAction $addFavoriteAction): JsonResponse
     {
         $user = Auth::user();
 
@@ -31,6 +31,7 @@ class FavoriteController extends BaseController
     /**
      * Список избранного
      *
+     * @param ListFavoriteAction $listFavoriteAction
      * @return JsonResponse
      */
     public function view(ListFavoriteAction $listFavoriteAction): JsonResponse
@@ -43,10 +44,11 @@ class FavoriteController extends BaseController
     /**
      * Удаление из избранного
      *
-     * @param int $identify
+     * @param $identify
+     * @param DeleteFavoriteAction $deleteFavoriteAction
      * @return JsonResponse
      */
-    public function remove(int $identify, DeleteFavoriteAction $deleteFavoriteAction): JsonResponse
+    public function remove($identify, DeleteFavoriteAction $deleteFavoriteAction): JsonResponse
     {
         $user = Auth::user();
 
