@@ -11,19 +11,26 @@ use App\Http\Resources\Chat\MessageResource;
 use App\Models\Chat;
 use Auth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ChatController extends BaseController
 {
     /**
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function chatsList(): JsonResponse
+    public function chatsList(Request $request): JsonResponse
     {
         $user = Auth::user();
+
         $chats = $user
-            ->chats()
+            ->chats();
+        if (isset($request->status)) {
+            $chats->where(['status' => $request->status]);
+        }
+        $chats = $chats
             ->join('messages', function ($query) {
                 $query->on('chats.last_message_id', '=', 'messages.id');
             })
@@ -46,6 +53,17 @@ class ChatController extends BaseController
             'lastPage' => $lastPage,
             'chats' => ChatResource::collection($chats->items())
         ], 'Success', 201);
+    }
+
+    /**
+     *
+     * @return JsonResponse
+     */
+    public function countChats(): JsonResponse
+    {
+        $user = Auth::user();
+
+        return $this->sendResponse(['count' => $user->getCountChats()], 'Success', 201);
     }
 
 
