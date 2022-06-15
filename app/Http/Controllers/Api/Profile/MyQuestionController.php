@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Profile;
 
+use App\Actions\Chat\QuestionChatCreateAction;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\MyQuestion\QuestionRequest;
 use App\Models\MyQuestion;
@@ -25,14 +26,18 @@ class MyQuestionController extends BaseController
         return $this->sendResponse(['currentPage' => $curPage, 'lastPage' => $lastPage, 'my_questions' => $my_questions], 'MyQuestion list');
     }
 
-    public function store(QuestionRequest $request): JsonResponse
+    public function store(QuestionRequest $request, QuestionChatCreateAction $chatCreateAction): JsonResponse
     {
         $user = Auth::user();
 
         $new_my_question = MyQuestion::new($user->id, $request->subject, $request->question, $request->images);
 
         if ($new_my_question) {
-            return $this->sendResponse([], 'Create successful', 201);
+            $chat = $chatCreateAction($user, $new_my_question);
+            $new_my_question->chat_id = $chat->id;
+            $new_my_question->save();
+
+            return $this->sendResponse(['chat_id' => $chat->id], 'Create successful', 201);
         }
 
         return $this->sendError('Error creating', [], 500);

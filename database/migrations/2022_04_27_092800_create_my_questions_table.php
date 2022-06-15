@@ -16,6 +16,7 @@ class CreateMyQuestionsTable extends Migration
         Schema::create('my_questions', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('user_id', false, true);
+            $table->bigInteger('chat_id', false, true)->nullable();
             $table->string('subject', 255);
             $table->text('question');
             $table->enum('status', ['wait', 'process', 'complete'])->default('wait');

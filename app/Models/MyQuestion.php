@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property int $user_id
+ * @property int $chat_id
  * @property string $subject
  * @property string $question
  * @property string $status
@@ -58,7 +59,7 @@ class MyQuestion extends Model
     public function scopeQuestionList(Builder $query, $user_id)
     {
         $query->where('user_id', '=', $user_id)
-            ->select('id', 'subject', 'question', 'status', 'created_at')
+            ->select('id', 'chat_id', 'subject', 'question', 'status', 'created_at')
             ->orderBy('created_at', 'desc');
     }
 

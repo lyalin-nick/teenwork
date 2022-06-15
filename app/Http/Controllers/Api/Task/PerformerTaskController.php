@@ -19,6 +19,7 @@ class PerformerTaskController extends BaseController
      *
      * @param $id
      * @param ResponseRequest $request
+     * @param TaskChatCreateAction $chatCreateAction
      * @return JsonResponse
      */
     public function response($id, ResponseRequest $request, TaskChatCreateAction $chatCreateAction): JsonResponse
