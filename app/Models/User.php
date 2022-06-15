@@ -86,7 +86,7 @@ class User extends Authenticatable
             $user->phone = '+1';
             $user->status = self::STATUS_ACTIVE;
             $user->save();
-            if ($user){
+            if ($user) {
                 $profile = $user->profile;
                 $profile->first_name = 'Technical support';
                 $profile->save();
@@ -474,6 +474,16 @@ class User extends Authenticatable
 //            2 => $reviews->star2,
 //            1 => $reviews->star1,
 //        ];
+    }
+
+    public function getCountChats(): array
+    {
+        $count[Chat::STATUS_CURRENT] = $this->chats()->where(['status' => Chat::STATUS_CURRENT])->count();
+        $count[Chat::STATUS_HISTORY] = $this->chats()->where(['status' => Chat::STATUS_HISTORY])->count();
+        $count[Chat::STATUS_SUPPORT] = $this->chats()->where(['status' => Chat::STATUS_SUPPORT])->count();
+        $count['all'] = $count[Chat::STATUS_CURRENT] + $count[Chat::STATUS_HISTORY] + $count[Chat::STATUS_SUPPORT];
+
+        return $count;
     }
 
     public function getLastReview()
