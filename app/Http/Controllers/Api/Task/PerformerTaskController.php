@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers\Api\Task;
 
-use App\Actions\Chat\ChatCreateAction;
-use App\Events\Task\ResponseCreated;
+use App\Actions\Chat\TaskChatCreateAction;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\Task\ResponseRequest;
 use App\Http\Requests\Api\Task\ReviewRequest;
@@ -22,7 +21,7 @@ class PerformerTaskController extends BaseController
      * @param ResponseRequest $request
      * @return JsonResponse
      */
-    public function response($id, ResponseRequest $request, ChatCreateAction $chatCreateAction): JsonResponse
+    public function response($id, ResponseRequest $request, TaskChatCreateAction $chatCreateAction): JsonResponse
     {
         $task = Task::where('id', '=', $id)->first();
         if (!$task) {

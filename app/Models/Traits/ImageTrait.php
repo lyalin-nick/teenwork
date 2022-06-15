@@ -142,7 +142,7 @@ trait ImageTrait
 
                 $img->filter(new MiniatureFilter($config['width'], $config['height']));
 
-                $img->save(Storage::disk('public')->path($path . $name . $suffix . '.' . $ext));
+                $img->save(Storage::disk('public')->path($path . $name . $suffix . '.' . $ext), 70);
             }
 
             return true;

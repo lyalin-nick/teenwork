@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Task;
 
-use App\Actions\Chat\ChatCreateAction;
+use App\Actions\Chat\TaskChatCreateAction;
 use App\Actions\Task\TaskStoreAction;
 use App\Actions\Task\TaskUpdateAction;
 use App\Http\Controllers\Api\BaseController;
@@ -112,10 +112,10 @@ class EmployerTaskController extends BaseController
      *
      * @param NewOfferRequest $request
      * @param $id
-     * @param ChatCreateAction $chatCreateAction
+     * @param TaskChatCreateAction $chatCreateAction
      * @return JsonResponse
      */
-    public function offer($id, NewOfferRequest $request, ChatCreateAction $chatCreateAction): JsonResponse
+    public function offer($id, NewOfferRequest $request, TaskChatCreateAction $chatCreateAction): JsonResponse
     {
         $task = Task::where('id', '=', $id)->first();
         if (!$task) {

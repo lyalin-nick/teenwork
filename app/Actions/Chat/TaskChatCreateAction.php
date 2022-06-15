@@ -4,7 +4,7 @@ namespace App\Actions\Chat;
 
 use App\Models\Chat;
 
-class ChatCreateAction
+class TaskChatCreateAction
 {
 
     /**

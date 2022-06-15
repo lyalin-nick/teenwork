@@ -61,7 +61,7 @@ class TaskController extends BaseController
             return $this->sendError('User not found');
         }
 
-        if ($task->user_id !== $reporter->id) {
+        if ($task->user_id == $reporter->id) {
             return $this->sendError('You`re an idiot?');
         }
 

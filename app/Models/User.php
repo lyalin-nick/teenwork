@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Http\Resources\Review\ViewResource;
-use App\Http\Resources\User\ShortInfoResource;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -77,6 +76,24 @@ class User extends Authenticatable
         'verify_token_expire' => 'datetime',
         'reset_token_expire' => 'datetime'
     ];
+
+    public static function getAdminUser()
+    {
+        $user = User::where('id', 0)->first();
+        if (!$user) {
+            $user = new User();
+            $user->id = 0;
+            $user->phone = '+1';
+            $user->status = self::STATUS_ACTIVE;
+            $user->save();
+            if ($user){
+                $profile = $user->profile;
+                $profile->first_name = 'Technical support';
+                $profile->save();
+            }
+        }
+        return User::where('id', 0)->first();
+    }
 
     public static function register(string $phone, string $password, string $verify_code)
     {
@@ -434,10 +451,10 @@ class User extends Authenticatable
     public function getStars($params = null): array
     {
         $reviews = $this->reviews()->get();
-        if (isset($params['dates'])){
+        if (isset($params['dates'])) {
             $reviews = $this->reviews()->whereIn('date', $params['dates'])->get();
         }
-       $stars = [5 => 0, 4 => 0, 3 => 0, 2=> 0, 1 => 0];
+        $stars = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
         foreach ($reviews as $review) {
             $stars[$review->rating]++;
         }
