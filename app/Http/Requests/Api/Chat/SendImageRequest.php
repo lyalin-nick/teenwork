@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Chat;
 
 use App\Http\Requests\Api\ApiFormRequest;
 
-class AddMessageRequest extends ApiFormRequest
+class SendImageRequest extends ApiFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +25,7 @@ class AddMessageRequest extends ApiFormRequest
     {
         return [
             'text' => ['string'],
-            'img' => ['nullable']
+            'img' => ['image', 'mimes:jpeg,png,jpg']
         ];
     }
 }

@@ -16,3 +16,5 @@ yarn-error.log
 /public/vendor
 /public/images/uploads/
 /public/packages/
+composer.lock
+package-lock.json

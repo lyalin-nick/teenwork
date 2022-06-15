@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\Task\RecommendedController;
 use App\Http\Controllers\Api\Task\ResponsesController;
 use App\Http\Controllers\Api\Task\TaskController;
 use App\Http\Controllers\Api\User\UserController;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -226,7 +227,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('/chat')->group(function () {
         Route::get('/', [ChatController::class, 'chatsList']);
         Route::get('/{chatId}', [ChatController::class, 'fetchMessages']);
-        Route::post('/{chatId}', [ChatController::class, 'addMessage']);
+        Route::post('/{chatId}', [ChatController::class, 'sendMessage']);
+        Route::post('/{chatId}/image', [ChatController::class, 'sendImage']);
+    });
+
+    Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
+        return Broadcast::auth($request);
     });
 
     Route::post('/logout', [LogoutController::class, 'logout']);
