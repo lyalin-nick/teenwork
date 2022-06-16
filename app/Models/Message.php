@@ -38,7 +38,11 @@ class Message extends Model
             $chat = $message->chat()->with(['users' => function ($query) use ($user) {
                 $query->where('users.id', '!=', $user->id);
             }])
-            ->first();
+                ->first();
+            foreach ($chat->users as $user) {
+                $message->unreadUsers()->attach($user);
+                $chat->users()->updateExistingPivot($user, ['unread_messages_count' => $user->pivot->unread_messages_count + 1]);
+            }
             if ($chat) {
                 $chat->last_message_id = $message->id;
                 $chat->save();

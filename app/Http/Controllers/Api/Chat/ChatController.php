@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Chat\SendMessageRequest;
 use App\Http\Resources\Chat\ChatResource;
 use App\Http\Resources\Chat\MessageResource;
 use App\Models\Chat;
+use App\Models\MyQuestion;
 use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -93,8 +94,9 @@ class ChatController extends BaseController
                 'messages' => MessageResource::collection($messages->items())
             ];
         } else {
+            $question = MyQuestion::where('id', $chat->identifier)->andWhere('user_id', $user->id)->first();
             $response_data = [
-                'question' => null,
+                'question' => isset($question) ? $question->id : null,
                 'currentPage' => $curPage,
                 'lastPage' => $lastPage,
                 'messages' => MessageResource::collection($messages->items())
