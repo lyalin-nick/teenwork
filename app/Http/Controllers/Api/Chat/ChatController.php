@@ -131,7 +131,7 @@ class ChatController extends BaseController
             return $this->sendError('Chat not found');
         }
 
-        $file_path = $uploadAction($request->get('image'), "chat/{$chatId}");
+        $file_path = $uploadAction($request->image, "chat/{$chatId}");
         if (!$file_path) {
             return $this->sendError('Image uploading error', [], 500);
         }
