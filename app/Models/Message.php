@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $chat_id
  * @property integer $user_id
  * @property string $text
- * @property string $img
+ * @property array $images
  * @property Chat $chat
  * @property User $user
  */
@@ -19,7 +19,7 @@ class Message extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'text', 'chat_id', 'img'];
+    protected $fillable = ['user_id', 'text', 'chat_id', 'images'];
 
     public function chat()
     {
@@ -31,13 +31,37 @@ class Message extends Model
         return $this->hasOne(User::class, 'id', 'user_id');
     }
 
+    public function unreadUsers()
+    {
+        return $this->belongsToMany(User::class, 'message_user');
+    }
+
+    /**
+     * @param $value
+     * @return void
+     */
+    public function setImagesAttribute($value): void
+    {
+        $this->attributes['images'] = json_encode($value);
+    }
+
+    /**
+     * @param $value
+     * @return mixed
+     */
+    public function getImagesAttribute($value)
+    {
+        return json_decode($value);
+    }
+
     protected static function booted()
     {
         static::created(function ($message) {
             $user = $message->user;
-            $chat = $message->chat()->with(['users' => function ($query) use ($user) {
-                $query->where('users.id', '!=', $user->id);
-            }])
+            $chat = $message->chat()
+                ->with(['users' => function ($query) use ($user) {
+                    $query->where('users.id', '!=', $user->id);
+                }])
                 ->first();
             foreach ($chat->users as $user) {
                 $message->unreadUsers()->attach($user);

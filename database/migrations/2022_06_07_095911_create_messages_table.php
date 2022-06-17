@@ -18,7 +18,7 @@ class CreateMessagesTable extends Migration
             $table->bigInteger('chat_id', false, true);
             $table->bigInteger('user_id', false, true);
             $table->text('text');
-            $table->binary('img')->nullable();
+            $table->json('images')->nullable();
             $table->timestamps();
         });
     }

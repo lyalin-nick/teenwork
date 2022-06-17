@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Chat;
 
 use App\Actions\File\FileUploadAction;
 use App\Http\Controllers\Api\BaseController;
-use App\Http\Requests\Api\Chat\SendImageRequest;
 use App\Http\Requests\Api\Chat\SendMessageRequest;
+use App\Http\Requests\Api\Helper\UploadFile\ImageRequest;
 use App\Http\Resources\Chat\ChatResource;
 use App\Http\Resources\Chat\MessageResource;
 use App\Models\Chat;
@@ -116,14 +116,14 @@ class ChatController extends BaseController
 
         $message = $chat->messages()->create([
             'user_id' => $user->id,
-            'text' => $request->text,
-            'img' => $request->img
+            'text' => $request->get('text'),
+            'images' => $request->get('images')
         ]);
 
         return $this->sendResponse(['message_id' => $message->id], 'Message created', 201);
     }
 
-    public function sendImage($chatId, SendImageRequest $request, FileUploadAction $uploadAction): JsonResponse
+    public function sendImage($chatId, ImageRequest $request, FileUploadAction $uploadAction): JsonResponse
     {
         $user = Auth::user();
         $chat = $user->chats()->where('id', $chatId)->first();
@@ -131,17 +131,11 @@ class ChatController extends BaseController
             return $this->sendError('Chat not found');
         }
 
-        $file_path = $uploadAction($request->img, "chat/{$chatId}");
+        $file_path = $uploadAction($request->get('image'), "chat/{$chatId}");
         if (!$file_path) {
             return $this->sendError('Image uploading error', [], 500);
         }
 
-        $message = $chat->messages()->create([
-            'user_id' => $user->id,
-            'text' => $request->text,
-            'img' => asset(Storage::url($file_path))
-        ]);
-
-        return $this->sendResponse(['message_id' => $message->id], 'Message created', 201);
+        return $this->sendResponse(asset(Storage::url($file_path)), 'Message created', 201);
     }
 }

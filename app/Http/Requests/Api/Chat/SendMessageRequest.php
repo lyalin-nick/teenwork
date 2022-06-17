@@ -24,7 +24,9 @@ class SendMessageRequest extends ApiFormRequest
     public function rules()
     {
         return [
-            'text' => ['string']
+            'text' => ['string'],
+            'images' => ['array'],
+            'images.*' => ['string'],
         ];
     }
 }
