@@ -12,8 +12,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $user_id
  * @property string $text
  * @property array $images
+ *
  * @property Chat $chat
- * @property User $user
+ * @property MessageStatus[] $messageStatuses
+ * @property User $sender
  */
 class Message extends Model
 {
@@ -21,19 +23,28 @@ class Message extends Model
 
     protected $fillable = ['user_id', 'text', 'chat_id', 'images'];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo|Chat
+     */
     public function chat()
     {
         return $this->belongsTo(Chat::class);
     }
 
-    public function user()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne|User
+     */
+    public function sender()
     {
         return $this->hasOne(User::class, 'id', 'user_id');
     }
 
-    public function unreadUsers()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany|MessageStatus
+     */
+    public function messageStatuses()
     {
-        return $this->belongsToMany(User::class, 'message_user');
+        return $this->hasMany(MessageStatus::class);
     }
 
     /**
@@ -57,14 +68,18 @@ class Message extends Model
     protected static function booted()
     {
         static::created(function ($message) {
-            $user = $message->user;
+            $sender = $message->sender;
             $chat = $message->chat()
-                ->with(['users' => function ($query) use ($user) {
-                    $query->where('users.id', '!=', $user->id);
+                ->with(['users' => function ($query) use ($sender) {
+                    $query->where('users.id', '!=', $sender->id);
                 }])
                 ->first();
             foreach ($chat->users as $user) {
-                $message->unreadUsers()->attach($user);
+                $message->messageStatuses()->create([
+                    'user_id' => $user->id,
+                    'message_id' => $message->id,
+                    'reading' => false
+                ]);
                 $chat->users()->updateExistingPivot($user, ['unread_messages_count' => $user->pivot->unread_messages_count + 1]);
             }
             if ($chat) {

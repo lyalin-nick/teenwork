@@ -16,14 +16,19 @@ class MessageResource extends JsonResource
     public function toArray($request)
     {
         /* @var Message $this */
+        $sender = $this->sender;
+
         return [
             'id' => $this->id,
             'text' => $this->text,
             'images' => $this->images,
-            "user_info" => [
-                'id' => $this->user->id,
-                'name' => $this->user->profile->full_name,
-                'photo' => $this->user->profile->getProfilePreviewImageLink(),
+            $this->mergeWhen(!empty($this->messageStatuses->first()), [
+                'reading' => $this->messageStatuses->first()->reading
+            ]),
+            'user_info' => [
+                'id' => $sender->id,
+                'name' => $sender->profile->full_name,
+                'photo' => $sender->profile->getProfilePreviewImageLink(),
             ],
         ];
     }

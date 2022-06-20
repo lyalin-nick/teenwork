@@ -500,4 +500,10 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Chat::class);
     }
+
+    public function unreadMessages()
+    {
+        return $this->belongsToMany(Message::class, 'message_statuses', 'user_id', 'message_id')
+            ->wherePivot('reading', false);
+    }
 }

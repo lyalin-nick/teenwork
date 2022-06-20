@@ -85,6 +85,13 @@ class Task extends Model
         'status', 'views_number', 'expired_at'
     ];
 
+    protected $casts = [
+        'safe_deal' => 'boolean',
+        'hot_work' => 'boolean',
+        'account_verified' => 'boolean',
+        'views_number' => 'integer',
+    ];
+
     public static function new($task_data, $languages, $images, $video)
     {
         $task = self::create($task_data);
@@ -378,38 +385,6 @@ class Task extends Model
         return date('H:i A', strtotime($value));
     }
 
-    /**
-     * Аксессор поля start_date
-     *
-     * @param $value
-     * @return string
-     */
-    public function getSafeDealAttribute($value): bool
-    {
-        return (boolean)$value;
-    }
-
-    /**
-     * Аксессор поля start_date
-     *
-     * @param $value
-     * @return string
-     */
-    public function getHotWorkAttribute($value): bool
-    {
-        return (boolean)$value;
-    }
-
-    /**
-     * Аксессор поля start_date
-     *
-     * @param $value
-     * @return string
-     */
-    public function getAccountVerifiedAttribute($value): bool
-    {
-        return (boolean)$value;
-    }
 
     /**
      * @param $value
@@ -452,17 +427,6 @@ class Task extends Model
 //    {
 //        return $this->belongsTo(TaskReport::class, 'task_id', 'id');
 //    }
-
-    /**
-     * Аксессор поля views_number
-     *
-     * @param $value
-     * @return int
-     */
-    public function getViewsNumberAttribute($value): int
-    {
-        return intval($value);
-    }
 
     /**
      * Аксессор поля status_label

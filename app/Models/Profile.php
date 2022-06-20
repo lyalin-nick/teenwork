@@ -57,6 +57,12 @@ class Profile extends Model
         'address', 'place_id'
     ];
 
+    protected $casts = [
+        'push_notification' => 'boolean',
+        'email_notification' => 'boolean',
+        'invisible' => 'boolean'
+    ];
+
     /**
      * Создание модели портфолио пользователя
      * @param $data
@@ -299,20 +305,9 @@ class Profile extends Model
      * @param $value
      * @return bool
      */
-    public function getPushNotificationAttribute($value)
-    {
-        return (boolean)$value;
-    }
-
-    /**
-     * Аксессор
-     *
-     * @param $value
-     * @return bool
-     */
     public function getRatingAttribute($value)
     {
-        return round($value, 2);
+        return round($value, 1);
     }
 
     /**
@@ -322,29 +317,7 @@ class Profile extends Model
      */
     public function setRatingAttribute($value)
     {
-        $this->attributes['rating'] = round($value, 2);
-    }
-
-    /**
-     * Аксессор
-     *
-     * @param $value
-     * @return bool
-     */
-    public function getEmailNotificationAttribute($value)
-    {
-        return (boolean)$value;
-    }
-
-    /**
-     * Аксессор
-     *
-     * @param $value
-     * @return bool
-     */
-    public function getInvisibleAttribute($value)
-    {
-        return (boolean)$value;
+        $this->attributes['rating'] = round($value, 1);
     }
 
     public function portfolioImages()
@@ -435,7 +408,7 @@ class Profile extends Model
      * Смотрим есть ли категория задачи у профиля
      *
      * @param Builder $query
-     * @param $category_id\
+     * @param $category_id
      */
     public function scopeCategoryMatches(Builder $query, $category_id)
     {

@@ -9,10 +9,10 @@ class FileUploadAction
 
     /**
      * @param $file
-     * @param $folder
+     * @param string $folder
      * @return false|string
      */
-    public function __invoke($file, $folder = 'tmp')
+    public function __invoke($file, string $folder = 'tmp')
     {
         return Storage::disk('public')->putFile($folder, $file);
     }

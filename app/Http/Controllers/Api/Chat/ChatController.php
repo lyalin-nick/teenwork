@@ -79,9 +79,12 @@ class ChatController extends BaseController
 
         $messages = $chat->messages()
             ->orderBy('updated_at', 'desc')
-            ->with('user')
+            ->with('sender')
+            ->with(['messageStatuses' => function ($query) use ($user) {
+                $query->where('user_id', '!=', $user->id);
+            }])
+            ->where('id', 1)
             ->paginate(50);
-
         $curPage = $messages->currentPage();
         $lastPage = $messages->lastPage();
 
