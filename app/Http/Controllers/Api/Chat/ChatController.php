@@ -83,7 +83,6 @@ class ChatController extends BaseController
             ->with(['messageStatuses' => function ($query) use ($user) {
                 $query->where('user_id', '!=', $user->id);
             }])
-            ->where('id', 1)
             ->paginate(50);
         $curPage = $messages->currentPage();
         $lastPage = $messages->lastPage();

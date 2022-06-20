@@ -13,6 +13,8 @@ class MessageStatus extends Model
         'reading' => 'boolean'
     ];
 
+    public $timestamps = false;
+
     protected $fillable = ['user_id', 'message_id', 'reading'];
 
     public function message()
