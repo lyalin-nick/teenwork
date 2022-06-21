@@ -230,6 +230,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{chatId}', [ChatController::class, 'fetchMessages']);
         Route::post('/{chatId}', [ChatController::class, 'sendMessage']);
         Route::post('/{chatId}/image', [ChatController::class, 'sendImage']);
+        Route::post('/{chatId}/reading', [ChatController::class, 'readingMessages']);
     });
 
     Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {

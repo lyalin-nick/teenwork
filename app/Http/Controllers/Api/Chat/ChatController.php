@@ -140,4 +140,30 @@ class ChatController extends BaseController
 
         return $this->sendResponse(asset(Storage::url($file_path)), 'Message created', 201);
     }
+
+    public function readingMessages($id, Request $request): JsonResponse
+    {
+        $user = Auth::user();
+
+        $reading_messages = $request->get('messages');
+        $chat = Chat::where('id', $id)->first();
+        if (!$chat) {
+            return $this->sendError('Chat not found');
+        }
+
+        $messages = $chat->messages()
+            ->whereIn('id', $reading_messages)
+            ->get();
+
+        if (!$messages) {
+            return $this->sendError('Messages not found');
+        }
+
+        foreach ($messages as $message) {
+            $message->messageStatuses()->where('user_id', $user->id)
+                ->update(['reading' => true]);
+        }
+
+        return $this->sendResponse([], 'Updating success');
+    }
 }

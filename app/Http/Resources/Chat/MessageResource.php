@@ -24,7 +24,7 @@ class MessageResource extends JsonResource
             'id' => $this->id,
             'text' => $this->text,
             'images' => $this->images,
-            'reading' => $this->when($status !== null, $status),
+            'reading' => ($status !== null) ? $status : true,
             'user_info' => [
                 'id' => $sender->id,
                 'name' => $sender->profile->full_name,
