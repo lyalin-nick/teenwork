@@ -498,12 +498,21 @@ class User extends Authenticatable
 
     public function chats()
     {
-        return $this->belongsToMany(Chat::class);
+        return $this->belongsToMany(Chat::class)->withPivot('unread_messages_count');
     }
 
     public function unreadMessages()
     {
         return $this->belongsToMany(Message::class, 'message_statuses', 'user_id', 'message_id')
             ->wherePivot('reading', false);
+    }
+
+    public function refreshUnreadMessagesCounter($chat_id)
+    {
+        $chat = $this->chats()->where('chat_id', $chat_id)->first();
+
+        $count = $this->unreadMessages()->where('chat_id', $chat_id)->count();
+
+        $this->chats()->updateExistingPivot($chat, ['unread_messages_count' => $count]);
     }
 }

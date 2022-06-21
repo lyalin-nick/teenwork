@@ -4,6 +4,7 @@ namespace App\Http\Resources\Chat;
 
 use App\Models\Message;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Auth;
 
 class MessageResource extends JsonResource
 {
@@ -15,16 +16,16 @@ class MessageResource extends JsonResource
      */
     public function toArray($request)
     {
+        $user = Auth::user();
         /* @var Message $this */
         $sender = $this->sender;
 
-        $status = $this->messageStatuses->first();
-        $status = (!empty($status) && isset($status->reading)) ? $status->reading : null;
+        $status = $this->messageStatuses()->where('user_id', $user->id)->first();
         return [
             'id' => $this->id,
             'text' => $this->text,
             'images' => $this->images,
-            'reading' => ($status !== null) ? $status : true,
+            'reading' => ($status !== null) ? $status->reading : true,
             'user_info' => [
                 'id' => $sender->id,
                 'name' => $sender->profile->full_name,

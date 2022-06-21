@@ -81,9 +81,9 @@ class ChatController extends BaseController
             ->orderBy('updated_at', 'desc')
             ->with('sender')
             ->with(['messageStatuses' => function ($query) use ($user) {
-                $query->where('user_id', '!=', $user->id);
+                $query->where('user_id', '=', $user->id);
             }])
-            ->paginate(50);
+            ->paginate(30);
         $curPage = $messages->currentPage();
         $lastPage = $messages->lastPage();
 
@@ -163,6 +163,8 @@ class ChatController extends BaseController
             $message->messageStatuses()->where('user_id', $user->id)
                 ->update(['reading' => true]);
         }
+
+        $user->refreshUnreadMessagesCounter($chat->id);
 
         return $this->sendResponse([], 'Updating success');
     }
