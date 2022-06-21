@@ -15,6 +15,7 @@ class FavoriteController extends BaseController
      * Добавить в избранное
      *
      * @param $identify
+     * @param AddFavoriteAction $addFavoriteAction
      * @return JsonResponse
      */
     public function add($identify, AddFavoriteAction $addFavoriteAction): JsonResponse

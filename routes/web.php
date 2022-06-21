@@ -51,3 +51,10 @@ Route::get('/phpinfo', function () {
 });
 Route::get('/refresh-expire', [HomeController::class, 'refreshExpire']);
 Auth::routes();
+
+Route::prefix('/chat')->group(function () {
+    Route::get('/', [\App\Http\Controllers\ChatsController::class, 'index']);
+    Route::get('/{chatId}', [\App\Http\Controllers\ChatsController::class, 'viewChat'])->name('chat.show');
+    Route::get('/{chatId}/messages', [\App\Http\Controllers\ChatsController::class, 'fetchMessages']);
+    Route::post('/{chatId}/messages', [\App\Http\Controllers\ChatsController::class, 'sendMessage']);
+});

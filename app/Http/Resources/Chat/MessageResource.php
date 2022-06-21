@@ -18,13 +18,13 @@ class MessageResource extends JsonResource
         /* @var Message $this */
         $sender = $this->sender;
 
+        $status = $this->messageStatuses->first();
+        $status = (!empty($status) && isset($status->reading)) ? $status->reading : null;
         return [
             'id' => $this->id,
             'text' => $this->text,
             'images' => $this->images,
-            $this->mergeWhen(!empty($this->messageStatuses->first()), [
-                'reading' => $this->messageStatuses->first()->reading
-            ]),
+            'reading' => $this->when($status !== null, $status),
             'user_info' => [
                 'id' => $sender->id,
                 'name' => $sender->profile->full_name,

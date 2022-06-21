@@ -25,7 +25,7 @@ class ImageRequest extends ApiFormRequest
     public function rules()
     {
         return [
-            'image' => ['image', 'mimes:jpeg,png,jpg'],
+            'image' => ['image'],
         ];
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Exceptions;
 
+use GuzzleHttp\Client;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -35,7 +37,18 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
-            //
+            try {
+                $client = new Client();
+                $error_mes = "Project: " . config('app.name') . "\n";
+                $error_mes .= "Message: {$e->getMessage()}\n";
+                $error_mes .= "Line: {$e->getLine()}\n";
+                $error_mes .= "File: {$e->getFile()}\n";
+                $link = "https://api.telegram.org/bot1538817875:AAFhqgqqncu3aJO8ni_1owaC2ffOt3RDCDI/sendMessage?chat_id=795629321&text={$error_mes}&parse_mode=html";
+
+                $response = $client->request('GET', $link);
+            } catch (\Exception $e) {
+                Log::error($e);
+            }
         });
     }
 }
