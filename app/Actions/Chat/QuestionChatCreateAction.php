@@ -5,6 +5,7 @@ namespace App\Actions\Chat;
 use App\Models\Chat;
 use App\Models\MyQuestion;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
 class QuestionChatCreateAction
 {
@@ -12,7 +13,7 @@ class QuestionChatCreateAction
     /**
      * @param $user
      * @param MyQuestion $question
-     * @return Chat|\Illuminate\Database\Eloquent\Model|null
+     * @return Chat|Model|null
      */
     public function __invoke($user, MyQuestion $question)
     {

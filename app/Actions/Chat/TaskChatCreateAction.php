@@ -3,6 +3,7 @@
 namespace App\Actions\Chat;
 
 use App\Models\Chat;
+use Illuminate\Database\Eloquent\Model;
 
 class TaskChatCreateAction
 {
@@ -12,7 +13,7 @@ class TaskChatCreateAction
      * @param $user_to
      * @param $task
      * @param null $message
-     * @return Chat|\Illuminate\Database\Eloquent\Model|null
+     * @return Chat|Model|null
      */
     public function __invoke($user_from, $user_to, $task, $message = null)
     {

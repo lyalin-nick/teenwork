@@ -20,6 +20,7 @@ class ResetPasswordController extends BaseController
      * TODO: раскомментировать на продакшн
      *
      * @param PhoneRequest $request
+     * @param SendSmsWithCodeAction $sendSmsWithCodeAction
      * @return JsonResponse
      */
     public function phone(PhoneRequest $request, SendSmsWithCodeAction $sendSmsWithCodeAction): JsonResponse

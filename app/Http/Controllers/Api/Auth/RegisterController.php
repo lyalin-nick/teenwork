@@ -19,6 +19,7 @@ class RegisterController extends BaseController
      * TODO: на продакшн привести в боевой вид
      *
      * @param RegisterRequest $request
+     * @param RegisterAction $register
      * @return JsonResponse
      */
     public function phone(RegisterRequest $request, RegisterAction $register): JsonResponse

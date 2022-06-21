@@ -17,6 +17,7 @@ class RecommendedController extends BaseController
      *
      * @param $id
      * @param Request $request
+     * @param RecommendedSearchAction $searchAction
      * @return JsonResponse
      */
     public function recommended($id, Request $request, RecommendedSearchAction $searchAction): JsonResponse
