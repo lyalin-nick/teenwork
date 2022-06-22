@@ -17,12 +17,8 @@ class ChatResource extends JsonResource
     {
         $user = \Auth::user();
         /* @var Chat $this */
-        $logo = [];
-        $users = $this->users()->where('id', '!=', $user->id)->get();
-        if ($users)
-            foreach ($users as $chat_user) {
-                $logo[] = $chat_user->profile->getProfilePreviewImageLink();
-            }
+
+        $logo = $this->getChatLogo($user->id);
 
         return [
             "id" => $this->id,
@@ -30,7 +26,7 @@ class ChatResource extends JsonResource
             "logo" => $logo,
             "last_message" => $this->last_message,
             "last_message_user_id" => $this->last_message_user_id,
-            "last_message_created_at" => $this->last_message_user_id,
+            "last_message_created_at" => $this->last_message_created_at,
             "unread_messages_count" => $this->unread_messages_count,
         ];
     }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\MessageSent;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $user_id
  * @property string $text
  * @property array $images
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  *
  * @property Chat $chat
  * @property MessageStatus[] $messageStatuses
@@ -22,6 +25,11 @@ class Message extends Model
     use HasFactory;
 
     protected $fillable = ['user_id', 'text', 'chat_id', 'images'];
+
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d',
+        'updated_at' => 'datetime:Y-m-d'
+    ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo|Chat
@@ -65,6 +73,11 @@ class Message extends Model
         return json_decode($value);
     }
 
+    public function getCreatedAtAttribute($value)
+    {
+        return date('Y-m-d H:i:s', strtotime($value));
+    }
+
     protected static function booted()
     {
         static::created(function ($message) {
@@ -82,12 +95,13 @@ class Message extends Model
                 ]);
                 $chat->users()->updateExistingPivot($user, ['unread_messages_count' => $user->pivot->unread_messages_count + 1]);
             }
+
+            broadcast(new MessageSent($message, $chat))->toOthers();
+
             if ($chat) {
                 $chat->last_message_id = $message->id;
                 $chat->save();
             }
-
-            broadcast(new MessageSent($message, $chat))->toOthers();
         });
     }
 }

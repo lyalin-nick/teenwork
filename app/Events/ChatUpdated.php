@@ -2,16 +2,14 @@
 
 namespace App\Events;
 
-use App\Http\Resources\Chat\MessageResource;
 use App\Models\Chat;
-use App\Models\Message;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageSent implements ShouldBroadcast
+class ChatUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -19,25 +17,17 @@ class MessageSent implements ShouldBroadcast
      * @var Chat
      */
     public $chat;
-
-    /**
-     * @var Message
-     */
-    public $message;
+    public $user_addressees_id;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($message, $chat)
+    public function __construct($chat_data, $user_addressee_id)
     {
-        $this->message = new MessageResource($message);
-
-        $this->chat = [
-            "id" => $chat->id,
-            "name" => $chat->name,
-        ];
+        $this->chat = $chat_data;
+        $this->user_addressees_id = $user_addressee_id;
     }
 
     /**
@@ -47,11 +37,11 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('chat.' . $this->chat['id']);
+        return new PrivateChannel('chatlist.' . $this->user_addressees_id);
     }
 
     public function broadcastAs(): string
     {
-        return 'chat.message.send';
+        return 'chatlist.update';
     }
 }
