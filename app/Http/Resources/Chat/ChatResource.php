@@ -23,6 +23,7 @@ class ChatResource extends JsonResource
         return [
             "id" => $this->id,
             "name" => $this->name,
+            "status" => $this->status,
             "logo" => $logo,
             "last_message" => $this->last_message,
             "last_message_user_id" => $this->last_message_user_id,

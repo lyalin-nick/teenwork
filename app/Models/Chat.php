@@ -84,6 +84,7 @@ class Chat extends Model
                 $chat_data = [
                     "id" => $chat->id,
                     "name" => $chat->name,
+                    "status" => $chat->status,
                     "logo" => $chat->getChatLogo($user->id),
                     "last_message" => $last_message->text,
                     "last_message_user_id" => $last_message->user_id,

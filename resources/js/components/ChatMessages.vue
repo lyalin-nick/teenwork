@@ -1,8 +1,8 @@
 <template>
-    <div class="position-relative">
-        <div class="chat-messages p-4" v-for="message in messages">
+    <div class="chat-messages p-4">
+        <div class="js-message" v-for="message in messages">
             <template v-if="message.user_info.id === userId">
-                <div class="chat-message-right pb-4">
+                <div class="chat-message-right mb-4">
                     <div>
                         <img v-if="message.user_info.photo" :src="message.user_info.photo" class="rounded-circle mr-1"
                              width="40" height="40">
@@ -19,7 +19,6 @@
                 </div>
             </template>
             <template v-else>
-
                 <div class="chat-message-left pb-4">
                     <div>
                         <img v-if="message.user_info.photo" :src="message.user_info.photo" class="rounded-circle mr-1"
@@ -44,23 +43,12 @@ export default {
 };
 </script>
 <style scoped>
-body {
-    margin-top: 20px;
-}
-
-.chat-online {
-    color: #34ce57
-}
-
-.chat-offline {
-    color: #e4606d
-}
 
 .chat-messages {
     display: flex;
     flex-direction: column;
     max-height: 800px;
-    overflow-y: scroll
+    overflow-y: auto;
 }
 
 .chat-message-left,
@@ -78,21 +66,4 @@ body {
     margin-left: auto
 }
 
-.py-3 {
-    padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
-}
-
-.px-4 {
-    padding-right: 1.5rem !important;
-    padding-left: 1.5rem !important;
-}
-
-.flex-grow-0 {
-    flex-grow: 0 !important;
-}
-
-.border-top {
-    border-top: 1px solid #dee2e6 !important;
-}
 </style>

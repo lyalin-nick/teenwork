@@ -2,6 +2,7 @@
 
 use App\Models\AdminUser;
 use App\Models\Chat;
+use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -19,13 +20,12 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int)$user->id === (int)$id;
 });
 Broadcast::channel('chat.{chatId}', function ($user, $chatId) {
-    $chat = Chat::where('id', $chatId)->first();
+    $chat = $user->chats()->where('id', $chatId)->first();
     if (!$chat)
         return false;
 
-    return ($user instanceof AdminUser && $chat->type == Chat::TYPE_MY_QUESTION)
-        || (!($user instanceof AdminUser) && !empty($user->chats()->where('id', $chatId)->first()));
+    return ($user instanceof AdminUser && $chat->type == Chat::TYPE_MY_QUESTION) || ($user instanceof User);
 });
 Broadcast::channel('chatlist.{userId}', function ($user, $userId) {
-    return $user->id === $userId;
+    return $user->id === (int)$userId;
 });

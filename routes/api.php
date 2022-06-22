@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\Task\RecommendedController;
 use App\Http\Controllers\Api\Task\ResponsesController;
 use App\Http\Controllers\Api\Task\TaskController;
 use App\Http\Controllers\Api\User\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
@@ -233,7 +234,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{chatId}/reading', [ChatController::class, 'readingMessages']);
     });
 
-    Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
+    Route::post('/broadcasting/auth', function (Request $request) {
         return Broadcast::auth($request);
     });
 
