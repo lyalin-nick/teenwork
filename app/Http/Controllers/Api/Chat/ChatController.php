@@ -79,7 +79,7 @@ class ChatController extends BaseController
 
         $messages = $chat->messages()
             ->orderBy('updated_at', 'desc')
-            ->with('sender')
+            ->with('sender', 'taskOffer')
             ->with(['messageStatuses' => function ($query) use ($user) {
                 $query->where('user_id', '=', $user->id);
             }])

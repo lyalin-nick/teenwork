@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $task_id
  * @property int $user_id
  * @property int $chat_id
+ * @property int $message_id
  * @property int $is_new
  * @property string $text
  *
@@ -52,7 +53,6 @@ class TaskResponse extends Model
     {
         return $this->belongsTo(User::class);
     }
-
 
     public function scopeRatingOrder(Builder $query)
     {

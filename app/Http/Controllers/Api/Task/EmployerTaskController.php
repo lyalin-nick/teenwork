@@ -92,7 +92,7 @@ class EmployerTaskController extends BaseController
      */
     public function update($id, UpdateTaskRequest $request, TaskUpdateAction $updateAction): JsonResponse
     {
-        $user = \Auth::user();
+        $user = Auth::user();
         $task = $user->tasks()->where('id', $id)->first();
 
         if ($task) {
@@ -123,18 +123,21 @@ class EmployerTaskController extends BaseController
         }
 
         $employer = Auth::user();
-        $performer = User::where('id', $request->get('user_id'))->first();
+        $performer = User::where('id', $request->user_id)->first();
 
-        if ($performer) {
-            $offer = TaskOffer::new($id, $request->get('user_id'), $request->get('text'));
-
-            if ($offer) {
-                $chat = $chatCreateAction($employer, $performer, $task, $offer->text);
-
-                return $this->sendResponse(['chat_id' => $chat->id], 'Offer create', 201);
-            }
+        if (!$performer) {
+            return $this->sendError('Error! Performer not found', [], 501);
         }
-        return $this->sendError('Error creating', [], 501);
+
+        $offer = TaskOffer::new($id, $request->user_id, $request->text);
+
+        if ($offer) {
+            $chat = $chatCreateAction($employer, $performer, $task, $offer);
+
+            return $this->sendResponse(['chat_id' => $chat->id], 'Offer create', 201);
+        }
+
+        return $this->sendError('Offer doesnt create', [], 501);
     }
 
 

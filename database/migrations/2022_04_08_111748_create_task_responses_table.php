@@ -17,7 +17,8 @@ class CreateTaskResponsesTable extends Migration
             $table->id();
             $table->bigInteger('task_id', false, true);
             $table->bigInteger('user_id', false, true);
-            $table->bigInteger('chat_id', false, true);
+            $table->bigInteger('chat_id', false, true)->nullable();
+            $table->bigInteger('message_id', false, true)->nullable();
             $table->text('text');
             $table->boolean('is_new')->default(true);
             $table->timestamps();

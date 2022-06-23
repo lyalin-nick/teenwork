@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property Chat $chat
  * @property MessageStatus[] $messageStatuses
  * @property User $sender
+ * @property TaskOffer $taskOffer
+ * @property TaskResponse $taskResponse
  */
 class Message extends Model
 {
@@ -27,8 +29,8 @@ class Message extends Model
     protected $fillable = ['user_id', 'text', 'chat_id', 'images'];
 
     protected $casts = [
-        'created_at' => 'datetime:Y-m-d',
-        'updated_at' => 'datetime:Y-m-d'
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 
     /**
@@ -76,6 +78,17 @@ class Message extends Model
     public function getCreatedAtAttribute($value)
     {
         return date('Y-m-d H:i:s', strtotime($value));
+    }
+
+
+    public function taskOffer()
+    {
+        return $this->hasOne(TaskOffer::class);
+    }
+
+    public function taskResponse()
+    {
+        return $this->hasOne(TaskResponse::class);
     }
 
     protected static function booted()

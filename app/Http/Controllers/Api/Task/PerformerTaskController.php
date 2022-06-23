@@ -36,7 +36,7 @@ class PerformerTaskController extends BaseController
 
         $new_response = TaskResponse::new($id, $user->id, $request->text);
         if ($new_response) {
-            $chat = $chatCreateAction($user, $task->user, $task, $new_response->text);
+            $chat = $chatCreateAction($user, $task->user, $task, $new_response);
 
             if ($chat)
                 return $this->sendResponse(['chat_id' => $chat->id], 'Response create', 201);

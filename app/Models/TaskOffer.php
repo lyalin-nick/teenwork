@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $id
  * @property integer $task_id
  * @property integer $user_id
+ * @property integer $message_id
  * @property string $text
  * @property boolean $accept
  */
