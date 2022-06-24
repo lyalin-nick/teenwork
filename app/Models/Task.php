@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\DB;
  * @property string $user_info
  * @property double $lat
  * @property double $lng
+ * @property integer $chat_id
  *
  * @property TaskImage[] $images
  * @property TaskVideo $video
@@ -46,6 +47,7 @@ use Illuminate\Support\Facades\DB;
  * @property User $user
  * @property Category $category
  * @property TaskResponse[] $responses
+ * @property Chat $chat
  *
  * @method Builder home($flag)
  * @method Builder notExpired()
@@ -132,6 +134,16 @@ class Task extends Model
     public function languages()
     {
         return $this->belongsToMany(Language::class);
+    }
+
+    public function taskOffers()
+    {
+        return $this->hasMany(TaskOffer::class);
+    }
+
+    public function acceptedTaskOffers()
+    {
+        return $this->hasMany(TaskOffer::class)->where('accept', '=', true);
     }
 
     /**
@@ -588,6 +600,12 @@ class Task extends Model
     public function video()
     {
         return $this->hasOne(TaskVideo::class);
+    }
+
+
+    public function chat()
+    {
+        return $this->belongsTo(Chat::class);
     }
 
     /**

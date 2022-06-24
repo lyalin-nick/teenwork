@@ -37,6 +37,7 @@ class CreateTasksTable extends Migration
             $table->integer('views_number')->default(0);
             $table->dateTime('expired_at')->nullable();
             $table->fulltext(['name','description'], 'search');
+            $table->bigInteger('chat_id', false, true)->nullable();
             $table->timestamps();
         });
     }

@@ -12,6 +12,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $message_id
  * @property string $text
  * @property boolean $accept
+ *
+ * @property Task $task
+ * @property Message $message
+ * @property Chat $chat
+ * @property User $user
  */
 class TaskOffer extends Model
 {
@@ -30,8 +35,28 @@ class TaskOffer extends Model
         ]);
     }
 
+    public function task()
+    {
+        return $this->belongsTo(Task::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function message()
+    {
+        return $this->belongsTo(Message::class);
+    }
+
+    public function chat()
+    {
+        return $this->belongsTo(Chat::class);
+    }
+
     public function getAcceptAttribute($value)
     {
-        return $value ? (bool)$value : $value;
+        return $value === null ? $value : (bool)$value;
     }
 }

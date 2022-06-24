@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Task;
 
 use App\Actions\Chat\TaskChatCreateAction;
+use App\Actions\TaskOffer\TaskOfferUpdateAction;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Api\Task\ResponseRequest;
 use App\Http\Requests\Api\Task\ReviewRequest;
@@ -76,27 +77,34 @@ class PerformerTaskController extends BaseController
     }
 
     /**
+     * Ответ исполнителя на оффер
      *
-     *
-     * @param $id
+     * @param $taskId
      * @param Request $request
+     * @param TaskOfferUpdateAction $taskOfferUpdateAction
      * @return JsonResponse
      */
-    public function offer($id, Request $request): JsonResponse
+    public function offer($taskId, Request $request, TaskOfferUpdateAction $taskOfferUpdateAction): JsonResponse
     {
         $performer = Auth::user();
-        $taskOffer = TaskOffer::where('task_id', '=', $id)->where('user_id', '=', $performer->id)->first();
+        $taskOffer = TaskOffer::where('task_id', '=', $taskId)->where('user_id', '=', $performer->id)
+            ->with(['chat', 'task' => function ($query) {
+                $query->with('chat');
+            }])
+            ->first();
 
         if (!$taskOffer) {
             return $this->sendError('Offer not found');
         }
 
-        $taskOffer->accept = $request->accept;
-
-        if (!$taskOffer->save()) {
-            return $this->sendError('Error creating', [], 502);
+        if ($taskOffer->accept === false || $taskOffer->accept === $request->accept) {
+            return $this->sendError('Offer already update');
         }
 
-        return $this->sendResponse(['chat' => $taskOffer->chat_id], 'Create successful', 201);
+        if (!$taskOffer->task) {
+            return $this->sendError('Task not found');
+        }
+
+        return $taskOfferUpdateAction($taskOffer, $performer, $request->accept);
     }
 }
