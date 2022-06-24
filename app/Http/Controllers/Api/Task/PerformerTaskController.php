@@ -8,9 +8,11 @@ use App\Http\Requests\Api\Task\ResponseRequest;
 use App\Http\Requests\Api\Task\ReviewRequest;
 use App\Models\Review;
 use App\Models\Task;
+use App\Models\TaskOffer;
 use App\Models\TaskResponse;
 use Auth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PerformerTaskController extends BaseController
 {
@@ -71,5 +73,30 @@ class PerformerTaskController extends BaseController
             return $this->sendError('Error creating', [], 502);
         }
         return $this->sendResponse([], 'Create successful', 201);
+    }
+
+    /**
+     *
+     *
+     * @param $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function offer($id, Request $request): JsonResponse
+    {
+        $performer = Auth::user();
+        $taskOffer = TaskOffer::where('task_id', '=', $id)->where('user_id', '=', $performer->id)->first();
+
+        if (!$taskOffer) {
+            return $this->sendError('Offer not found');
+        }
+
+        $taskOffer->accept = $request->accept;
+
+        if (!$taskOffer->save()) {
+            return $this->sendError('Error creating', [], 502);
+        }
+
+        return $this->sendResponse(['chat' => $taskOffer->chat_id], 'Create successful', 201);
     }
 }

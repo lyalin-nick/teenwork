@@ -153,6 +153,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('/task')->group(function () {
             Route::post('/{id}/response', [PerformerTaskController::class, 'response']);
             Route::post('/{id}/review', [PerformerTaskController::class, 'review']);
+            Route::post('/{id}/offer', [PerformerTaskController::class, 'offer']);
         });
 
         Route::prefix('/favorite')->group(function () {
