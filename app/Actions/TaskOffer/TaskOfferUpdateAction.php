@@ -13,9 +13,10 @@ class TaskOfferUpdateAction
      * @param TaskOffer $taskOffer
      * @param User $performer
      * @param bool $accept
+     * @param string|null $message
      * @return JsonResponse
      */
-    public function __invoke(TaskOffer $taskOffer, User $performer, bool $accept)
+    public function __invoke(TaskOffer $taskOffer, User $performer, bool $accept, string $message = null): JsonResponse
     {
         $task = $taskOffer->task;
         $taskOfferChat = $taskOffer->chat;
@@ -75,8 +76,15 @@ class TaskOfferUpdateAction
                 return $this->sendError('Error declined offer', [], 502);
             }
 
-            $taskOffer->chat->status = Chat::STATUS_HISTORY;
-            $taskOffer->chat->save();
+            if (!empty($message)) {
+                $taskOfferChat->messages()->create([
+                    'user_id' => $performer->id,
+                    'text' => $message
+                ]);
+            }
+
+            $taskOfferChat->status = Chat::STATUS_HISTORY;
+            $taskOfferChat->save();
 
             $taskChat = $taskOffer->task->chat;
 

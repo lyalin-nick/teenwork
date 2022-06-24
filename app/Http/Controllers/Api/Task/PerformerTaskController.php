@@ -105,6 +105,6 @@ class PerformerTaskController extends BaseController
             return $this->sendError('Task not found');
         }
 
-        return $taskOfferUpdateAction($taskOffer, $performer, $request->accept);
+        return $taskOfferUpdateAction($taskOffer, $performer, $request->accept, $request->message);
     }
 }
