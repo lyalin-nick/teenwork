@@ -37,6 +37,8 @@ class MessageResource extends JsonResource
                 return [
                     'id' => $this->taskOffer->id,
                     'task_id' => $this->taskOffer->task_id,
+                    'task_name' => $this->taskOffer->task->name,
+                    'task_price' => $this->taskOffer->task->price,
                     'accept' => $this->taskOffer->accept
                 ];
             })
