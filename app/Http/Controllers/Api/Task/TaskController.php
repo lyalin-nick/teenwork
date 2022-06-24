@@ -34,7 +34,9 @@ class TaskController extends BaseController
      */
     public function view($id): JsonResponse
     {
-        $task = Task::where('id', '=', $id)->first();
+        $task = Task::where('id', '=', $id)
+            ->with(['user', 'user.profile', 'category', 'acceptedTaskOfferUsers'])
+            ->first();
 
         if (!$task) {
             return $this->sendError('Task not found');

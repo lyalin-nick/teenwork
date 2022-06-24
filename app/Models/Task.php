@@ -48,6 +48,7 @@ use Illuminate\Support\Facades\DB;
  * @property Category $category
  * @property TaskResponse[] $responses
  * @property Chat $chat
+ * @property User[] $acceptedTaskOfferUsers
  *
  * @method Builder home($flag)
  * @method Builder notExpired()
@@ -144,6 +145,11 @@ class Task extends Model
     public function acceptedTaskOffers()
     {
         return $this->hasMany(TaskOffer::class)->where('accept', '=', true);
+    }
+
+    public function acceptedTaskOfferUsers()
+    {
+        return $this->hasManyThrough(User::class, TaskOffer::class,'task_id', 'id', 'id', 'user_id');
     }
 
     /**

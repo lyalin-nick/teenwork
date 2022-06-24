@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Task;
 
+use App\Http\Resources\User\ShortInfoResource;
 use App\Models\Task;
 use Auth;
 use Illuminate\Contracts\Support\Arrayable;
@@ -31,7 +32,7 @@ class ViewResource extends JsonResource
             'description' => $this->description,
             'result' => $this->result,
             'languages' => $this->getLanguagesAsString(),
-            'accepted_offers' => [],
+            'accepted_offers' => ShortInfoResource::collection($this->acceptedTaskOfferUsers),
             'address' => $this->address,
             'place_id' => $this->place_id,
             'images' => $this->images_links,
