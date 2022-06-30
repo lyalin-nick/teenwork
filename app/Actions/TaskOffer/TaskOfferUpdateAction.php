@@ -64,6 +64,14 @@ class TaskOfferUpdateAction
 
                 return $this->sendResponse(['chat' => $task->chat->id], 'Create successful', 201);
             }
+
+            if (!empty($message)) {
+                $taskOfferChat->messages()->create([
+                    'user_id' => $performer->id,
+                    'text' => $message
+                ]);
+            }
+
             $taskOfferChat->status = Chat::STATUS_HISTORY;
             $taskOfferChat->save();
 
