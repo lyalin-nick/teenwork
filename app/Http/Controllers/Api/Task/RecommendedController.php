@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Task;
 
 use App\Actions\Task\RecommendedSearchAction;
 use App\Http\Controllers\Api\BaseController;
-use App\Http\Resources\User\ShortInfoResource;
+use App\Http\Resources\Task\RecommendedUsersResource;
 use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,7 +35,7 @@ class RecommendedController extends BaseController
             return $this->sendResponse([
                 'currentPage' => $curPage,
                 'lastPage' => $lastPage,
-                'users' => ShortInfoResource::collection($profiles)
+                'users' => RecommendedUsersResource::collection($profiles)
             ], 'Users');
         }
 

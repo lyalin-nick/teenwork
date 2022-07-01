@@ -515,4 +515,9 @@ class User extends Authenticatable
 
         $this->chats()->updateExistingPivot($chat, ['unread_messages_count' => $count]);
     }
+
+    public function taskOffers()
+    {
+        return $this->hasMany(TaskOffer::class);
+    }
 }

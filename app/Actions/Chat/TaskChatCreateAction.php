@@ -22,7 +22,8 @@ class TaskChatCreateAction
         $chat = Chat::where('type', '=', Chat::TYPE_TASK)
             ->where('identifier', '=', $task->id)
             ->select('chats.*')
-            ->whereRaw("(SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id)=(SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id AND chat_user.user_id IN ({$user_from->id}, {$user_to->id}))")
+            ->whereRaw("(SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id)=2")
+            ->whereRaw("(SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id AND  chat_user.user_id IN ({$user_from->id}, {$user_to->id}))=2")
             ->first();
 
         if (!$chat) {

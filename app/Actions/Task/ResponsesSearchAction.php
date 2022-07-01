@@ -2,7 +2,7 @@
 
 namespace App\Actions\Task;
 
-use App\Http\Resources\Response\ViewResource;
+use App\Http\Resources\Task\RespondedUsersResource;
 
 class ResponsesSearchAction
 {
@@ -10,7 +10,9 @@ class ResponsesSearchAction
     {
         $responses = $task->responses()
             ->select('*')
-            ->with('user');
+            ->with(['user', 'user.taskOffers' => function($query) use ($task){
+                $query->where('task_id', '=', $task->id);
+            }]);
 
         $params['sort'] = $params['sort'] ?? 'rating';
 
@@ -23,6 +25,6 @@ class ResponsesSearchAction
                 break;
         }
 
-        return ViewResource::collection($responses->get());
+        return RespondedUsersResource::collection($responses->get());
     }
 }

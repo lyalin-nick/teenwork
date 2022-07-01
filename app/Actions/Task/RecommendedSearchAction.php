@@ -13,7 +13,11 @@ class RecommendedSearchAction
     {
         $task_languages = $task->getLanguagesAsArray();
         $category_id = $task->category_id;
-        $profiles = Profile::query()->select('profiles.*')
+        $profiles = Profile::query()
+            ->select('profiles.*')
+            ->addSelect(\DB::raw("(SELECT id FROM task_offers WHERE task_id={$task->id} AND user_id=profiles.user_id) as offer_id"))
+            ->addSelect(\DB::raw("(SELECT chat_id FROM task_offers WHERE task_id={$task->id} AND user_id=profiles.user_id) as offer_chat_id"))
+            ->addSelect(\DB::raw("(SELECT id FROM chats WHERE type='task' AND identifier={$task->id} AND (SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id)=2 AND (SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id AND chat_user.user_id IN (profiles.user_id, {$task->user_id}))=2) as chat_id"))
             ->where('user_id', '!=', $task->user_id)
             ->whereHas('user', function ($query) {
                 $query->where('role', '=', User::ROLE_PERFORMER);
