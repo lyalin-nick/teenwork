@@ -29,23 +29,16 @@ class ChatController extends BaseController
     {
         $user = Auth::user();
 
-        $chats = $user
-            ->chats();
+        $chats = $user->chats();
         if (isset($request->status)) {
             $chats->where(['status' => $request->status]);
         }
+
         $chats = $chats
-            ->join('messages', function ($query) {
-                $query->on('chats.last_message_id', '=', 'messages.id');
-            })
             ->with(['users' => function ($query) use ($user) {
                 $query->where('users.id', '!=', $user->id);
-            }])
-            ->select('chats.*',
-                'messages.text as last_message',
-                'messages.user_id as last_message_user_id',
-                'messages.created_at as last_message_created_at',
-                'chat_user.unread_messages_count as unread_messages_count')
+            }, 'lastMessage'])
+            ->select('chats.*', 'chat_user.unread_messages_count as unread_messages_count')
             ->orderBy('updated_at', 'desc')
             ->paginate(20);
 

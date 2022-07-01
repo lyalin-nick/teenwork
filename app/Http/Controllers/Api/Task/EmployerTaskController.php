@@ -129,6 +129,10 @@ class EmployerTaskController extends BaseController
             return $this->sendError('Error! Performer not found', [], 501);
         }
 
+        if (TaskOffer::where('task_id', '=', $id)->where('user_id', '=', $request->user_id)->first() !== null) {
+            return $this->sendError('Offer created already', [], 402);
+        }
+
         $offer = TaskOffer::new($id, $request->user_id, $request->text);
 
         if ($offer) {

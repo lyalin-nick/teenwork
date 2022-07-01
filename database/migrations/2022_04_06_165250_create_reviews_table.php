@@ -22,6 +22,7 @@ class CreateReviewsTable extends Migration
             $table->text('text');
             $table->date('date')->nullable();
             $table->timestamps();
+            $table->unique(['task_id', 'user_id', 'reviewer_id']);
         });
     }
 

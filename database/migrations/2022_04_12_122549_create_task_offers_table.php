@@ -22,6 +22,7 @@ class CreateTaskOffersTable extends Migration
             $table->text('text')->nullable();
             $table->boolean('accept')->nullable();
             $table->timestamps();
+            $table->unique(['task_id', 'user_id']);
         });
     }
 

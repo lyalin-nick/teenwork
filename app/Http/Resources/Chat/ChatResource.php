@@ -25,9 +25,9 @@ class ChatResource extends JsonResource
             "name" => $this->name,
             "status" => $this->status,
             "logo" => $logo,
-            "last_message" => $this->last_message,
-            "last_message_user_id" => $this->last_message_user_id,
-            "last_message_created_at" => $this->last_message_created_at,
+            "last_message" => ($this->lastMessage) ? $this->lastMessage->text : null,
+            "last_message_user_id" => ($this->lastMessage) ? $this->lastMessage->user_id : null,
+            "last_message_created_at" => ($this->lastMessage) ? $this->lastMessage->created_at : null,
             "unread_messages_count" => $this->unread_messages_count,
         ];
     }

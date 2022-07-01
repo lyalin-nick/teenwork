@@ -33,7 +33,10 @@ class RecommendedUsersResource extends JsonResource
             'status' => $profile->status,
             'number_reviews' => $profile->number_review,
             'offer' => (isset($profile->offer_id)) ? ['id' => $profile->offer_id] : null,
-            'chat' => isset($profile->offer_chat_id) ? ['id' => $profile->offer_chat_id] : ((isset($profile->chat_id) ? ['id' => $profile->chat_id] : null))
+            'chat' => isset($profile->offer_chat_id) ? ['id' => $profile->offer_chat_id] : ((isset($profile->chat_id) ? ['id' => $profile->chat_id] : null)),
+            $this->mergeWhen(isset($this->distance), [
+                "distance" => round($this->distance, 2) . ' km'
+            ])
         ];
     }
 }

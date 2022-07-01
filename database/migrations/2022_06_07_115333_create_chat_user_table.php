@@ -17,7 +17,7 @@ class CreateChatUserTable extends Migration
             $table->bigInteger('user_id', false, true);
             $table->bigInteger('chat_id', false, true);
             $table->integer('unread_messages_count', false, true)->default(0);
-            $table->unique(['user_id', 'message_id']);
+            $table->unique(['user_id', 'chat_id']);
         });
     }
 

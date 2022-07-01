@@ -22,6 +22,7 @@ class CreateTaskResponsesTable extends Migration
             $table->text('text');
             $table->boolean('is_new')->default(true);
             $table->timestamps();
+            $table->unique(['task_id', 'user_id']);
         });
     }
 

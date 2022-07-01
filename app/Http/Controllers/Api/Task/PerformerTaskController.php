@@ -37,6 +37,10 @@ class PerformerTaskController extends BaseController
             return $this->sendError('Its your task.');
         }
 
+        if (TaskResponse::where('task_id', '=', $id,)->where( 'user_id', '=', $user->id)->first() !== null){
+            return $this->sendError('Response create already', [], 402);
+        }
+
         $new_response = TaskResponse::new($id, $user->id, $request->text);
         if ($new_response) {
             $chat = $chatCreateAction($user, $task->user, $task, $new_response);
