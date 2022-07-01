@@ -180,8 +180,9 @@ class ChatController extends BaseController
         }
 
         foreach ($messages as $message) {
-            $message->messageStatuses()->where('user_id', $user->id)
-                ->update(['reading' => true]);
+            $message->messageStatuses()
+                ->where('user_id', $user->id)
+                ->updateOrCreate(['user_id' => $user->id, 'reading' => true]);
         }
 
         $user->refreshUnreadMessagesCounter($chat->id);
