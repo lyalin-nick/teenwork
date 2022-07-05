@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Helper\UploadFile\ImageRequest;
 use App\Http\Resources\Chat\ChatResource;
 use App\Http\Resources\Chat\MessageResource;
 use App\Models\Chat;
+use App\Models\MessageStatus;
 use App\Models\MyQuestion;
 use App\Models\Task;
 use App\Models\TaskOffer;
@@ -166,25 +167,23 @@ class ChatController extends BaseController
     {
         $user = Auth::user();
 
-        $reading_messages = $request->get('messages');
+        $reading_message_ids = $request->messages;
         $chat = Chat::where('id', $chatId)->first();
         if (!$chat) {
             return $this->sendError('Chat not found');
         }
 
         $messages = $chat->messages()
-            ->whereIn('id', $reading_messages)
+            ->whereIn('id', $reading_message_ids)
             ->get();
 
         if (!$messages) {
             return $this->sendError('Messages not found');
         }
 
-        foreach ($messages as $message) {
-            $message->messageStatuses()
-                ->where('user_id', $user->id)
-                ->updateOrCreate(['user_id' => $user->id, 'reading' => true]);
-        }
+        MessageStatus::where('user_id', '=', $user->id)
+            ->whereIn('message_id', $reading_message_ids)
+            ->update(['reading' => true]);
 
         $user->refreshUnreadMessagesCounter($chat->id);
 

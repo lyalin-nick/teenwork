@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Resources\Review\ViewResource;
+use App\Http\Resources\Task\TaskListPreviewResource;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -295,45 +296,20 @@ class User extends Authenticatable
 
     public function getTaskList($status = null)
     {
-        $tasks = [];
-
         if ($this->isEmployer()) {
             $tasks = $this->tasks()->taskList($status)
                 ->paginate(20);
-
-            $curPage = $tasks->currentPage();
-            $lastPage = $tasks->lastPage();
-
-            $tasks = $tasks->each(function ($item, $key) {
-                $item->makeHidden(['images']);
-                $item['images_links'] = $item->images_links;
-                $item['status'] = $item->status_label;
-            });
-
-        } else { //TODO: доделать список задач исполнителя
-            $responses = $this->responses()->with(['task' => function ($query) {
-                $query->with('images');
-            }])->paginate(20);
-
-            $curPage = $responses->currentPage();
-            $lastPage = $responses->lastPage();
-
-            $tasks = [];
-            foreach ($responses as $response) {
-                $task = $response->task;
-                $tasks[] = [
-                    'id' => $task->id,
-                    'name' => $task->name,
-                    'price' => $task->price,
-                    'description' => $task->description,
-                    'status' => $task->status_label,
-                    'safe_deal' => $task->safe_deal,
-                    'images_links' => $task->images_links,
-                ];
-            }
+        } else {
+            $tasks = Task::query()
+                ->whereRaw("id IN (SELECT task_id FROM task_responses WHERE user_id={$this->id})")
+                ->orWhereRaw("id IN (SELECT task_id FROM task_offers WHERE user_id={$this->id})")
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
         }
+        $curPage = $tasks->currentPage();
+        $lastPage = $tasks->lastPage();
 
-        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => $tasks];
+        return ['currentPage' => $curPage, 'lastPage' => $lastPage, 'tasks' => TaskListPreviewResource::collection($tasks->items())];
     }
 
     /**

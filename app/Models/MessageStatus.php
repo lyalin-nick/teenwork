@@ -9,13 +9,13 @@ class MessageStatus extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['user_id', 'message_id', 'reading'];
+
     protected $casts = [
         'reading' => 'boolean'
     ];
 
     public $timestamps = false;
-
-    protected $fillable = ['user_id', 'message_id', 'reading'];
 
     public function message()
     {

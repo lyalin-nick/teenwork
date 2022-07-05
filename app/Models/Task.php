@@ -155,7 +155,6 @@ class Task extends Model
     /**
      * Кол-во задач online/offline
      *
-     * @return int
      */
     public static function countOnline()
     {
@@ -169,47 +168,6 @@ class Task extends Model
         $tasks = Task::query()->notExpired()->categoryFlag('offline');
 
         return $tasks->count();
-    }
-
-    protected static function booted()
-    {
-        static::creating(function ($task) {
-            $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
-
-            $service = new GoogleMapService();
-            $coords = $service->coords($task->place_id);//GoogleMap::getCoordinates($task->place_id);
-            $coords = $coords ?: ['lat' => 53.213672, 'lng' => 45.061300];
-            $task->lat = $coords['lat'];
-            $task->lng = $coords['lng'];
-        });
-        static::updating(function ($task) {
-            $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
-
-            if ($task->isDirty('place_id')) {
-                $service = new GoogleMapService();
-                $coords = $service->coords($task->place_id); //GoogleMap::getCoordinates($task->place_id);
-                $coords = $coords ?: ['lat' => 53.213672, 'lng' => 45.061300];
-                $task->lat = $coords['lat'];
-                $task->lng = $coords['lng'];
-            }
-        });
-
-        static::created(function ($task) {
-            $profile = $task->profile;
-            if ($profile)
-                $profile->addNumberEmployerTask();
-        });
-
-        static::deleted(function (self $task) {
-            $task->languages()->detach(); //удалим прилинкованные языки
-
-            if ($task->video)
-                $task->video->delete();//удалим прикрепленное видео
-
-            if ($task->images)//удалим прикрепленные фото
-                foreach ($task->images as $image_model)
-                    $image_model->delete();
-        });
     }
 
     public function scopeHome(Builder $query, $flag)
@@ -456,7 +414,7 @@ class Task extends Model
     {
         $labels = self::getStatusLabels();
 
-        return isset($labels[$this->status]) ? $labels[$this->status] : 'undefined';
+        return $labels[$this->status] ?? 'undefined';
     }
 
     /**
@@ -480,8 +438,6 @@ class Task extends Model
     /**
      * Аксессор поля video_link
      *
-     * @param $value
-     * @return int
      */
     public function getVideoLinkAttribute()
     {
@@ -566,8 +522,10 @@ class Task extends Model
 
     public function cleanImages(): void
     {
-        foreach ($this->images as $image) {
-            $image->delete();
+        if ($this->images) {
+            foreach ($this->images as $image) {
+                $image->delete();
+            }
         }
     }
 

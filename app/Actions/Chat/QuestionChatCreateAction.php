@@ -31,19 +31,16 @@ class QuestionChatCreateAction
             $new_chat->users()->attach($user);
             $new_chat->users()->attach($admin_user);
 
-            $new_chat->messages()->create([
-                'user_id' => $user->id,
-                'text' => $question->question
-            ]);
-
+            $images = [];
             if ($question->myQuestionImages) {
                 foreach ($question->myQuestionImages as $image)
-                    $new_chat->messages()->create([
-                        'user_id' => $user->id,
-                        'text' => 'Фотография',
-                        'img' => $image->getImageLink()
-                    ]);
+                    $images[] = $image->getImageLink();
             }
+            $new_chat->messages()->create([
+                'user_id' => $user->id,
+                'text' => $question->question,
+                'images' => $images
+            ]);
 
             return $new_chat;
         }
