@@ -131,6 +131,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{id}/responses', [ResponsesController::class, 'responses']);
             Route::post('/{id}/offer', [EmployerTaskController::class, 'offer']);
             Route::post('/{id}/review', [EmployerTaskController::class, 'review']);
+            Route::get('/{id}/performers-map', [EmployerTaskController::class, 'performersOnMap']);
         });
 
         Route::prefix('/favorite')->group(function () {

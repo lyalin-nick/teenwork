@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $user_id
  * @property int $chat_id
  * @property int $message_id
- * @property int $is_new
+ * @property boolean $is_new
  * @property string $text
  *
  * @property Task $task
@@ -27,6 +27,10 @@ class TaskResponse extends Model
 
     protected $fillable = [
         'task_id', 'user_id', 'text', 'is_new'
+    ];
+
+    protected $casts = [
+        'is_new' => 'boolean'
     ];
 
     /**

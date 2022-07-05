@@ -12,6 +12,7 @@ use App\Http\Resources\Chat\MessageResource;
 use App\Models\Chat;
 use App\Models\MyQuestion;
 use App\Models\Task;
+use App\Models\TaskOffer;
 use App\Models\User;
 use Auth;
 use Illuminate\Http\JsonResponse;
@@ -91,7 +92,7 @@ class ChatController extends BaseController
         if ($chat->type = Chat::TYPE_TASK) {
 //            $offer = TaskOffer::where('task_id', $chat->identifier)->andWhere('user_id', )->first();
             $response_data = [
-                'offer' => null,
+                'offer' => ($chat->users()->count() == 2) ? TaskOffer::where('chat_id', $chatId)->exists() : null,
                 'currentPage' => $curPage,
                 'lastPage' => $lastPage,
                 'messages' => MessageResource::collection($messages->items())

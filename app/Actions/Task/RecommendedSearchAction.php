@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 class RecommendedSearchAction
 {
 
-    public function __invoke($task, $params = null): Builder
+    public function __invoke($task, $params = null, $without_user_ids = []): Builder
     {
         $task_languages = $task->getLanguagesAsArray();
         $category_id = $task->category_id;
@@ -29,6 +29,10 @@ class RecommendedSearchAction
                 $cat_query->where('id', $category_id);
             })
             ->with('user');
+
+        if ($without_user_ids){
+            $profiles->where('user_id', 'NOT IN', $without_user_ids);
+        }
 
         $params['sort'] = $params['sort'] ?? 'nearby';
 

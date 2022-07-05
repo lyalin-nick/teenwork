@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources\Task;
 
+use App\Http\Resources\User\ShortInfoResource;
 use App\Models\Profile;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class RecommendedUsersResource extends JsonResource
+class  RecommendedUsersResource extends JsonResource
 {
     public static $wrap = false;
 
@@ -26,12 +27,7 @@ class RecommendedUsersResource extends JsonResource
         }
 
         return [
-            'id' => $user->id,
-            'name' => $profile->full_name,
-            'photo' => $profile->getProfilePreviewImageLink(),
-            'rating' => $profile->rating,
-            'status' => $profile->status,
-            'number_reviews' => $profile->number_review,
+            'user_info' => new ShortInfoResource($user),
             'offer' => (isset($profile->offer_id)) ? ['id' => $profile->offer_id] : null,
             'chat' => isset($profile->offer_chat_id) ? ['id' => $profile->offer_chat_id] : ((isset($profile->chat_id) ? ['id' => $profile->chat_id] : null)),
             $this->mergeWhen(isset($this->distance), [

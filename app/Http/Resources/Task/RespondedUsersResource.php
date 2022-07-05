@@ -20,9 +20,11 @@ class RespondedUsersResource extends JsonResource
     {
         /* @var TaskResponse $this */
         return [
-            "id" => $this->id,
-            "text" => $this->text,
-            "is_new" => $this->is_new,
+            "response" => [
+                "id" => $this->id,
+                "text" => $this->text,
+                "is_new" => $this->is_new,
+            ],
             "user_info" => new ShortInfoResource($this->user),
             $this->mergeWhen(isset($this->distance), [
                 "distance" => round($this->distance, 2) . ' km'

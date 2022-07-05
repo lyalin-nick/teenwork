@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Task;
 
 use App\Actions\Chat\TaskChatCreateAction;
+use App\Actions\Task\RecommendedSearchAction;
+use App\Actions\Task\ResponsesSearchAction;
 use App\Actions\Task\TaskStoreAction;
 use App\Actions\Task\TaskUpdateAction;
 use App\Http\Controllers\Api\BaseController;
@@ -10,6 +12,7 @@ use App\Http\Requests\Api\Task\EmployerReviewRequest;
 use App\Http\Requests\Api\Task\NewOfferRequest;
 use App\Http\Requests\Api\Task\NewTaskRequest;
 use App\Http\Requests\Api\Task\UpdateTaskRequest;
+use App\Http\Resources\Task\PerformersMapResource;
 use App\Http\Resources\Task\UpdateResource;
 use App\Http\Resources\Task\ViewResource;
 use App\Models\Review;
@@ -50,13 +53,13 @@ class EmployerTaskController extends BaseController
     /**
      * Удаление задачи (Заказчик)
      *
-     * @param $id
+     * @param $taskId
      * @return JsonResponse
      */
-    public function delete($id): JsonResponse
+    public function delete($taskId): JsonResponse
     {
         $user = Auth::user();
-        $task = $user->tasks()->where('id', $id)->first();
+        $task = $user->tasks()->where('id', $taskId)->first();
         if ($task) {
             return ($task->delete()) ? $this->sendResponse([], 'Task delete', 201) : $this->sendError('Task deleting error', [], 500);
         }
@@ -67,13 +70,13 @@ class EmployerTaskController extends BaseController
     /**
      * Получение данных о задаче для редактирования (Заказчик)
      *
-     * @param $id
+     * @param $taskId
      * @return JsonResponse
      */
-    public function edit($id): JsonResponse
+    public function edit($taskId): JsonResponse
     {
         $user = \Auth::user();
-        $task = $user->tasks()->where('id', '=', $id)->first();
+        $task = $user->tasks()->where('id', '=', $taskId)->first();
 
         if ($task) {
             return $this->sendResponse(new UpdateResource($task), 'Task info', 201);
@@ -85,15 +88,15 @@ class EmployerTaskController extends BaseController
     /**
      * Обновление существующей задачи (Заказчик)
      *
+     * @param $taskId
      * @param UpdateTaskRequest $request
-     * @param $id
      * @param TaskUpdateAction $updateAction
      * @return JsonResponse
      */
-    public function update($id, UpdateTaskRequest $request, TaskUpdateAction $updateAction): JsonResponse
+    public function update($taskId, UpdateTaskRequest $request, TaskUpdateAction $updateAction): JsonResponse
     {
         $user = Auth::user();
-        $task = $user->tasks()->where('id', $id)->first();
+        $task = $user->tasks()->where('id', $taskId)->first();
 
         if ($task) {
             $updated_task = $updateAction($task, $request);
@@ -110,16 +113,16 @@ class EmployerTaskController extends BaseController
     /**
      * Отправка оффера исполнителю (Заказчик)
      *
+     * @param $taskId
      * @param NewOfferRequest $request
-     * @param $id
      * @param TaskChatCreateAction $chatCreateAction
      * @return JsonResponse
      */
-    public function offer($id, NewOfferRequest $request, TaskChatCreateAction $chatCreateAction): JsonResponse
+    public function offer($taskId, NewOfferRequest $request, TaskChatCreateAction $chatCreateAction): JsonResponse
     {
-        $task = Task::where('id', '=', $id)->first();
+        $task = Task::where('id', '=', $taskId)->first();
         if (!$task) {
-            return $this->sendError("Task #{$id} not found");
+            return $this->sendError("Task #{$taskId} not found");
         }
 
         $employer = Auth::user();
@@ -129,11 +132,11 @@ class EmployerTaskController extends BaseController
             return $this->sendError('Error! Performer not found', [], 501);
         }
 
-        if (TaskOffer::where('task_id', '=', $id)->where('user_id', '=', $request->user_id)->first() !== null) {
+        if (TaskOffer::where('task_id', '=', $taskId)->where('user_id', '=', $request->user_id)->first() !== null) {
             return $this->sendError('Offer created already', [], 402);
         }
 
-        $offer = TaskOffer::new($id, $request->user_id, $request->text);
+        $offer = TaskOffer::new($taskId, $request->user_id, $request->text);
 
         if ($offer) {
             $chat = $chatCreateAction($employer, $performer, $task, $offer);
@@ -148,14 +151,14 @@ class EmployerTaskController extends BaseController
     /**
      * Отправка отзыва на исполнителей
      *
-     * @param $id
+     * @param $taskId
      * @param EmployerReviewRequest $request
      * @return JsonResponse
      */
-    public function review(EmployerReviewRequest $request, $id): JsonResponse
+    public function review($taskId, EmployerReviewRequest $request): JsonResponse
     {
         $reviewer = Auth::user();
-        $task = Task::where('id', '=', $id)->first();
+        $task = Task::where('id', '=', $taskId)->first();
 
         if (!$task) {
             return $this->sendError('Task not found');
@@ -166,10 +169,35 @@ class EmployerTaskController extends BaseController
         }
 
         foreach ($request->users as $user_id)
-            $review = Review::new($id, $user_id, $reviewer->id, $request->rating, $request->text);
+            $review = Review::new($taskId, $user_id, $reviewer->id, $request->rating, $request->text);
 
         $users_without_review = []; //TODO: доделать проверку существования отзывов на всех исполнителей данной задачи
 
         return $this->sendResponse($users_without_review, 'Create successful', 201);
+    }
+
+    /**
+     * Получение рекомендованных и откликнувшихся исполнителей для отображения на карте
+     *
+     * @param $taskId
+     * @param ResponsesSearchAction $responsesSearchAction
+     * @param RecommendedSearchAction $recommendedSearchAction
+     * @return JsonResponse
+     */
+    public function performersOnMap($taskId, ResponsesSearchAction $responsesSearchAction, RecommendedSearchAction $recommendedSearchAction): JsonResponse
+    {
+        $user = Auth::user();
+        $task = Task::where('id', $taskId)->where('user_id', $user->id)->first();
+        if (!$task) {
+            return $this->sendError('Task not found');
+        }
+        $responses = $responsesSearchAction($task);
+        $responses_user_ids = [];
+        foreach ($responses as $response) {
+            $responses_user_ids[] = $response->user->id;
+        }
+        $recommendedSearchAction = $recommendedSearchAction($task, null, $responses_user_ids);
+
+        return $this->sendResponse(['users' => PerformersMapResource::collection($responses->merge($recommendedSearchAction->get()))], 'Users');
     }
 }

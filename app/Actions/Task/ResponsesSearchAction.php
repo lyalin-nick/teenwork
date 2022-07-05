@@ -2,15 +2,13 @@
 
 namespace App\Actions\Task;
 
-use App\Http\Resources\Task\RespondedUsersResource;
-
 class ResponsesSearchAction
 {
-    public function __invoke($task, $params)
+    public function __invoke($task, $params = null)
     {
         $responses = $task->responses()
             ->select('*')
-            ->with(['user', 'user.taskOffers' => function($query) use ($task){
+            ->with(['user', 'user.taskOffers' => function ($query) use ($task) {
                 $query->where('task_id', '=', $task->id);
             }]);
 
@@ -25,6 +23,6 @@ class ResponsesSearchAction
                 break;
         }
 
-        return RespondedUsersResource::collection($responses->get());
+        return $responses->get();
     }
 }
