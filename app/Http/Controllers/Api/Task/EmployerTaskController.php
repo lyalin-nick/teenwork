@@ -15,6 +15,7 @@ use App\Http\Requests\Api\Task\UpdateTaskRequest;
 use App\Http\Resources\Task\PerformersMapResource;
 use App\Http\Resources\Task\UpdateResource;
 use App\Http\Resources\Task\ViewResource;
+use App\Http\Resources\User\ShortInfoResource;
 use App\Models\Review;
 use App\Models\Task;
 use App\Models\TaskOffer;
@@ -136,6 +137,10 @@ class EmployerTaskController extends BaseController
             return $this->sendError('Offer created already', [], 402);
         }
 
+        if ($task->acceptedTaskOfferUsers()->count() >= $task->amount_of_workers) {
+            return $this->sendError('Task team is full', [], 402);
+        }
+
         $offer = TaskOffer::new($taskId, $request->user_id, $request->text);
 
         if ($offer) {
@@ -199,5 +204,59 @@ class EmployerTaskController extends BaseController
         $recommendedSearchAction = $recommendedSearchAction($task, null, $responses_user_ids);
 
         return $this->sendResponse(['users' => PerformersMapResource::collection($responses->merge($recommendedSearchAction->get()))], 'Users');
+    }
+
+    /**
+     * Завершение задачи
+     *
+     * @param $taskId
+     * @return JsonResponse
+     */
+    public function finish($taskId): JsonResponse
+    {
+        $user = Auth::user();
+        $task = Task::where('id', $taskId)->where('user_id', $user->id)->first();
+        if (!$task) {
+            return $this->sendError('Task not found');
+        }
+
+        $task->status = Task::STATUS_COMPLETE;
+        if (!$task->save()) {
+            return $this->sendError('Error task updated', [], 405);
+        }
+        $task->refresh();
+
+        $users = $task->acceptedTaskOfferUsers;
+        foreach ($users as $i => $user) {
+            if ($user->reviews()->where('task_id', '=', $task->id)->exists()) {
+                $users->forget($i);
+            }
+        }
+
+        return $this->sendResponse(['task' => new ViewResource($task)], 'Task finished');
+    }
+
+    /**
+     * Завершение задачи
+     *
+     * @param $taskId
+     * @return JsonResponse
+     */
+    public function performersWithoutReview($taskId): JsonResponse
+    {
+        $user = Auth::user();
+        $task = Task::where('id', $taskId)->where('user_id', $user->id)->first();
+        if (!$task) {
+            return $this->sendError('Task not found');
+        }
+
+        $users = $task->acceptedTaskOfferUsers;
+        foreach ($users as $i => $user) {
+            if ($user->reviews()->where('task_id', '=', $task->id)->exists()) {
+                $users->forget($i);
+            }
+        }
+
+        return $this->sendResponse(['users' => ShortInfoResource::collection($users)], 'Task finished');
     }
 }

@@ -37,7 +37,7 @@ class PerformerTaskController extends BaseController
             return $this->sendError('Its your task.');
         }
 
-        if (TaskResponse::where('task_id', '=', $id,)->where( 'user_id', '=', $user->id)->first() !== null){
+        if (TaskResponse::where('task_id', '=', $id,)->where('user_id', '=', $user->id)->first() !== null) {
             return $this->sendError('Response create already', [], 402);
         }
 
@@ -99,6 +99,10 @@ class PerformerTaskController extends BaseController
 
         if (!$taskOffer) {
             return $this->sendError('Offer not found');
+        }
+
+        if ($taskOffer->task->acceptedTaskOfferUsers()->count() >= $taskOffer->task->amount_of_workers) {
+            return $this->sendError('Task team is full', [], 402);
         }
 
         if ($taskOffer->accept === false || $taskOffer->accept === $request->accept) {

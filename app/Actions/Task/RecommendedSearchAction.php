@@ -17,7 +17,7 @@ class RecommendedSearchAction
             ->select('profiles.*')
             ->addSelect(\DB::raw("(SELECT id FROM task_offers WHERE task_id={$task->id} AND user_id=profiles.user_id) as offer_id"))
             ->addSelect(\DB::raw("(SELECT chat_id FROM task_offers WHERE task_id={$task->id} AND user_id=profiles.user_id) as offer_chat_id"))
-            ->addSelect(\DB::raw("(SELECT id FROM chats WHERE type='task' AND identifier={$task->id} AND (SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id)=2 AND (SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id AND chat_user.user_id IN (profiles.user_id, {$task->user_id}))=2) as chat_id"))
+            ->addSelect(\DB::raw("(SELECT id FROM chats WHERE chats.group=0 AND chats.type='task' AND chats.identifier={$task->id} AND (SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id)=2 AND (SELECT COUNT(*) FROM chat_user WHERE chats.id=chat_user.chat_id AND chat_user.user_id IN (profiles.user_id, {$task->user_id}))=2) as chat_id"))
             ->where('user_id', '!=', $task->user_id)
             ->whereHas('user', function ($query) {
                 $query->where('role', '=', User::ROLE_PERFORMER);
@@ -28,9 +28,10 @@ class RecommendedSearchAction
             ->whereHas('categories', function ($cat_query) use ($category_id) {
                 $cat_query->where('id', $category_id);
             })
+            ->whereRaw("profiles.user_id NOT IN (SELECT user_id FROM task_offers WHERE task_id={$task->id} AND accept IS NOT NULL)")
             ->with('user');
 
-        if ($without_user_ids){
+        if ($without_user_ids) {
             $profiles->where('user_id', 'NOT IN', $without_user_ids);
         }
 

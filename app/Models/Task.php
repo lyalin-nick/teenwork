@@ -149,7 +149,8 @@ class Task extends Model
 
     public function acceptedTaskOfferUsers()
     {
-        return $this->hasManyThrough(User::class, TaskOffer::class,'task_id', 'id', 'id', 'user_id');
+        return $this->hasManyThrough(User::class, TaskOffer::class,'task_id', 'id', 'id', 'user_id')
+            ->where('accept', '=', true);
     }
 
     /**

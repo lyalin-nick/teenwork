@@ -29,9 +29,10 @@ class TaskObserver
      */
     public function saving(Task $task)
     {
-        $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
+        if ($task->isDirty('start_date') || $task->isDirty('start_time'))
+            $task->expired_at = date('Y-m-d H:i:s', strtotime($task->start_date . ' ' . $task->start_time));
 
-        if ($task->place_id) {
+        if ($task->isDirty('place_id')) {
             $service = new GoogleMapService();
             $coords = $service->coords($task->place_id);
             $coords = $coords ?: ['lat' => 53.213672, 'lng' => 45.061300];
